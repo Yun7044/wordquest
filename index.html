@@ -4369,24 +4369,206 @@ function stepClickTenDraw(){
   tut.step = 'clickTenDraw';
   hideSpotlight();
 
+  // ===== 階段 A：引導點「十連抽」 =====
   setTimeout(() => {
     retrySpotlight('#drawTenBtn', '十連抽試試手氣！<br>新手金幣剛好夠 600');
   }, 400);
 
-  // 記錄目前抽卡結果區的內容長度
-  const resultEl = document.getElementById('gachaResult');
-  const initialLen = resultEl ? resultEl.innerHTML.length : 0;
+  // ===== 輪詢 1：偵測「確認抽卡」彈窗出現 =====
+  const checkConfirm = setInterval(() => {
+    if(tut.step !== 'clickTenDraw'){ clearInterval(checkConfirm); return; }
 
-  // 輪詢：偵測十連抽被點（gachaResult 內容變長）
-  const check = setInterval(() => {
-    if(tut.step !== 'clickTenDraw'){ clearInterval(check); return; }
-    const el = document.getElementById('gachaResult');
-    if(el && el.innerHTML.length > initialLen + 200){
-      clearInterval(check);
+    const dcOk = document.getElementById('dcOk');
+    if(dcOk && dcOk.offsetParent !== null){
+      clearInterval(checkConfirm);
       hideSpotlight();
-      setTimeout(() => { tut.step = 'done'; stepDone(); }, 3500);
+      console.log('[Tutorial] 偵測到確認彈窗，改引導確認按鈕');
+
+      // ===== 階段 B：引導點「確認抽卡」 =====
+      setTimeout(() => {
+        const btn = document.getElementById('dcOk');
+        if(!btn) return;
+
+        // 記錄目前 gachaResult 內容長度（用來判斷抽卡完成）
+        const resultEl = document.getElementById('gachaResult');
+        const initialLen = resultEl ? resultEl.innerHTML.length : 0;
+
+        showSpotlight(btn, '點「確認抽卡」');
+
+        // 每次 spotlight 更新時，把目標動態指向最新的 dcOk（避免彈窗重建時參考失效）
+        const iv = setInterval(() => {
+          if(tut.step !== 'clickTenDraw'){ clearInterval(iv); return; }
+          const cur = document.getElementById('dcOk');
+          if(cur && cur.offsetParent !== null){
+            tut.target = cur;
+          }
+        }, 400);
+
+        // ===== 輪詢 2：偵測抽卡結果出現 =====
+        const checkResult = setInterval(() => {
+          if(tut.step !== 'clickTenDraw'){
+            clearInterval(checkResult);
+            clearInterval(iv);
+            return;
+          }
+          const el = document.getElementById('gachaResult');
+          if(el && el.innerHTML.length > initialLen + 200){
+            clearInterval(checkResult);
+            clearInterval(iv);
+            hideSpotlight();
+            console.log('[Tutorial] 十連抽完成');
+            setTimeout(() => { tut.step = 'done'; stepDone(); }, 3500);
+          }
+        }, 500);
+      }, 350);
     }
-  }, 500);
+  }, 300);
+}
+
+function stepDone(){
+  tut.step = 'done';
+  hideSpotlight();
+  hideModal();
+
+  // 注入 CSS（只注入一次）
+  if(!document.getElementById('tutRpgStyle')){
+    const st = document.createElement('style');
+    st.id = 'tutRpgStyle';
+    st.textContent = `
+#tutRPG{
+  position:fixed;inset:0;z-index:5200;
+  display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(4,6,12,.72);
+  backdrop-filter:blur(4px);
+  animation:tutRpgIn .3s ease;
+}
+@keyframes tutRpgIn{from{opacity:0}to{opacity:1}}
+.tut-rpg-box{
+  width:100%;max-width:520px;
+  margin:0 12px 12px;
+  padding:20px 20px 26px;
+  background:linear-gradient(180deg,rgba(24,30,50,.97),rgba(14,18,32,.97));
+  border:2px solid rgba(255,217,61,.5);
+  border-radius:16px;
+  box-shadow:0 20px 60px -20px rgba(0,0,0,.95),
+             0 0 40px -10px rgba(255,217,61,.4);
+  min-height:140px;
+  position:relative;
+  animation:tutRpgSlide .35s cubic-bezier(.2,1.2,.4,1);
+}
+@keyframes tutRpgSlide{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.tut-rpg-name{
+  position:absolute;top:-14px;left:20px;
+  padding:4px 14px;border-radius:10px;
+  background:linear-gradient(135deg,#ffd93d,#ff9500);
+  color:#1a1208;font-size:12px;font-weight:900;
+  letter-spacing:1px;
+  box-shadow:0 4px 12px -4px rgba(255,217,61,.8);
+}
+.tut-rpg-text{
+  font-size:15px;font-weight:600;color:#e8ecf5;
+  line-height:1.9;letter-spacing:.5px;
+  padding-top:8px;
+  min-height:80px;
+}
+.tut-rpg-cursor{
+  display:inline-block;width:2px;height:16px;
+  background:#ffd93d;
+  vertical-align:middle;
+  margin-left:2px;
+  animation:tutCursor .7s steps(2) infinite;
+}
+@keyframes tutCursor{0%,100%{opacity:1}50%{opacity:0}}
+.tut-rpg-next{
+  position:absolute;bottom:8px;right:16px;
+  font-size:14px;color:#ffd93d;
+  animation:tutNext 1s ease-in-out infinite;
+}
+@keyframes tutNext{
+  0%,100%{opacity:.4;transform:translateY(0)}
+  50%{opacity:1;transform:translateY(3px)}
+}
+    `;
+    document.head.appendChild(st);
+  }
+
+  const lines = [
+    '你已經學會了戰鬥與抽卡。',
+    '接下來的路，就要靠自己了。',
+    '記得每天來打幾場，把卡牌養強吧 💪'
+  ];
+
+  let idx = 0;
+  let typing = false;
+  let skipTyping = false;
+  let typingTimer = null;
+
+  const box = document.createElement('div');
+  box.id = 'tutRPG';
+  box.innerHTML = `
+    <div class="tut-rpg-box">
+      <div class="tut-rpg-name">導師</div>
+      <div class="tut-rpg-text" id="tutRpgText"></div>
+      <div class="tut-rpg-next" id="tutRpgNext" style="display:none">▼</div>
+    </div>
+  `;
+  document.body.appendChild(box);
+
+  const textEl = document.getElementById('tutRpgText');
+  const nextEl = document.getElementById('tutRpgNext');
+
+  function typeLine(str, done){
+    typing = true;
+    skipTyping = false;
+    textEl.textContent = '';
+    nextEl.style.display = 'none';
+
+    let i = 0;
+    function tick(){
+      if(skipTyping){
+        textEl.textContent = str;
+        typing = false;
+        done();
+        return;
+      }
+      if(i >= str.length){
+        typing = false;
+        done();
+        return;
+      }
+      textEl.textContent = str.slice(0, ++i);
+      typingTimer = setTimeout(tick, 55);
+    }
+    tick();
+  }
+
+  function advance(){
+    if(typing){
+      // 正在打字 → 點一下直接跳到完整顯示
+      skipTyping = true;
+      clearTimeout(typingTimer);
+      return;
+    }
+    if(idx >= lines.length){
+      // 對話結束
+      clearTimeout(typingTimer);
+      box.style.transition = 'opacity .3s';
+      box.style.opacity = '0';
+      setTimeout(() => {
+        box.remove();
+        try { S.rare(); } catch(e){}
+        finishTutorial();
+      }, 300);
+      return;
+    }
+    const line = lines[idx++];
+    typeLine(line, () => {
+      nextEl.style.display = 'block';
+    });
+  }
+
+  box.onclick = advance;
+  advance();
 }
 
   /* ========== Blocker ========== */
@@ -4413,6 +4595,7 @@ function stepClickTenDraw(){
       tut.step = 'fighting';
       console.log('[Tutorial] 進入教學戰鬥');
     }
+    });
 
   /* ========== Hook: nextQuestion ========== */
   if(typeof window.nextQuestion === 'function'){
@@ -4423,6 +4606,7 @@ function stepClickTenDraw(){
       return r;
     };
   }
+
 
   /* ========== Hook: doHeroAttack ========== */
   if(typeof window.doHeroAttack === 'function'){
