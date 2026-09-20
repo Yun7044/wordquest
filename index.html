@@ -4536,6 +4536,530 @@ init();
   console.log('[Tutorial] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   新手引導 v2 — 修復版
+   1. 虛線框不再旋轉，改用呼吸效果
+   2. 加入戰鬥中的作答引導
+   3. 修復按鈕被點擊後引導卡住的問題
+   ========================================================= */
+(function(){
+  'use strict';
+
+  const TUT_KEY = 'wordquest_tut_v1';
+
+  // 先移除 v1 的痕跡（如果還活著）
+  const oldRoot = document.getElementById('tutRoot');
+  const oldModal = document.getElementById('tutModal');
+  const oldStyle = document.querySelector('style[data-tut="v1"]');
+  if (oldRoot) oldRoot.remove();
+  if (oldModal) oldModal.remove();
+  if (oldStyle) oldStyle.remove();
+
+  let done = false;
+  try { done = localStorage.getItem(TUT_KEY) === '1'; } catch(e) {}
+  if (done) {
+    console.log('[Tutorial v2] 已完成，跳過');
+    return;
+  }
+
+  console.log('[Tutorial v2] 啟動');
+
+  /* ========== CSS ========== */
+  const css = `
+#tutRoot { position:fixed; inset:0; z-index:5000; pointer-events:none; }
+#tutBlocker { position:absolute; inset:0; z-index:1; pointer-events:none; }
+#tutBlocker.active { pointer-events:auto; }
+
+#tutSpotlight {
+  position:absolute;
+  border-radius:14px;
+  box-shadow:0 0 0 9999px rgba(4,6,12,.78);
+  transition:all .35s cubic-bezier(.2,1,.3,1);
+  pointer-events:none;
+  z-index:2;
+  border:2px solid rgba(255,217,61,.95);
+  box-sizing:border-box;
+  animation:tutBreath 2s ease-in-out infinite;
+}
+@keyframes tutBreath {
+  0%,100% {
+    box-shadow:0 0 0 9999px rgba(4,6,12,.78),
+               0 0 0 0 rgba(255,217,61,.6);
+    border-color:rgba(255,217,61,.95);
+  }
+  50% {
+    box-shadow:0 0 0 9999px rgba(4,6,12,.78),
+               0 0 0 10px rgba(255,217,61,.25);
+    border-color:rgba(255,217,61,1);
+  }
+}
+#tutSpotlight.shake { animation:tutShake .4s; }
+@keyframes tutShake {
+  0%,100%{ transform:translate(0,0); }
+  25%{ transform:translate(-8px,0); }
+  75%{ transform:translate(8px,0); }
+}
+
+#tutTip {
+  position:absolute;
+  max-width:280px;
+  background:linear-gradient(180deg,#1f2642,#141a2e);
+  border:1px solid rgba(255,217,61,.5);
+  border-radius:14px;
+  padding:12px 16px;
+  font-size:13px; font-weight:700; color:#e8ecf5;
+  letter-spacing:.3px; line-height:1.55; text-align:center;
+  box-shadow:0 12px 32px -8px rgba(0,0,0,.95),
+             0 0 24px -8px rgba(255,217,61,.5);
+  animation:tutTipIn .4s cubic-bezier(.2,1.4,.4,1);
+  z-index:3;
+  pointer-events:none;
+}
+@keyframes tutTipIn {
+  from { opacity:0; transform:translateY(10px) scale(.9); }
+  to   { opacity:1; transform:none; }
+}
+.tut-tip-arrow {
+  position:absolute;
+  width:0; height:0;
+  border-left:8px solid transparent;
+  border-right:8px solid transparent;
+  margin-left:-8px;
+}
+.tut-tip-arrow[data-dir="up"] { top:-9px; border-bottom:9px solid rgba(255,217,61,.5); }
+.tut-tip-arrow[data-dir="down"] { bottom:-9px; border-top:9px solid rgba(255,217,61,.5); }
+
+#tutModal {
+  position:fixed; inset:0; z-index:5100;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(4,6,12,.8);
+  backdrop-filter:blur(8px);
+  animation:tutFadeIn .3s ease;
+}
+#tutModal.hidden { display:none; }
+@keyframes tutFadeIn { from{opacity:0} to{opacity:1} }
+
+.tut-box {
+  width:84%; max-width:340px; padding:26px 22px 22px;
+  background:linear-gradient(180deg,#1a2038,#0f1424);
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 24px 70px -20px rgba(0,0,0,.95),
+             0 0 40px -10px rgba(139,124,255,.4);
+  text-align:center;
+  animation:tutBoxIn .4s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes tutBoxIn {
+  from { opacity:0; transform:scale(.85) translateY(20px); }
+  to   { opacity:1; transform:none; }
+}
+.tut-box-icon {
+  font-size:52px; margin-bottom:8px;
+  filter:drop-shadow(0 0 24px rgba(139,124,255,.7));
+  animation:tutIconPulse 1.8s ease-in-out infinite;
+}
+@keyframes tutIconPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.tut-box-title {
+  font-size:22px; font-weight:900; letter-spacing:1px;
+  margin-bottom:10px;
+  background:linear-gradient(135deg,#ffd93d,#ff9500);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent;
+}
+.tut-box-desc {
+  font-size:13px; color:#b9c0d8;
+  line-height:1.7; margin-bottom:22px;
+}
+  `;
+  const styleEl = document.createElement('style');
+  styleEl.dataset.tut = 'v2';
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+
+  /* ========== DOM ========== */
+  const root = document.createElement('div');
+  root.id = 'tutRoot';
+  root.innerHTML = `
+    <div id="tutBlocker"></div>
+    <div id="tutSpotlight" style="display:none"></div>
+    <div id="tutTip" style="display:none">
+      <div class="tut-tip-arrow" data-dir="up"></div>
+      <div id="tutTipText"></div>
+    </div>
+  `;
+  document.body.appendChild(root);
+
+  const modal = document.createElement('div');
+  modal.id = 'tutModal';
+  modal.classList.add('hidden');
+  document.body.appendChild(modal);
+
+  /* ========== 狀態 ========== */
+  const tut = { step: 'idle', target: null };
+  let tutorialFighting = false;
+
+  /* ========== 工具 ========== */
+  const $id = id => document.getElementById(id);
+  const $qs = sel => document.querySelector(sel);
+
+  function isVisible(el) {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+
+  function positionSpotlight(el, pad = 8) {
+    if (!el || !isVisible(el)) return false;
+    const r = el.getBoundingClientRect();
+    const sp = $id('tutSpotlight');
+    sp.style.left = (r.left - pad) + 'px';
+    sp.style.top = (r.top - pad) + 'px';
+    sp.style.width = (r.width + pad*2) + 'px';
+    sp.style.height = (r.height + pad*2) + 'px';
+    return true;
+  }
+
+  function positionTip(el) {
+    if (!el || !isVisible(el)) return false;
+    const r = el.getBoundingClientRect();
+    const tip = $id('tutTip');
+
+    tip.style.visibility = 'hidden';
+    tip.style.display = 'block';
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+
+    const spaceBelow = window.innerHeight - r.bottom;
+    const spaceAbove = r.top;
+    const useAbove = spaceBelow < th + 30 && spaceAbove > spaceBelow;
+
+    let top, left, arrowDir;
+    if (useAbove) {
+      top = r.top - th - 14;
+      arrowDir = 'down';
+    } else {
+      top = r.bottom + 14;
+      arrowDir = 'up';
+    }
+    left = r.left + r.width/2 - tw/2;
+
+    left = Math.max(10, Math.min(window.innerWidth - tw - 10, left));
+    top = Math.max(10, Math.min(window.innerHeight - th - 10, top));
+
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    tip.style.visibility = '';
+
+    const arrow = tip.querySelector('.tut-tip-arrow');
+    arrow.dataset.dir = arrowDir;
+    arrow.style.left = (r.left + r.width/2 - left) + 'px';
+    return true;
+  }
+
+  function showSpotlight(selector, text) {
+    const el = typeof selector === 'string' ? $qs(selector) : selector;
+    if (!el || !isVisible(el)) return false;
+    tut.target = el;
+    $id('tutSpotlight').style.display = 'block';
+    $id('tutTip').style.display = 'block';
+    $id('tutTipText').innerHTML = text;
+    positionSpotlight(el);
+    positionTip(el);
+    $id('tutBlocker').classList.add('active');
+    return true;
+  }
+
+  function retrySpotlight(selector, text, maxRetry = 25, interval = 150) {
+    let n = 0;
+    function attempt(){
+      const el = typeof selector === 'string' ? $qs(selector) : selector;
+      if (el && isVisible(el)) {
+        showSpotlight(el, text);
+        return;
+      }
+      if (++n >= maxRetry) return;
+      setTimeout(attempt, interval);
+    }
+    attempt();
+  }
+
+  function hideSpotlight() {
+    $id('tutSpotlight').style.display = 'none';
+    $id('tutTip').style.display = 'none';
+    $id('tutBlocker').classList.remove('active');
+    tut.target = null;
+  }
+
+  function shakeSpotlight() {
+    const sp = $id('tutSpotlight');
+    sp.classList.remove('shake');
+    void sp.offsetWidth;
+    sp.classList.add('shake');
+    try { S.wrong(); } catch(e) {}
+  }
+
+  function showModal(html) {
+    modal.innerHTML = html;
+    modal.classList.remove('hidden');
+  }
+  function hideModal() {
+    modal.classList.add('hidden');
+    modal.innerHTML = '';
+  }
+
+  function finishTutorial() {
+    try { localStorage.setItem(TUT_KEY, '1'); } catch(e) {}
+    hideSpotlight();
+    hideModal();
+    setTimeout(() => { root.remove(); modal.remove(); }, 200);
+    console.log('[Tutorial v2] 完成 ✓');
+  }
+
+  /* ========== 步驟 ========== */
+  function stepWelcome() {
+    tut.step = 'welcome';
+    hideSpotlight();
+    showModal(`
+      <div class="tut-box">
+        <div class="tut-box-icon">⚔️</div>
+        <h2 class="tut-box-title">歡迎來到單字遠征</h2>
+        <p class="tut-box-desc">
+          用抽到的單字卡，擊倒知識的敵人<br>
+          先帶你走一遍完整流程吧！
+        </p>
+        <button class="big-btn" id="tutStartBtn">開始教學</button>
+      </div>
+    `);
+    $id('tutStartBtn').onclick = () => {
+      try { S.click(); } catch(e) {}
+      hideModal();
+      stepClickBattle();
+    };
+  }
+
+  function stepClickBattle() {
+    tut.step = 'clickBattle';
+    try {
+      if (typeof currentScreen !== 'undefined' && currentScreen !== 'home') {
+        if (typeof switchScreen === 'function') switchScreen('home');
+      }
+    } catch(e) {}
+    setTimeout(() => {
+      retrySpotlight('#startBattleBtn', '點這裡，開始你的第一場戰鬥！');
+    }, 300);
+  }
+
+  function stepAnswerQuestion() {
+    tut.step = 'answer';
+    hideSpotlight();
+    // 等選項按鈕渲染完
+    setTimeout(() => {
+      if (!battle || !battle.currentQ) return;
+      const opts = document.querySelectorAll('#options .opt');
+      const idx = battle.currentQ.correctIndex;
+      if (opts[idx]) {
+        showSpotlight(opts[idx], '點擊正確答案，攻擊敵人！');
+        // 每秒重新定位，避免版面滑動
+        const iv = setInterval(() => {
+          if (tut.step !== 'answer') { clearInterval(iv); return; }
+          const o = document.querySelectorAll('#options .opt');
+          if (o[idx]) {
+            positionSpotlight(o[idx]);
+            positionTip(o[idx]);
+          }
+        }, 500);
+      }
+    }, 250);
+  }
+
+  function stepClickResult() {
+    tut.step = 'clickResult';
+    hideSpotlight();
+    setTimeout(() => {
+      retrySpotlight('#resultBtn', '太棒了！點這裡繼續');
+    }, 500);
+  }
+
+  function stepGoGacha() {
+    tut.step = 'goGacha';
+    hideSpotlight();
+    setTimeout(() => {
+      retrySpotlight('.navbtn[data-screen="gacha"]', '去抽卡吧！點下面的「抽卡」');
+    }, 400);
+  }
+
+  function stepClickTenDraw() {
+    tut.step = 'clickTenDraw';
+    hideSpotlight();
+    setTimeout(() => {
+      retrySpotlight('#drawTenBtn', '十連抽試試手氣！<br>新手金幣剛好夠 600');
+    }, 400);
+  }
+
+  function stepDone() {
+    tut.step = 'done';
+    hideSpotlight();
+    showModal(`
+      <div class="tut-box">
+        <div class="tut-box-icon">🎉</div>
+        <h2 class="tut-box-title">教學完成！</h2>
+        <p class="tut-box-desc">
+          你已經學會了戰鬥與抽卡<br>
+          接下來就靠自己囉！<br><br>
+          記得每天來打幾場，<br>
+          把卡牌養強吧 💪
+        </p>
+        <button class="big-btn" id="tutFinishBtn">開始冒險</button>
+      </div>
+    `);
+    $id('tutFinishBtn').onclick = () => {
+      try { S.rare(); } catch(e) {}
+      finishTutorial();
+    };
+  }
+
+  /* ========== Blocker 點擊（只讓高亮區可點） ========== */
+  $id('tutBlocker').addEventListener('click', (e) => {
+    const target = tut.target;
+    if (!target) return;
+    const r = target.getBoundingClientRect();
+    const x = e.clientX, y = e.clientY;
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+      try { target.click(); } catch(err) {}
+    } else {
+      shakeSpotlight();
+    }
+  });
+
+  /* ========== 事件推進 ========== */
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (!t || !t.closest) return;
+
+    if (tut.step === 'clickBattle' && t.closest('#startBattleBtn')) {
+      hideSpotlight();
+      tutorialFighting = true;
+      tut.step = 'fighting';
+      console.log('[Tutorial v2] 進入教學戰鬥');
+    }
+
+    if (tut.step === 'clickResult' && t.closest('#resultBtn')) {
+      // 玩家按了繼續前進 → 立刻清除引導
+      hideSpotlight();
+      setTimeout(stepGoGacha, 500);
+    }
+
+    if (tut.step === 'goGacha' && t.closest('.navbtn[data-screen="gacha"]')) {
+      hideSpotlight();
+      setTimeout(stepClickTenDraw, 500);
+    }
+
+    if (tut.step === 'clickTenDraw' && t.closest('#drawTenBtn')) {
+      hideSpotlight();
+      setTimeout(() => {
+        tut.step = 'done';
+        stepDone();
+      }, 3500);
+    }
+  }, true);
+
+  /* ========== Hook: nextQuestion → 引導作答 ========== */
+  if (typeof window.nextQuestion === 'function') {
+    const _origNextQuestion = window.nextQuestion;
+    window.nextQuestion = function() {
+      const r = _origNextQuestion.apply(this, arguments);
+      if (tutorialFighting) {
+        // 每次出新題都引導一次（答錯會重新出題）
+        setTimeout(stepAnswerQuestion, 400);
+      }
+      return r;
+    };
+    console.log('[Tutorial v2] hook nextQuestion ✓');
+  }
+
+  /* ========== Hook: 教學戰鬥中傷害 x20 + 必暴擊 ========== */
+  if (typeof window.doHeroAttack === 'function') {
+    const _orig = window.doHeroAttack;
+    window.doHeroAttack = function(dmg, crit) {
+      if (tutorialFighting) {
+        return _orig.call(this, Math.round(dmg * 20), true);
+      }
+      return _orig.call(this, dmg, crit);
+    };
+    console.log('[Tutorial v2] hook doHeroAttack ✓');
+  }
+
+  /* ========== Hook: 教學戰鬥中敵人攻擊無效 ========== */
+  if (typeof window.doEnemyAttack === 'function') {
+    const _orig = window.doEnemyAttack;
+    window.doEnemyAttack = function() {
+      if (tutorialFighting) {
+        const enemyF = document.getElementById('enemyF');
+        if (enemyF) {
+          enemyF.classList.remove('attacking');
+          void enemyF.offsetWidth;
+          enemyF.classList.add('attacking');
+        }
+        setTimeout(() => {
+          if (enemyF) enemyF.classList.remove('attacking');
+          if (typeof window.nextQuestion === 'function') {
+            window.nextQuestion();
+          }
+        }, 600);
+        return;
+      }
+      return _orig.call(this);
+    };
+    console.log('[Tutorial v2] hook doEnemyAttack ✓');
+  }
+
+  /* ========== Hook: showResult → 戰鬥結束推進 ========== */
+  if (typeof window.showResult === 'function') {
+    const _orig = window.showResult;
+    window.showResult = function(win, gold, nextStage) {
+      const result = _orig.call(this, win, gold, nextStage);
+      if (tutorialFighting) {
+        tutorialFighting = false;
+        setTimeout(() => {
+          tut.step = 'clickResult';
+          stepClickResult();
+        }, 500);
+      }
+      return result;
+    };
+    console.log('[Tutorial v2] hook showResult ✓');
+  }
+
+  /* ========== 定期重新定位（僅當引導目標還存在） ========== */
+  setInterval(() => {
+    if (tut.target && $id('tutSpotlight').style.display !== 'none') {
+      if (!isVisible(tut.target)) {
+        // 目標消失 → 隱藏引導，避免卡在角落
+        hideSpotlight();
+        return;
+      }
+      positionSpotlight(tut.target);
+      positionTip(tut.target);
+    }
+  }, 400);
+
+  window.addEventListener('resize', () => {
+    if (tut.target && isVisible(tut.target)) {
+      positionSpotlight(tut.target);
+      positionTip(tut.target);
+    }
+  });
+
+  /* ========== 啟動 ========== */
+  setTimeout(() => {
+    stepWelcome();
+  }, 800);
+
+  console.log('[Tutorial v2] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
