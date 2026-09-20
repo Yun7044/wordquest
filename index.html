@@ -3451,6 +3451,81 @@ init();
   console.log('[Fix2] 全部就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   Fix3：戰鬥殘留樣式修復
+   每次開始戰鬥前，強制清空 battle-ui / battleResult 的 inline style
+   ========================================================= */
+(function(){
+  'use strict';
+
+  console.log('[Fix3] 戰鬥殘留修復啟動');
+
+  const _prevStartBattle = window.startBattle;
+
+  if (typeof _prevStartBattle !== 'function') {
+    console.error('[Fix3] 找不到 startBattle，無法包裝');
+    return;
+  }
+
+  window.startBattle = function(grammar){
+    console.log('[Fix3] 準備開始戰鬥，重置殘留樣式...');
+
+    // 1. 徹底清空戰鬥相關元素的 inline style
+    const bui = document.getElementById('battle-ui');
+    const box = document.getElementById('battleResult');
+    const fx  = document.getElementById('fxLayer');
+
+    if (bui) {
+      bui.classList.add('closed');
+      bui.removeAttribute('style');  // 完全清掉 inline style
+    }
+    if (box) {
+      box.classList.add('hidden');
+      box.innerHTML = '';
+      box.removeAttribute('style');
+    }
+    if (fx) {
+      fx.innerHTML = '';
+    }
+
+    // 2. 強制 reflow，讓瀏覽器套用上面的變更
+    if (bui) void bui.offsetWidth;
+
+    // 3. 呼叫原本的 startBattle
+    try {
+      _prevStartBattle.call(window, grammar);
+      console.log('[Fix3] startBattle 執行完成 ✓');
+    } catch(e) {
+      console.error('[Fix3] startBattle 執行失敗:', e);
+    }
+  };
+
+  // 額外保險：切換畫面時也清一次（如果切到主頁）
+  const _prevSwitchScreen = window.switchScreen;
+  if (typeof _prevSwitchScreen === 'function') {
+    window.switchScreen = function(name){
+      if (name === 'home') {
+        const bui = document.getElementById('battle-ui');
+        const box = document.getElementById('battleResult');
+        if (bui) {
+          bui.classList.add('closed');
+          bui.removeAttribute('style');
+        }
+        if (box) {
+          box.classList.add('hidden');
+          box.innerHTML = '';
+          box.removeAttribute('style');
+        }
+      }
+      return _prevSwitchScreen.call(window, name);
+    };
+  }
+
+  console.log('[Fix3] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
