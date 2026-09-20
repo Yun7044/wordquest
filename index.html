@@ -5060,6 +5060,629 @@ init();
   console.log('[Tutorial v2] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   新手引導 v3 — 終極隔離版
+   - 完全隔離 v1/v2 的殘留
+   - 修復旋轉虛線框
+   - 加入戰鬥中作答引導
+   - 修復回主畫面卡住的 bug
+   ========================================================= */
+(function(){
+  'use strict';
+
+  const TUT_KEY = 'wordquest_tut_v1';
+
+  let done = false;
+  try { done = localStorage.getItem(TUT_KEY) === '1'; } catch(e) {}
+  if (done) {
+    console.log('[Tutorial v3] 已完成，跳過');
+    // 順便清理一下 v1/v2 的殘留
+    cleanupOldTutorial();
+    return;
+  }
+
+  console.log('[Tutorial v3] 啟動');
+
+  /* =========================================================
+     1. 隔離 v1 / v2 的殘留
+     ========================================================= */
+  function cleanupOldTutorial() {
+    // 1-1. 移除 v1/v2 的 DOM
+    const oldIds = ['tutRoot','tutModal','tutSpotlight','tutTip','tutTipText','tutBlocker',
+                    'tutv2Root','tutv2Modal','tutv2Spotlight','tutv2Tip','tutv2Blocker'];
+    oldIds.forEach(id => {
+      document.querySelectorAll('#' + id).forEach(el => el.remove());
+    });
+
+    // 1-2. 移除 v1/v2 的 style
+    document.querySelectorAll('style').forEach(s => {
+      const t = s.textContent;
+      const isOld = (
+        t.includes('tutSpin') ||
+        t.includes('tutBreath') ||
+        t.includes('@keyframes tutShake') ||
+        t.includes('@keyframes tutTipIn') ||
+        t.includes('@keyframes tutFadeIn') ||
+        t.includes('@keyframes tutBoxIn') ||
+        t.includes('@keyframes tutIconPulse') ||
+        (t.includes('#tutSpotlight') && !s.dataset.tut3)
+      );
+      if (isOld && !s.dataset.tut3) s.remove();
+    });
+
+    // 1-3. 加 killer CSS，封殺 v1/v2 所有 ID（防禦性）
+    const killerCSS = `
+      #tutRoot, #tutBlocker, #tutSpotlight, #tutTip, #tutTipText, #tutModal,
+      #tutv2Root, #tutv2Blocker, #tutv2Spotlight, #tutv2Tip, #tutv2Modal {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        position: fixed !important;
+        top: -9999px !important;
+        left: -9999px !important;
+      }
+    `;
+    const killerStyle = document.createElement('style');
+    killerStyle.dataset.tut3 = 'killer';
+    killerStyle.textContent = killerCSS;
+    document.head.appendChild(killerStyle);
+
+    // 1-4. 創建假的 v1/v2 元素，讓它們的 setInterval 不報錯
+    ['tutSpotlight','tutTip','tutBlocker','tutv2Spotlight','tutv2Tip','tutv2Blocker'].forEach(id => {
+      if (!document.getElementById(id)) {
+        const fake = document.createElement('div');
+        fake.id = id;
+        document.body.appendChild(fake);
+      }
+    });
+  }
+
+  // 執行清理
+  cleanupOldTutorial();
+
+  /* =========================================================
+     2. v3 的 CSS（完全用 tut3 前綴）
+     ========================================================= */
+  const css = `
+#tut3Root { position:fixed; inset:0; z-index:5000; pointer-events:none; }
+#tut3Blocker { position:absolute; inset:0; z-index:1; pointer-events:none; }
+#tut3Blocker.active { pointer-events:auto; }
+
+#tut3Spotlight {
+  position:absolute;
+  border-radius:14px;
+  box-shadow:0 0 0 9999px rgba(4,6,12,.78);
+  transition:all .35s cubic-bezier(.2,1,.3,1);
+  pointer-events:none;
+  z-index:2;
+  border:2px solid rgba(255,217,61,.95);
+  box-sizing:border-box;
+  animation:tut3Breath 2s ease-in-out infinite;
+}
+@keyframes tut3Breath {
+  0%,100% {
+    box-shadow:0 0 0 9999px rgba(4,6,12,.78),
+               0 0 0 0 rgba(255,217,61,.6);
+    border-color:rgba(255,217,61,.95);
+  }
+  50% {
+    box-shadow:0 0 0 9999px rgba(4,6,12,.78),
+               0 0 0 10px rgba(255,217,61,.25);
+    border-color:rgba(255,217,61,1);
+  }
+}
+#tut3Spotlight.shake { animation:tut3Shake .4s !important; }
+@keyframes tut3Shake {
+  0%,100%{ transform:translate(0,0); }
+  25%{ transform:translate(-8px,0); }
+  75%{ transform:translate(8px,0); }
+}
+
+#tut3Tip {
+  position:absolute;
+  max-width:280px;
+  background:linear-gradient(180deg,#1f2642,#141a2e);
+  border:1px solid rgba(255,217,61,.5);
+  border-radius:14px;
+  padding:12px 16px;
+  font-size:13px; font-weight:700; color:#e8ecf5;
+  letter-spacing:.3px; line-height:1.55; text-align:center;
+  box-shadow:0 12px 32px -8px rgba(0,0,0,.95),
+             0 0 24px -8px rgba(255,217,61,.5);
+  animation:tut3TipIn .4s cubic-bezier(.2,1.4,.4,1);
+  z-index:3;
+  pointer-events:none;
+}
+@keyframes tut3TipIn {
+  from { opacity:0; transform:translateY(10px) scale(.9); }
+  to   { opacity:1; transform:none; }
+}
+.tut3-tip-arrow {
+  position:absolute;
+  width:0; height:0;
+  border-left:8px solid transparent;
+  border-right:8px solid transparent;
+  margin-left:-8px;
+}
+.tut3-tip-arrow[data-dir="up"] { top:-9px; border-bottom:9px solid rgba(255,217,61,.5); }
+.tut3-tip-arrow[data-dir="down"] { bottom:-9px; border-top:9px solid rgba(255,217,61,.5); }
+
+#tut3Modal {
+  position:fixed; inset:0; z-index:5100;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(4,6,12,.8);
+  backdrop-filter:blur(8px);
+  animation:tut3FadeIn .3s ease;
+}
+#tut3Modal.hidden { display:none; }
+@keyframes tut3FadeIn { from{opacity:0} to{opacity:1} }
+
+.tut3-box {
+  width:84%; max-width:340px; padding:26px 22px 22px;
+  background:linear-gradient(180deg,#1a2038,#0f1424);
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 24px 70px -20px rgba(0,0,0,.95),
+             0 0 40px -10px rgba(139,124,255,.4);
+  text-align:center;
+  animation:tut3BoxIn .4s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes tut3BoxIn {
+  from { opacity:0; transform:scale(.85) translateY(20px); }
+  to   { opacity:1; transform:none; }
+}
+.tut3-box-icon {
+  font-size:52px; margin-bottom:8px;
+  filter:drop-shadow(0 0 24px rgba(139,124,255,.7));
+  animation:tut3IconPulse 1.8s ease-in-out infinite;
+}
+@keyframes tut3IconPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.tut3-box-title {
+  font-size:22px; font-weight:900; letter-spacing:1px;
+  margin-bottom:10px;
+  background:linear-gradient(135deg,#ffd93d,#ff9500);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent;
+}
+.tut3-box-desc {
+  font-size:13px; color:#b9c0d8;
+  line-height:1.7; margin-bottom:22px;
+}
+  `;
+  const styleEl = document.createElement('style');
+  styleEl.dataset.tut3 = 'main';
+  styleEl.textContent = css;
+  document.head.appendChild(styleEl);
+
+  /* =========================================================
+     3. DOM
+     ========================================================= */
+  const root = document.createElement('div');
+  root.id = 'tut3Root';
+  root.innerHTML = `
+    <div id="tut3Blocker"></div>
+    <div id="tut3Spotlight" style="display:none"></div>
+    <div id="tut3Tip" style="display:none">
+      <div class="tut3-tip-arrow" data-dir="up"></div>
+      <div id="tut3TipText"></div>
+    </div>
+  `;
+  document.body.appendChild(root);
+
+  const modal = document.createElement('div');
+  modal.id = 'tut3Modal';
+  modal.classList.add('hidden');
+  document.body.appendChild(modal);
+
+  /* =========================================================
+     4. 狀態 & 工具
+     ========================================================= */
+  const tut = { step: 'idle', target: null };
+  let tutorialFighting = false;
+  let chatRelocateTimer = null;
+
+  const $id = id => document.getElementById(id);
+  const $qs = sel => document.querySelector(sel);
+
+  function isVisible(el) {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  }
+
+  function positionSpotlight(el, pad = 8) {
+    if (!el || !isVisible(el)) return false;
+    const r = el.getBoundingClientRect();
+    const sp = $id('tut3Spotlight');
+    if (!sp) return false;
+    sp.style.left = (r.left - pad) + 'px';
+    sp.style.top = (r.top - pad) + 'px';
+    sp.style.width = (r.width + pad*2) + 'px';
+    sp.style.height = (r.height + pad*2) + 'px';
+    return true;
+  }
+
+  function positionTip(el) {
+    if (!el || !isVisible(el)) return false;
+    const r = el.getBoundingClientRect();
+    const tip = $id('tut3Tip');
+    if (!tip) return false;
+
+    tip.style.visibility = 'hidden';
+    tip.style.display = 'block';
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+
+    const spaceBelow = window.innerHeight - r.bottom;
+    const spaceAbove = r.top;
+    const useAbove = spaceBelow < th + 30 && spaceAbove > spaceBelow;
+
+    let top, left, arrowDir;
+    if (useAbove) {
+      top = r.top - th - 14;
+      arrowDir = 'down';
+    } else {
+      top = r.bottom + 14;
+      arrowDir = 'up';
+    }
+    left = r.left + r.width/2 - tw/2;
+    left = Math.max(10, Math.min(window.innerWidth - tw - 10, left));
+    top = Math.max(10, Math.min(window.innerHeight - th - 10, top));
+
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+    tip.style.visibility = '';
+
+    const arrow = tip.querySelector('.tut3-tip-arrow');
+    if (arrow) {
+      arrow.dataset.dir = arrowDir;
+      arrow.style.left = (r.left + r.width/2 - left) + 'px';
+    }
+    return true;
+  }
+
+  function showSpotlight(selector, text) {
+    const el = typeof selector === 'string' ? $qs(selector) : selector;
+    if (!el || !isVisible(el)) return false;
+    tut.target = el;
+    const sp = $id('tut3Spotlight');
+    const tp = $id('tut3Tip');
+    if (sp) sp.style.display = 'block';
+    if (tp) tp.style.display = 'block';
+    const tt = $id('tut3TipText');
+    if (tt) tt.innerHTML = text;
+    positionSpotlight(el);
+    positionTip(el);
+    const b = $id('tut3Blocker');
+    if (b) b.classList.add('active');
+    return true;
+  }
+
+  function retrySpotlight(selector, text, maxRetry = 25, interval = 150) {
+    let n = 0;
+    function attempt(){
+      const el = typeof selector === 'string' ? $qs(selector) : selector;
+      if (el && isVisible(el)) {
+        showSpotlight(el, text);
+        return;
+      }
+      if (++n >= maxRetry) return;
+      setTimeout(attempt, interval);
+    }
+    attempt();
+  }
+
+  function hideSpotlight() {
+    const sp = $id('tut3Spotlight');
+    const tp = $id('tut3Tip');
+    if (sp) sp.style.display = 'none';
+    if (tp) tp.style.display = 'none';
+    const b = $id('tut3Blocker');
+    if (b) b.classList.remove('active');
+    tut.target = null;
+  }
+
+  function shakeSpotlight() {
+    const sp = $id('tut3Spotlight');
+    if (!sp) return;
+    sp.classList.remove('shake');
+    void sp.offsetWidth;
+    sp.classList.add('shake');
+    try { S.wrong(); } catch(e) {}
+  }
+
+  function showModal(html) {
+    if (!modal) return;
+    modal.innerHTML = html;
+    modal.classList.remove('hidden');
+  }
+  function hideModal() {
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.innerHTML = '';
+  }
+
+  function finishTutorial() {
+    try { localStorage.setItem(TUT_KEY, '1'); } catch(e) {}
+    hideSpotlight();
+    hideModal();
+    if (chatRelocateTimer) clearInterval(chatRelocateTimer);
+    setTimeout(() => {
+      if (root) root.remove();
+      if (modal) modal.remove();
+    }, 200);
+    console.log('[Tutorial v3] 完成 ✓');
+  }
+
+  /* =========================================================
+     5. 步驟
+     ========================================================= */
+  function stepWelcome() {
+    tut.step = 'welcome';
+    hideSpotlight();
+    showModal(`
+      <div class="tut3-box">
+        <div class="tut3-box-icon">⚔️</div>
+        <h2 class="tut3-box-title">歡迎來到單字遠征</h2>
+        <p class="tut3-box-desc">
+          用抽到的單字卡，擊倒知識的敵人<br>
+          先帶你走一遍完整流程吧！
+        </p>
+        <button class="big-btn" id="tut3StartBtn">開始教學</button>
+      </div>
+    `);
+    const btn = $id('tut3StartBtn');
+    if (btn) btn.onclick = () => {
+      try { S.click(); } catch(e) {}
+      hideModal();
+      stepClickBattle();
+    };
+  }
+
+  function stepClickBattle() {
+    tut.step = 'clickBattle';
+    try {
+      if (typeof currentScreen !== 'undefined' && currentScreen !== 'home') {
+        if (typeof switchScreen === 'function') switchScreen('home');
+      }
+    } catch(e) {}
+    setTimeout(() => {
+      retrySpotlight('#startBattleBtn', '點這裡，開始你的第一場戰鬥！');
+    }, 300);
+  }
+
+  function stepAnswerQuestion() {
+    if (tut.step !== 'fighting') return;
+    // 找正確答案按鈕
+    if (typeof battle === 'undefined' || !battle || !battle.currentQ) return;
+    const opts = document.querySelectorAll('#options .opt');
+    const idx = battle.currentQ.correctIndex;
+    if (!opts[idx]) return;
+    tut.step = 'answer';
+    showSpotlight(opts[idx], '點擊正確答案，攻擊敵人！');
+    // 定期重新定位（版面變動時跟上）
+    if (chatRelocateTimer) clearInterval(chatRelocateTimer);
+    chatRelocateTimer = setInterval(() => {
+      if (tut.step !== 'answer') { clearInterval(chatRelocateTimer); chatRelocateTimer = null; return; }
+      const o = document.querySelectorAll('#options .opt');
+      if (o[idx]) {
+        positionSpotlight(o[idx]);
+        positionTip(o[idx]);
+      }
+    }, 500);
+  }
+
+  function stepClickResult() {
+    tut.step = 'clickResult';
+    hideSpotlight();
+    if (chatRelocateTimer) { clearInterval(chatRelocateTimer); chatRelocateTimer = null; }
+    setTimeout(() => {
+      retrySpotlight('#resultBtn', '太棒了！點這裡繼續');
+    }, 500);
+  }
+
+  function stepGoGacha() {
+    tut.step = 'goGacha';
+    hideSpotlight();
+    setTimeout(() => {
+      retrySpotlight('.navbtn[data-screen="gacha"]', '去抽卡吧！點下面的「抽卡」');
+    }, 400);
+  }
+
+  function stepClickTenDraw() {
+    tut.step = 'clickTenDraw';
+    hideSpotlight();
+    setTimeout(() => {
+      retrySpotlight('#drawTenBtn', '十連抽試試手氣！<br>新手金幣剛好夠 600');
+    }, 400);
+  }
+
+  function stepDone() {
+    tut.step = 'done';
+    hideSpotlight();
+    showModal(`
+      <div class="tut3-box">
+        <div class="tut3-box-icon">🎉</div>
+        <h2 class="tut3-box-title">教學完成！</h2>
+        <p class="tut3-box-desc">
+          你已經學會了戰鬥與抽卡<br>
+          接下來就靠自己囉！<br><br>
+          記得每天來打幾場，<br>
+          把卡牌養強吧 💪
+        </p>
+        <button class="big-btn" id="tut3FinishBtn">開始冒險</button>
+      </div>
+    `);
+    const btn = $id('tut3FinishBtn');
+    if (btn) btn.onclick = () => {
+      try { S.rare(); } catch(e) {}
+      finishTutorial();
+    };
+  }
+
+  /* =========================================================
+     6. Blocker 點擊
+     ========================================================= */
+  const blocker = $id('tut3Blocker');
+  if (blocker) {
+    blocker.addEventListener('click', (e) => {
+      const target = tut.target;
+      if (!target) return;
+      const r = target.getBoundingClientRect();
+      const x = e.clientX, y = e.clientY;
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        try { target.click(); } catch(err) {}
+      } else {
+        shakeSpotlight();
+      }
+    });
+  }
+
+  /* =========================================================
+     7. 事件推進
+     ========================================================= */
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (!t || !t.closest) return;
+
+    if (tut.step === 'clickBattle' && t.closest('#startBattleBtn')) {
+      hideSpotlight();
+      tutorialFighting = true;
+      tut.step = 'fighting';
+      console.log('[Tutorial v3] 進入教學戰鬥');
+    }
+
+    if (tut.step === 'clickResult' && t.closest('#resultBtn')) {
+      hideSpotlight();
+      setTimeout(stepGoGacha, 500);
+    }
+
+    if (tut.step === 'goGacha' && t.closest('.navbtn[data-screen="gacha"]')) {
+      hideSpotlight();
+      setTimeout(stepClickTenDraw, 500);
+    }
+
+    if (tut.step === 'clickTenDraw' && t.closest('#drawTenBtn')) {
+      hideSpotlight();
+      setTimeout(() => {
+        tut.step = 'done';
+        stepDone();
+      }, 3500);
+    }
+  }, true);
+
+  /* =========================================================
+     8. Hooks（用 flag 防止重複 hook）
+     ========================================================= */
+  if (typeof window.nextQuestion === 'function' && !window.nextQuestion._tut3) {
+    const _origNextQuestion = window.nextQuestion;
+    const wrapped = function() {
+      const r = _origNextQuestion.apply(this, arguments);
+      if (tutorialFighting) {
+        setTimeout(stepAnswerQuestion, 400);
+      }
+      return r;
+    };
+    wrapped._tut3 = true;
+    window.nextQuestion = wrapped;
+    console.log('[Tutorial v3] hook nextQuestion ✓');
+  }
+
+  if (typeof window.doHeroAttack === 'function' && !window.doHeroAttack._tut3) {
+    const _orig = window.doHeroAttack;
+    const wrapped = function(dmg, crit) {
+      if (tutorialFighting) {
+        return _orig.call(this, Math.round(dmg * 20), true);
+      }
+      return _orig.call(this, dmg, crit);
+    };
+    wrapped._tut3 = true;
+    window.doHeroAttack = wrapped;
+    console.log('[Tutorial v3] hook doHeroAttack ✓');
+  }
+
+  if (typeof window.doEnemyAttack === 'function' && !window.doEnemyAttack._tut3) {
+    const _orig = window.doEnemyAttack;
+    const wrapped = function() {
+      if (tutorialFighting) {
+        const enemyF = document.getElementById('enemyF');
+        if (enemyF) {
+          enemyF.classList.remove('attacking');
+          void enemyF.offsetWidth;
+          enemyF.classList.add('attacking');
+        }
+        setTimeout(() => {
+          if (enemyF) enemyF.classList.remove('attacking');
+          if (typeof window.nextQuestion === 'function') {
+            window.nextQuestion();
+          }
+        }, 600);
+        return;
+      }
+      return _orig.call(this);
+    };
+    wrapped._tut3 = true;
+    window.doEnemyAttack = wrapped;
+    console.log('[Tutorial v3] hook doEnemyAttack ✓');
+  }
+
+  if (typeof window.showResult === 'function' && !window.showResult._tut3) {
+    const _orig = window.showResult;
+    const wrapped = function(win, gold, nextStage) {
+      const result = _orig.call(this, win, gold, nextStage);
+      if (tutorialFighting) {
+        tutorialFighting = false;
+        setTimeout(() => {
+          tut.step = 'clickResult';
+          stepClickResult();
+        }, 500);
+      }
+      return result;
+    };
+    wrapped._tut3 = true;
+    window.showResult = wrapped;
+    console.log('[Tutorial v3] hook showResult ✓');
+  }
+
+  /* =========================================================
+     9. 定期重新定位 & 目標消失時自動隱藏
+     ========================================================= */
+  setInterval(() => {
+    const sp = $id('tut3Spotlight');
+    if (!sp || sp.style.display === 'none') return;
+    if (!tut.target) return;
+    if (!isVisible(tut.target)) {
+      // 目標消失（例如按鈕被移除）→ 立刻隱藏引導
+      hideSpotlight();
+      return;
+    }
+    positionSpotlight(tut.target);
+    positionTip(tut.target);
+  }, 400);
+
+  window.addEventListener('resize', () => {
+    if (tut.target && isVisible(tut.target)) {
+      positionSpotlight(tut.target);
+      positionTip(tut.target);
+    }
+  });
+
+  /* =========================================================
+     10. 啟動
+     ========================================================= */
+  setTimeout(() => {
+    stepWelcome();
+  }, 800);
+
+  console.log('[Tutorial v3] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
