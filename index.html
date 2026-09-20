@@ -3312,5 +3312,87 @@ init();
 })();
 </script>
 
+<script>
+/* =========================================================
+   修復：戰敗無法退出
+   用事件委託攔截點擊，不管原本的 onclick 為何壞掉都能救
+   ========================================================= */
+(function(){
+  'use strict';
+
+  console.log('[Fix] 戰敗退出修復已載入');
+
+  document.addEventListener('click', function(e){
+    // 用 closest 找，不管點到按鈕內的什麼都能攔到
+    const btn = e.target && e.target.closest && e.target.closest('#resultBtn');
+    if (!btn) return;
+
+    console.log('[Fix] 攔截到 resultBtn 點擊');
+
+    // 阻止原本可能壞掉的處理器
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    try {
+      // 1. 隱藏結果畫面
+      const box = document.getElementById('battleResult');
+      if (box) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+      }
+
+      // 2. 關閉戰鬥介面
+      const bui = document.getElementById('battle-ui');
+      if (bui) bui.classList.add('closed');
+
+      // 3. 強制隱藏（雙重保險，就算 class 沒生效也藏得掉）
+      if (box) box.style.display = 'none';
+      if (bui) bui.style.display = 'none';
+
+      // 4. 重新整理主畫面
+      try { renderAll(); } catch(err) { console.error('[Fix] renderAll:', err); }
+
+      // 5. 切回主畫面音樂
+      try {
+        if (typeof AudioSys !== 'undefined' && AudioSys.playMusic) {
+          const screen = (typeof currentScreen !== 'undefined') ? currentScreen : 'home';
+          AudioSys.playMusic(screen === 'gacha' ? 'gacha' : 'home');
+        }
+      } catch(err) {}
+
+      // 6. 如果主畫面是 guild，重新渲染
+      try {
+        if (typeof currentScreen !== 'undefined' && currentScreen === 'guild' && typeof renderGuild === 'function') {
+          renderGuild();
+        }
+      } catch(err) {}
+
+      console.log('[Fix] 退出成功 ✓');
+    } catch(err) {
+      console.error('[Fix] 主流程失敗:', err);
+    }
+  }, true);  // ← 捕獲階段，比任何 onclick 都早
+
+  // 保險：按 ESC 也能退出
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    const box = document.getElementById('battleResult');
+    if (!box || box.classList.contains('hidden')) return;
+
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    box.style.display = 'none';
+    const bui = document.getElementById('battle-ui');
+    if (bui) {
+      bui.classList.add('closed');
+      bui.style.display = 'none';
+    }
+    try { renderAll(); } catch(err) {}
+  });
+
+  console.log('[Fix] 戰敗退出已就緒 ✓');
+})();
+</script>
+  
 </body>
 </html>
