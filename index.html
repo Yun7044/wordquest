@@ -4816,6 +4816,487 @@ function stepDone(){
   console.log('[TutFree] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   擴充包：托福初級 + 雅思初級 + GEPT 高級
+   貼在最後一個 之後
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._examPackLoaded) return;
+  window._examPackLoaded = true;
+
+  const W = (w,zh,pos,rar,tier,forms,syn,ant,ex) =>
+    ({w,zh,pos,rar,tier,forms:forms||[],syn:syn||[],ant:ant||[],ex:ex||''});
+
+  /* ========== 托福初級 50 字 ========== */
+  window.TOEFL_BASIC = [
+    W("analyze","分析","v",1,"托福初級",["analyzes","analyzed","analyzing"],["examine","study"],["synthesize"],"Analyze the data carefully."),
+    W("approach","方法","n",1,"托福初級",["approaches"],["method","way"],[],"This approach works well."),
+    W("concept","概念","n",1,"托福初級",["concepts"],["idea","notion"],[],"The concept is simple."),
+    W("significant","顯著的","adj",1,"托福初級",["more significant","most significant"],["important","notable"],["trivial"],"A significant change occurred."),
+    W("evidence","證據","n",1,"托福初級",[],["proof","sign"],[],"We need more evidence."),
+    W("factor","因素","n",1,"托福初級",["factors"],["element","cause"],[],"Cost is a key factor."),
+    W("method","方法","n",1,"托福初級",["methods"],["way","technique"],[],"This method is effective."),
+    W("theory","理論","n",1,"托福初級",["theories"],["hypothesis","idea"],[],"The theory was proven."),
+    W("research","研究","n",1,"托福初級",[],["study","investigation"],[],"Research takes time."),
+    W("data","數據","n",1,"托福初級",[],["information","facts"],[],"The data is clear."),
+    W("structure","結構","n",1,"托福初級",["structures"],["framework","form"],[],"The structure is solid."),
+    W("function","功能","n",1,"托福初級",["functions"],["purpose","role"],[],"Its function is to protect."),
+    W("process","過程","n",1,"托福初級",["processes"],["procedure","method"],[],"The process is slow."),
+    W("context","語境","n",1,"托福初級",["contexts"],["setting","background"],[],"Read it in context."),
+    W("define","定義","v",1,"托福初級",["defines","defined","defining"],["explain","specify"],[],"Define the term first."),
+    W("establish","建立","v",1,"托福初級",["establishes","established","establishing"],["found","set up"],["abolish"],"Establish a clear goal."),
+    W("indicate","表明","v",1,"托福初級",["indicates","indicated","indicating"],["show","signal"],["conceal"],"The results indicate success."),
+    W("occur","發生","v",1,"托福初級",["occurs","occurred","occurring"],["happen","arise"],[],"It occurred last night."),
+    W("require","要求","v",1,"托福初級",["requires","required","requiring"],["need","demand"],[],"This job requires skill."),
+    W("achieve","達成","v",1,"托福初級",["achieves","achieved","achieving"],["accomplish","reach"],["fail"],"She achieved her goal."),
+    W("obtain","獲得","v",1,"托福初級",["obtains","obtained","obtaining"],["acquire","gain"],["lose"],"Obtain permission first."),
+    W("involve","涉及","v",1,"托福初級",["involves","involved","involving"],["include","engage"],["exclude"],"The task involves travel."),
+    W("maintain","維持","v",1,"托福初級",["maintains","maintained","maintaining"],["keep","preserve"],["abandon"],"Maintain your focus."),
+    W("influence","影響","n",1,"托福初級",["influences"],["effect","impact"],[],"His influence is strong."),
+    W("environment","環境","n",1,"托福初級",["environments"],["surroundings","setting"],[],"Protect the environment."),
+    W("individual","個人","n",1,"托福初級",["individuals"],["person","being"],[],"Each individual matters."),
+    W("respond","回應","v",1,"托福初級",["responds","responded","responding"],["reply","answer"],["ignore"],"Respond quickly, please."),
+    W("affect","影響","v",1,"托福初級",["affects","affected","affecting"],["influence","impact"],[],"It affects everyone."),
+    W("assume","假設","v",1,"托福初級",["assumes","assumed","assuming"],["suppose","presume"],["verify"],"Don't assume too much."),
+    W("benefit","好處","n",1,"托福初級",["benefits"],["advantage","gain"],["drawback"],"Exercise has many benefits."),
+    W("category","類別","n",1,"托福初級",["categories"],["class","group"],[],"Sort them by category."),
+    W("communicate","溝通","v",1,"托福初級",["communicates","communicated","communicating"],["talk","convey"],[],"We communicate daily."),
+    W("complex","複雜的","adj",1,"托福初級",["more complex","most complex"],["complicated","intricate"],["simple"],"This is a complex issue."),
+    W("consist","組成","v",1,"托福初級",["consists","consisted","consisting"],["comprise","contain"],[],"It consists of three parts."),
+    W("contrast","對比","n",1,"托福初級",["contrasts"],["difference","opposition"],["similarity"],"Note the contrast here."),
+    W("create","創造","v",1,"托福初級",["creates","created","creating"],["make","produce"],["destroy"],"Create a new plan."),
+    W("culture","文化","n",1,"托福初級",["cultures"],["civilization","tradition"],[],"Every culture is unique."),
+    W("determine","決定","v",1,"托福初級",["determines","determined","determining"],["decide","resolve"],["hesitate"],"Determine the cause."),
+    W("develop","發展","v",1,"托福初級",["develops","developed","developing"],["grow","evolve"],["decline"],"Develop new skills."),
+    W("economy","經濟","n",1,"托福初級",["economies"],["market","finance"],[],"The economy is growing."),
+    W("evaluate","評估","v",1,"托福初級",["evaluates","evaluated","evaluating"],["assess","judge"],[],"Evaluate the risks."),
+    W("feature","特徵","n",1,"托福初級",["features"],["characteristic","trait"],[],"A key feature is speed."),
+    W("focus","聚焦","v",1,"托福初級",["focuses","focused","focusing"],["concentrate","center"],["distract"],"Focus on your work."),
+    W("impact","影響","n",1,"托福初級",["impacts"],["effect","influence"],[],"The impact was huge."),
+    W("interpret","解釋","v",1,"托福初級",["interprets","interpreted","interpreting"],["explain","translate"],["misread"],"Interpret the results."),
+    W("investigate","調查","v",1,"托福初級",["investigates","investigated","investigating"],["examine","probe"],["ignore"],"Investigate the incident."),
+    W("participate","參與","v",1,"托福初級",["participates","participated","participating"],["join","engage"],["withdraw"],"Participate in class."),
+    W("potential","潛力","n",1,"托福初級",[],["possibility","capability"],[],"She has great potential."),
+    W("predict","預測","v",1,"托福初級",["predicts","predicted","predicting"],["forecast","anticipate"],[],"Predict the outcome."),
+    W("regulate","管理","v",1,"托福初級",["regulates","regulated","regulating"],["control","manage"],[],"Laws regulate trade."),
+  ];
+
+  /* ========== 雅思初級 50 字 ========== */
+  window.IELTS_BASIC = [
+    W("account","描述","n",1,"雅思初級",["accounts"],["description","report"],[],"Give a brief account."),
+    W("accurate","準確的","adj",1,"雅思初級",["more accurate","most accurate"],["precise","correct"],["inaccurate"],"The data is accurate."),
+    W("adapt","適應","v",1,"雅思初級",["adapts","adapted","adapting"],["adjust","modify"],["resist"],"Adapt to new rules."),
+    W("advantage","優勢","n",1,"雅思初級",["advantages"],["benefit","edge"],["drawback"],"Speed is our advantage."),
+    W("alternative","替代方案","n",1,"雅思初級",["alternatives"],["option","substitute"],[],"Find an alternative."),
+    W("apparent","明顯的","adj",1,"雅思初級",[],["obvious","evident"],["hidden"],"The reason is apparent."),
+    W("aspect","方面","n",1,"雅思初級",["aspects"],["side","facet"],[],"Every aspect matters."),
+    W("assess","評估","v",1,"雅思初級",["assesses","assessed","assessing"],["evaluate","judge"],[],"Assess the situation."),
+    W("assume","假設","v",1,"雅思初級",["assumes","assumed","assuming"],["suppose","presume"],["verify"],"Don't assume too much."),
+    W("authority","權威","n",1,"雅思初級",["authorities"],["power","control"],[],"Respect the authority."),
+    W("available","可用的","adj",1,"雅思初級",[],["accessible","obtainable"],["unavailable"],"Is it available now?"),
+    W("aware","意識到的","adj",1,"雅思初級",[],["conscious","mindful"],["unaware"],"Be aware of risks."),
+    W("capacity","容量","n",1,"雅思初級",["capacities"],["volume","ability"],[],"The capacity is limited."),
+    W("challenge","挑戰","n",1,"雅思初級",["challenges"],["difficulty","test"],[],"Face the challenge."),
+    W("circumstance","情況","n",1,"雅思初級",["circumstances"],["situation","condition"],[],"Under any circumstance."),
+    W("commit","承諾","v",1,"雅思初級",["commits","committed","committing"],["pledge","dedicate"],["quit"],"Commit to the plan."),
+    W("component","組成部分","n",1,"雅思初級",["components"],["part","element"],[],"Each component works."),
+    W("conduct","進行","v",1,"雅思初級",["conducts","conducted","conducting"],["perform","carry out"],[],"Conduct the experiment."),
+    W("consequence","後果","n",1,"雅思初級",["consequences"],["result","outcome"],["cause"],"Consider the consequences."),
+    W("considerable","相當大的","adj",1,"雅思初級",[],["substantial","large"],["small"],"It took considerable time."),
+    W("constrain","限制","v",1,"雅思初級",["constrains","constrained","constraining"],["restrict","limit"],["free"],"Don't constrain creativity."),
+    W("contribute","貢獻","v",1,"雅思初級",["contributes","contributed","contributing"],["donate","give"],["withhold"],"Everyone contributed."),
+    W("convince","說服","v",1,"雅思初級",["convinces","convinced","convincing"],["persuade","assure"],["dissuade"],"Convince the client."),
+    W("crucial","關鍵的","adj",1,"雅思初級",[],["critical","vital"],["trivial"],"This step is crucial."),
+    W("decline","下降","v",1,"雅思初級",["declines","declined","declining"],["decrease","refuse"],["increase"],"Sales declined sharply."),
+    W("demonstrate","展示","v",1,"雅思初級",["demonstrates","demonstrated","demonstrating"],["show","prove"],["hide"],"Demonstrate the method."),
+    W("dimension","維度","n",1,"雅思初級",["dimensions"],["aspect","size"],[],"Add a new dimension."),
+    W("diminish","減少","v",1,"雅思初級",["diminishes","diminished","diminishing"],["reduce","lessen"],["increase"],"His influence diminished."),
+    W("distinct","不同的","adj",1,"雅思初級",["more distinct","most distinct"],["different","clear"],["similar"],"Two distinct groups exist."),
+    W("diverse","多樣的","adj",1,"雅思初級",["more diverse","most diverse"],["varied","different"],["uniform"],"A diverse community."),
+    W("dominant","占主導地位的","adj",1,"雅思初級",[],["main","leading"],["minor"],"The dominant species won."),
+    W("eliminate","消除","v",1,"雅思初級",["eliminates","eliminated","eliminating"],["remove","eradicate"],["include"],"Eliminate all errors."),
+    W("emerge","出現","v",1,"雅思初級",["emerges","emerged","emerging"],["appear","surface"],["vanish"],"New ideas emerged."),
+    W("emphasize","強調","v",1,"雅思初級",["emphasizes","emphasized","emphasizing"],["stress","highlight"],["understate"],"Emphasize the key point."),
+    W("enhance","增強","v",1,"雅思初級",["enhances","enhanced","enhancing"],["improve","boost"],["weaken"],"Enhance the quality."),
+    W("estimate","估計","v",1,"雅思初級",["estimates","estimated","estimating"],["calculate","assess"],[],"Estimate the cost."),
+    W("exceed","超過","v",1,"雅思初級",["exceeds","exceeded","exceeding"],["surpass","outdo"],["fall short"],"Don't exceed the limit."),
+    W("expand","擴大","v",1,"雅思初級",["expands","expanded","expanding"],["enlarge","extend"],["shrink"],"Expand the business."),
+    W("expose","暴露","v",1,"雅思初級",["exposes","exposed","exposing"],["reveal","uncover"],["conceal"],"Expose the truth."),
+    W("external","外部的","adj",1,"雅思初級",[],["outer","outside"],["internal"],"External factors matter."),
+    W("fundamental","基本的","adj",1,"雅思初級",[],["basic","essential"],["secondary"],"A fundamental rule."),
+    W("generate","產生","v",1,"雅思初級",["generates","generated","generating"],["produce","create"],["destroy"],"Generate new ideas."),
+    W("hypothesis","假設","n",1,"雅思初級",["hypotheses"],["theory","assumption"],[],"Test the hypothesis."),
+    W("illustrate","說明","v",1,"雅思初級",["illustrates","illustrated","illustrating"],["demonstrate","explain"],[],"Let me illustrate."),
+    W("imply","暗示","v",1,"雅思初級",["implies","implied","implying"],["suggest","indicate"],["state"],"What do you imply?"),
+    W("incentive","激勵","n",1,"雅思初級",["incentives"],["motivation","reward"],["deterrent"],"Bonuses are incentives."),
+    W("incorporate","納入","v",1,"雅思初級",["incorporates","incorporated","incorporating"],["include","integrate"],["exclude"],"Incorporate the feedback."),
+    W("inhibit","抑制","v",1,"雅思初級",["inhibits","inhibited","inhibiting"],["restrain","prevent"],["encourage"],"Fear inhibits progress."),
+    W("initiate","發起","v",1,"雅思初級",["initiates","initiated","initiating"],["start","launch"],["end"],"Initiate the project."),
+    W("innovate","創新","v",1,"雅思初級",["innovates","innovated","innovating"],["invent","create"],["imitate"],"Innovate or die."),
+  ];
+
+  /* ========== GEPT 高級 150 字（SSR） ========== */
+  window.GEPT_HIGH = [
+    W("abundant","豐富的","adj",3,"GEPT高級",[],["plentiful","ample"],["scarce"],"Resources are abundant."),
+    W("accelerate","加速","v",3,"GEPT高級",["accelerates","accelerated","accelerating"],["speed up","hasten"],["decelerate"],"Accelerate the process."),
+    W("accommodate","容納","v",3,"GEPT高級",["accommodates","accommodated","accommodating"],["hold","fit"],[],"The hall accommodates 500."),
+    W("accumulate","累積","v",3,"GEPT高級",["accumulates","accumulated","accumulating"],["gather","amass"],["disperse"],"Wealth accumulated fast."),
+    W("acknowledge","承認","v",3,"GEPT高級",["acknowledges","acknowledged","acknowledging"],["admit","recognize"],["deny"],"Acknowledge the mistake."),
+    W("adjacent","相鄰的","adj",3,"GEPT高級",[],["neighboring","next to"],["distant"],"The adjacent room is empty."),
+    W("advocate","提倡","v",3,"GEPT高級",["advocates","advocated","advocating"],["support","promote"],["oppose"],"Advocate for change."),
+    W("aesthetic","美學的","adj",3,"GEPT高級",[],["artistic","tasteful"],["ugly"],"The design is aesthetic."),
+    W("aggregate","總計","n",3,"GEPT高級",["aggregates"],["total","sum"],[],"The aggregate is enormous."),
+    W("alleviate","減輕","v",3,"GEPT高級",["alleviates","alleviated","alleviating"],["relieve","ease"],["aggravate"],"Alleviate the pain."),
+    W("allocate","分配","v",3,"GEPT高級",["allocates","allocated","allocating"],["assign","distribute"],[],"Allocate the funds."),
+    W("ambiguous","模稜兩可的","adj",3,"GEPT高級",["more ambiguous","most ambiguous"],["unclear","vague"],["clear"],"The wording is ambiguous."),
+    W("ambitious","有雄心的","adj",3,"GEPT高級",["more ambitious","most ambitious"],["aspiring","driven"],["modest"],"An ambitious plan."),
+    W("analogy","類比","n",3,"GEPT高級",["analogies"],["comparison","parallel"],[],"Use an analogy."),
+    W("anticipate","預期","v",3,"GEPT高級",["anticipates","anticipated","anticipating"],["expect","predict"],[],"Anticipate the problem."),
+    W("arbitrary","任意的","adj",3,"GEPT高級",[],["random","capricious"],["reasoned"],"An arbitrary decision."),
+    W("articulate","清晰表達","v",3,"GEPT高級",["articulates","articulated","articulating"],["express","voice"],["mumble"],"Articulate your thoughts."),
+    W("aspire","渴望","v",3,"GEPT高級",["aspires","aspired","aspiring"],["desire","aim"],[],"Aspire to greatness."),
+    W("assert","斷言","v",3,"GEPT高級",["asserts","asserted","asserting"],["claim","declare"],["deny"],"Assert your rights."),
+    W("attain","達到","v",3,"GEPT高級",["attains","attained","attaining"],["achieve","reach"],["fail"],"Attain excellence."),
+    W("attribute","歸因","v",3,"GEPT高級",["attributes","attributed","attributing"],["ascribe","credit"],[],"Attribute success to effort."),
+    W("authentic","真實的","adj",3,"GEPT高級",[],["genuine","real"],["fake"],"An authentic piece."),
+    W("autonomous","自治的","adj",3,"GEPT高級",[],["independent","self-governing"],["dependent"],"An autonomous region."),
+    W("benevolent","仁慈的","adj",3,"GEPT高級",[],["kind","charitable"],["cruel"],"A benevolent leader."),
+    W("bias","偏見","n",3,"GEPT高級",["biases"],["prejudice","partiality"],["fairness"],"Avoid personal bias."),
+    W("bolster","支持","v",3,"GEPT高級",["bolsters","bolstered","bolstering"],["support","strengthen"],["undermine"],"Bolster the economy."),
+    W("candid","坦率的","adj",3,"GEPT高級",[],["frank","honest"],["evasive"],"A candid reply."),
+    W("coherent","連貫的","adj",3,"GEPT高級",["more coherent","most coherent"],["logical","consistent"],["incoherent"],"A coherent argument."),
+    W("coincide","巧合","v",3,"GEPT高級",["coincides","coincided","coinciding"],["overlap","agree"],[],"Our views coincide."),
+    W("commodity","商品","n",3,"GEPT高級",["commodities"],["goods","product"],[],"A valuable commodity."),
+    W("compatible","兼容的","adj",3,"GEPT高級",[],["consistent","harmonious"],["incompatible"],"Compatible with all."),
+    W("compelling","令人信服的","adj",3,"GEPT高級",[],["persuasive","gripping"],["weak"],"A compelling story."),
+    W("compensate","補償","v",3,"GEPT高級",["compensates","compensated","compensating"],["repay","reimburse"],[],"Compensate the loss."),
+    W("compile","編譯","v",3,"GEPT高級",["compiles","compiled","compiling"],["gather","assemble"],[],"Compile the results."),
+    W("complement","補充","v",3,"GEPT高級",["complements","complemented","complementing"],["complete","enhance"],["clash"],"Colors complement each other."),
+    W("comply","遵守","v",3,"GEPT高級",["complies","complied","complying"],["obey","conform"],["defy"],"Comply with the rules."),
+    W("comprehensive","全面的","adj",3,"GEPT高級",["more comprehensive","most comprehensive"],["thorough","complete"],["partial"],"A comprehensive plan."),
+    W("comprise","包含","v",3,"GEPT高級",["comprises","comprised","comprising"],["include","consist of"],[],"The team comprises 10."),
+    W("conceive","構想","v",3,"GEPT高級",["conceives","conceived","conceiving"],["imagine","devise"],[],"Conceive a new idea."),
+    W("concise","簡明的","adj",3,"GEPT高級",["more concise","most concise"],["brief","succinct"],["verbose"],"Keep it concise."),
+    W("condemn","譴責","v",3,"GEPT高級",["condemns","condemned","condemning"],["blame","denounce"],["praise"],"Condemn the violence."),
+    W("confer","授予","v",3,"GEPT高級",["confers","conferred","conferring"],["grant","bestow"],[],"Confer a degree."),
+    W("confine","限制","v",3,"GEPT高級",["confines","confined","confining"],["restrict","limit"],["release"],"Confine to the area."),
+    W("conform","符合","v",3,"GEPT高級",["conforms","conformed","conforming"],["comply","obey"],["deviate"],"Conform to standards."),
+    W("consensus","共識","n",3,"GEPT高級",[],["agreement","accord"],["disagreement"],"Reach a consensus."),
+    W("conspicuous","顯眼的","adj",3,"GEPT高級",[],["noticeable","prominent"],["inconspicuous"],"A conspicuous error."),
+    W("constitute","構成","v",3,"GEPT高級",["constitutes","constituted","constituting"],["form","compose"],[],"Twelve constitute a year."),
+    W("contemplate","考慮","v",3,"GEPT高級",["contemplates","contemplated","contemplating"],["consider","ponder"],[],"Contemplate the offer."),
+    W("contradict","反駁","v",3,"GEPT高級",["contradicts","contradicted","contradicting"],["deny","oppose"],["confirm"],"Don't contradict me."),
+    W("controversial","有爭議的","adj",3,"GEPT高級",[],["debatable","disputed"],["uncontroversial"],"A controversial topic."),
+    W("conventional","傳統的","adj",3,"GEPT高級",[],["traditional","standard"],["unconventional"],"Conventional wisdom."),
+    W("converge","匯聚","v",3,"GEPT高級",["converges","converged","converging"],["meet","unite"],["diverge"],"Paths converge here."),
+    W("convey","傳達","v",3,"GEPT高級",["conveys","conveyed","conveying"],["communicate","express"],[],"Convey the message."),
+    W("coordinate","協調","v",3,"GEPT高級",["coordinates","coordinated","coordinating"],["organize","synchronize"],[],"Coordinate the teams."),
+    W("correlate","關聯","v",3,"GEPT高級",["correlates","correlated","correlating"],["relate","connect"],[],"They correlate strongly."),
+    W("correspond","對應","v",3,"GEPT高級",["corresponds","corresponded","corresponding"],["match","agree"],[],"It corresponds to plan."),
+    W("credible","可信的","adj",3,"GEPT高級",[],["believable","trustworthy"],["implausible"],"A credible source."),
+    W("criterion","標準","n",3,"GEPT高級",["criteria"],["standard","benchmark"],[],"Meet the criterion."),
+    W("cultivate","培養","v",3,"GEPT高級",["cultivates","cultivated","cultivating"],["nurture","develop"],["neglect"],"Cultivate good habits."),
+    W("cumulative","累積的","adj",3,"GEPT高級",[],["accumulated","collective"],["individual"],"A cumulative effect."),
+    W("curb","抑制","v",3,"GEPT高級",["curbs","curbed","curbing"],["restrain","control"],["release"],"Curb the spending."),
+    W("deceive","欺騙","v",3,"GEPT高級",["deceives","deceived","deceiving"],["trick","mislead"],["enlighten"],"Don't deceive me."),
+    W("decisive","決定性的","adj",3,"GEPT高級",[],["crucial","resolute"],["indecisive"],"A decisive victory."),
+    W("dedicate","奉獻","v",3,"GEPT高級",["dedicates","dedicated","dedicating"],["devote","commit"],["neglect"],"Dedicate your life."),
+    W("deficiency","缺乏","n",3,"GEPT高級",["deficiencies"],["lack","shortage"],["abundance"],"Vitamin deficiency."),
+    W("deliberate","故意的","adj",3,"GEPT高級",[],["intentional","planned"],["accidental"],"A deliberate act."),
+    W("denote","表示","v",3,"GEPT高級",["denotes","denoted","denoting"],["indicate","signify"],[],"Red denotes danger."),
+    W("deprive","剝奪","v",3,"GEPT高級",["deprives","deprived","depriving"],["strip","rob"],["provide"],"Deprive of freedom."),
+    W("derive","源自","v",3,"GEPT高級",["derives","derived","deriving"],["originate","obtain"],[],"It derives from Latin."),
+    W("deteriorate","惡化","v",3,"GEPT高級",["deteriorates","deteriorated","deteriorating"],["worsen","decline"],["improve"],"Health deteriorated."),
+    W("deviate","偏離","v",3,"GEPT高級",["deviates","deviated","deviating"],["diverge","stray"],["conform"],"Don't deviate from plan."),
+    W("devise","設計","v",3,"GEPT高級",["devises","devised","devising"],["create","invent"],[],"Devise a strategy."),
+    W("diagnose","診斷","v",3,"GEPT高級",["diagnoses","diagnosed","diagnosing"],["identify","detect"],[],"Diagnose the problem."),
+    W("differentiate","區分","v",3,"GEPT高級",["differentiates","differentiated","differentiating"],["distinguish","discriminate"],["confuse"],"Differentiate the two."),
+    W("discern","辨別","v",3,"GEPT高級",["discerns","discerned","discerning"],["perceive","detect"],["miss"],"Discern the truth."),
+    W("disclose","披露","v",3,"GEPT高級",["discloses","disclosed","disclosing"],["reveal","expose"],["conceal"],"Disclose the facts."),
+    W("discourse","話語","n",3,"GEPT高級",["discourses"],["dialogue","discussion"],[],"Academic discourse."),
+    W("discrete","離散的","adj",3,"GEPT高級",[],["separate","distinct"],["continuous"],"Discrete categories."),
+    W("disdain","蔑視","n",3,"GEPT高級",[],["contempt","scorn"],["respect"],"She showed disdain."),
+    W("disparate","不同的","adj",3,"GEPT高級",[],["different","distinct"],["similar"],"Disparate ideas."),
+    W("displace","取代","v",3,"GEPT高級",["displaces","displaced","displacing"],["replace","supplant"],[],"Workers were displaced."),
+    W("dispose","處理","v",3,"GEPT高級",["disposes","disposed","disposing"],["discard","arrange"],[],"Dispose of waste."),
+    W("disrupt","打斷","v",3,"GEPT高級",["disrupts","disrupted","disrupting"],["interrupt","disturb"],["maintain"],"Don't disrupt class."),
+    W("dissipate","消散","v",3,"GEPT高級",["dissipates","dissipated","dissipating"],["disperse","vanish"],["gather"],"The fog dissipated."),
+    W("distinguish","區分","v",3,"GEPT高級",["distinguishes","distinguished","distinguishing"],["differentiate","tell apart"],["confuse"],"Distinguish right from wrong."),
+    W("distort","扭曲","v",3,"GEPT高級",["distorts","distorted","distorting"],["twist","misrepresent"],[],"Don't distort facts."),
+    W("diverge","分歧","v",3,"GEPT高級",["diverges","diverged","diverging"],["separate","differ"],["converge"],"Opinions diverge."),
+    W("dominate","支配","v",3,"GEPT高級",["dominates","dominated","dominating"],["control","rule"],["submit"],"Dominate the market."),
+    W("drastic","劇烈的","adj",3,"GEPT高級",[],["extreme","severe"],["mild"],"A drastic change."),
+    W("dubious","可疑的","adj",3,"GEPT高級",[],["doubtful","suspicious"],["certain"],"A dubious claim."),
+    W("dynamic","動態的","adj",3,"GEPT高級",[],["energetic","active"],["static"],"A dynamic system."),
+    W("elaborate","闡述","v",3,"GEPT高級",["elaborates","elaborated","elaborating"],["explain","expand"],["simplify"],"Elaborate on that."),
+    W("eloquent","雄辯的","adj",3,"GEPT高級",[],["articulate","persuasive"],["inarticulate"],"An eloquent speaker."),
+    W("embark","開始","v",3,"GEPT高級",["embarks","embarked","embarking"],["begin","start"],["conclude"],"Embark on a journey."),
+    W("embrace","擁抱","v",3,"GEPT高級",["embraces","embraced","embracing"],["hug","accept"],["reject"],"Embrace change."),
+    W("empirical","經驗的","adj",3,"GEPT高級",[],["experimental","observed"],["theoretical"],"Empirical evidence."),
+    W("encompass","包含","v",3,"GEPT高級",["encompasses","encompassed","encompassing"],["include","cover"],["exclude"],"It encompasses all."),
+    W("endeavor","努力","n",3,"GEPT高級",["endeavors"],["effort","attempt"],[],"A worthy endeavor."),
+    W("endorse","認可","v",3,"GEPT高級",["endorses","endorsed","endorsing"],["support","approve"],["oppose"],"Endorse the plan."),
+    W("entail","需要","v",3,"GEPT高級",["entails","entailed","entailing"],["involve","require"],[],"It entails risks."),
+    W("envisage","設想","v",3,"GEPT高級",["envisages","envisaged","envisaging"],["imagine","foresee"],[],"Envisage the future."),
+    W("equivalent","等價的","adj",3,"GEPT高級",[],["equal","comparable"],["different"],"Equivalent value."),
+    W("erode","侵蝕","v",3,"GEPT高級",["erodes","eroded","eroding"],["wear away","corrode"],["build"],"Water erodes rock."),
+    W("erratic","不規則的","adj",3,"GEPT高級",[],["unpredictable","irregular"],["steady"],"Erratic behavior."),
+    W("escalate","升級","v",3,"GEPT高級",["escalates","escalated","escalating"],["intensify","increase"],["de-escalate"],"Tensions escalated."),
+    W("essence","本質","n",3,"GEPT高級",[],["core","nature"],[],"The essence of life."),
+    W("ethical","道德的","adj",3,"GEPT高級",[],["moral","principled"],["unethical"],"An ethical choice."),
+    W("evoke","喚起","v",3,"GEPT高級",["evokes","evoked","evoking"],["arouse","elicit"],[],"Evoke memories."),
+    W("exacerbate","加劇","v",3,"GEPT高級",["exacerbates","exacerbated","exacerbating"],["worsen","aggravate"],["alleviate"],"Don't exacerbate it."),
+    W("exclusive","獨家的","adj",3,"GEPT高級",[],["selective","restricted"],["inclusive"],"An exclusive club."),
+    W("exemplify","舉例說明","v",3,"GEPT高級",["exemplifies","exemplified","exemplifying"],["illustrate","demonstrate"],[],"It exemplifies the issue."),
+    W("exert","施加","v",3,"GEPT高級",["exerts","exerted","exerting"],["apply","exercise"],[],"Exert pressure."),
+    W("explicit","明確的","adj",3,"GEPT高級",["more explicit","most explicit"],["clear","definite"],["implicit"],"Explicit instructions."),
+    W("exploit","利用","v",3,"GEPT高級",["exploits","exploited","exploiting"],["utilize","take advantage"],[],"Exploit the opportunity."),
+    W("extract","提取","v",3,"GEPT高級",["extracts","extracted","extracting"],["remove","obtain"],["insert"],"Extract the data."),
+    W("facilitate","促進","v",3,"GEPT高級",["facilitates","facilitated","facilitating"],["ease","assist"],["hinder"],"Facilitate teamwork."),
+    W("feasible","可行的","adj",3,"GEPT高級",["more feasible","most feasible"],["possible","viable"],["impossible"],"A feasible plan."),
+    W("fluctuate","波動","v",3,"GEPT高級",["fluctuates","fluctuated","fluctuating"],["vary","swing"],["stabilize"],"Prices fluctuate."),
+    W("formulate","制定","v",3,"GEPT高級",["formulates","formulated","formulating"],["devise","draft"],[],"Formulate a policy."),
+    W("foster","培養","v",3,"GEPT高級",["fosters","fostered","fostering"],["nurture","encourage"],["discourage"],"Foster creativity."),
+    W("framework","框架","n",3,"GEPT高級",["frameworks"],["structure","system"],[],"A legal framework."),
+    W("genuine","真正的","adj",3,"GEPT高級",[],["authentic","real"],["fake"],"A genuine smile."),
+    W("grasp","抓住","v",3,"GEPT高級",["grasps","grasped","grasping"],["seize","understand"],["release"],"Grasp the concept."),
+    W("hierarchy","階級制度","n",3,"GEPT高級",["hierarchies"],["ranking","order"],[],"A strict hierarchy."),
+    W("highlight","突出","v",3,"GEPT高級",["highlights","highlighted","highlighting"],["emphasize","stress"],["hide"],"Highlight the key point."),
+    W("identical","相同的","adj",3,"GEPT高級",[],["same","alike"],["different"],"Identical twins."),
+    W("imminent","迫近的","adj",3,"GEPT高級",[],["approaching","impending"],["distant"],"A storm is imminent."),
+    W("implement","實施","v",3,"GEPT高級",["implements","implemented","implementing"],["execute","apply"],[],"Implement the policy."),
+    W("induce","誘發","v",3,"GEPT高級",["induces","induced","inducing"],["persuade","cause"],["deter"],"Induce sleep."),
+    W("inevitable","不可避免的","adj",3,"GEPT高級",[],["unavoidable","certain"],["avoidable"],"Change is inevitable."),
+    W("infer","推斷","v",3,"GEPT高級",["infers","inferred","inferring"],["deduce","conclude"],[],"Infer the meaning."),
+    W("inherent","固有的","adj",3,"GEPT高級",[],["intrinsic","built-in"],["acquired"],"An inherent risk."),
+    W("inhibit","抑制","v",3,"GEPT高級",["inhibits","inhibited","inhibiting"],["restrain","prevent"],["encourage"],"Inhibit growth."),
+    W("initiate","發起","v",3,"GEPT高級",["initiates","initiated","initiating"],["start","launch"],["end"],"Initiate the project."),
+    W("innovative","創新的","adj",3,"GEPT高級",["more innovative","most innovative"],["creative","original"],["traditional"],"An innovative design."),
+    W("integrate","整合","v",3,"GEPT高級",["integrates","integrated","integrating"],["combine","unify"],["separate"],"Integrate the systems."),
+    W("integrity","正直","n",3,"GEPT高級",[],["honesty","wholeness"],[],"Personal integrity."),
+    W("intense","強烈的","adj",3,"GEPT高級",["more intense","most intense"],["strong","fierce"],["mild"],"Intense heat."),
+    W("intrinsic","內在的","adj",3,"GEPT高級",[],["inherent","innate"],["extrinsic"],"Intrinsic value."),
+    W("intuition","直覺","n",3,"GEPT高級",["intuitions"],["instinct","sense"],[],"Trust your intuition."),
+    W("justify","證明正當","v",3,"GEPT高級",["justifies","justified","justifying"],["defend","vindicate"],["condemn"],"Justify your actions."),
+    W("legitimate","合法的","adj",3,"GEPT高級",[],["legal","valid"],["illegitimate"],"A legitimate concern."),
+    W("leverage","槓桿","n",3,"GEPT高級",[],["advantage","influence"],[],"Use your leverage."),
+    W("manifest","顯現","v",3,"GEPT高級",["manifests","manifested","manifesting"],["reveal","display"],["conceal"],"Symptoms manifest slowly."),
+    W("manipulate","操縱","v",3,"GEPT高級",["manipulates","manipulated","manipulating"],["control","handle"],[],"Manipulate the data."),
+    W("marginal","邊際的","adj",3,"GEPT高級",[],["slight","minor"],["significant"],"A marginal gain."),
+    W("maximize","最大化","v",3,"GEPT高級",["maximizes","maximized","maximizing"],["optimize","increase"],["minimize"],"Maximize the output."),
+    W("mediate","調解","v",3,"GEPT高級",["mediates","mediated","mediating"],["arbitrate","negotiate"],[],"Mediate the dispute."),
+    W("meticulous","一絲不苟的","adj",3,"GEPT高級",[],["careful","precise"],["careless"],"Meticulous attention."),
+  ];
+
+  /* ========== 讓 core 系統認識新池子 ========== */
+  const _prevCurrentPool = window.currentPool;
+  window.currentPool = function(){
+    switch(state.mode){
+      case 'toeic': return WORDS;
+      case 'geptMid': return GEPT_MH;
+      case 'geptHigh': return window.GEPT_HIGH;
+      case 'toeflBasic': return window.TOEFL_BASIC;
+      case 'ieltsBasic': return window.IELTS_BASIC;
+      default: return WORDS;
+    }
+  };
+
+  const _prevWordOf = window.wordOf;
+  window.wordOf = function(id){
+    return WORDS.find(x=>x.w===id)
+      || GEPT_MH.find(x=>x.w===id)
+      || window.GEPT_HIGH.find(x=>x.w===id)
+      || window.TOEFL_BASIC.find(x=>x.w===id)
+      || window.IELTS_BASIC.find(x=>x.w===id)
+      || null;
+  };
+
+  /* ========== 給新池子補初始進度 ========== */
+  function ensureProgress(){
+    if(!state.progress) state.progress = {};
+    const defaults = {
+      geptHigh:    { cards: { abundant:{lv:1,star:1}, accelerate:{lv:1,star:1}, accommodate:{lv:1,star:1} }, team: 'abundant', stage: 1 },
+      toeflBasic:  { cards: { analyze:{lv:1,star:1}, approach:{lv:1,star:1}, concept:{lv:1,star:1} }, team: 'analyze', stage: 1 },
+      ieltsBasic:  { cards: { accurate:{lv:1,star:1}, adapt:{lv:1,star:1}, advantage:{lv:1,star:1} }, team: 'accurate', stage: 1 },
+    };
+    Object.keys(defaults).forEach(m => {
+      if(!state.progress[m] || typeof state.progress[m] !== 'object'){
+        state.progress[m] = defaults[m];
+      }
+    });
+  }
+  ensureProgress();
+
+  /* ========== 包裝 renderAll，讓新進度在切模式時生效 ========== */
+  const _prevRenderAll = window.renderAll;
+  window.renderAll = function(){
+    ensureProgress();
+    return _prevRenderAll.apply(this, arguments);
+  };
+
+  /* ========== 模式 UI ========== */
+  function updateModeBadge(){
+    const badge = document.getElementById('modeBadge');
+    const sub = document.getElementById('homeSubtitle');
+    if(!badge || !sub) return;
+    const map = {
+      toeic:      { cls:'toeic', txt:'TOEIC 模式', sub:'用抽到的單字卡，擊倒知識的敵人' },
+      geptMid:    { cls:'gept',  txt:'GEPT 中高級', sub:'全民英檢中高級 · 200 字' },
+      geptHigh:   { cls:'gept',  txt:'🏆 GEPT 高級', sub:'全民英檢高級 · 150 字 · 進階挑戰' },
+      toeflBasic: { cls:'gept',  txt:'🎓 托福初級', sub:'TOEFL 基礎學術字 · 50 字' },
+      ieltsBasic: { cls:'gept',  txt:'🎓 雅思初級', sub:'IELTS 基礎學術字 · 50 字' },
+    };
+    const m = map[state.mode] || map.toeic;
+    badge.className = m.cls;
+    badge.textContent = m.txt;
+    sub.textContent = m.sub;
+  }
+
+  const _prevRenderHome = window.renderHome;
+  window.renderHome = function(){
+    const r = _prevRenderHome.apply(this, arguments);
+    setTimeout(updateModeBadge, 0);
+    return r;
+  };
+  const _prevUpdateModeUI = window.updateModeUI;
+  window.updateModeUI = function(){
+    if(typeof _prevUpdateModeUI === 'function') _prevUpdateModeUI.apply(this, arguments);
+    setTimeout(updateModeBadge, 0);
+  };
+
+  /* ========== 新增按鈕：🎓 學術考試 ========== */
+  setTimeout(() => {
+    const homeScreen = document.getElementById('screen-home');
+    if(!homeScreen) return;
+
+    // 找 GEPT 按鈕後面插一個新的
+    const geptBtn = document.getElementById('geptBtn');
+    if(!geptBtn) return;
+
+    if(document.getElementById('academicBtn')) return;
+
+    const btn = document.createElement('button');
+    btn.className = 'big-btn ghost';
+    btn.id = 'academicBtn';
+    btn.textContent = '🎓 學術考試模式（托福 / 雅思）';
+    btn.style.marginTop = '0';
+    geptBtn.parentNode.insertBefore(btn, geptBtn.nextSibling);
+
+    btn.onclick = () => {
+      try { S.click(); } catch(e){}
+      showAcademicMenu();
+    };
+  }, 500);
+
+  /* ========== 學術考試選擇選單 ========== */
+  function showAcademicMenu(){
+    if(document.getElementById('academicMenu')) return;
+
+    const menu = document.createElement('div');
+    menu.id = 'academicMenu';
+    menu.style.cssText = `
+      position:fixed;inset:0;z-index:400;
+      background:rgba(4,6,12,.85);backdrop-filter:blur(10px);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:24px;gap:12px;
+      animation:fadeIn .25s ease;
+    `;
+
+    const items = [
+      { id:'toeflBasic', icon:'🎓', name:'托福初級', desc:'TOEFL 基礎學術字 · 50 字' },
+      { id:'ieltsBasic', icon:'🎓', name:'雅思初級', desc:'IELTS 基礎學術字 · 50 字' },
+    ];
+
+    menu.innerHTML = `
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:42px;margin-bottom:8px">🎓</div>
+        <div style="font-size:22px;font-weight:900;letter-spacing:1px;
+          background:linear-gradient(135deg,#8bddff,#7c5cff);
+          -webkit-background-clip:text;background-clip:text;color:transparent">學術考試模式</div>
+        <div style="font-size:12px;color:#8b93b0;margin-top:6px">選擇考試級別開始挑戰</div>
+      </div>
+      ${items.map(it => `
+        <div class="acad-item" data-mode="${it.id}" style="
+          width:100%;max-width:340px;padding:16px 18px;border-radius:16px;cursor:pointer;
+          background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+          border:1.5px solid rgba(139,124,255,.4);
+          display:flex;align-items:center;gap:14px;
+          transition:transform .12s;
+        ">
+          <div style="font-size:28px">${it.icon}</div>
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:800">${it.name}</div>
+            <div style="font-size:11.5px;color:#8b93b0;margin-top:3px">${it.desc}</div>
+          </div>
+          <div style="font-size:20px;color:#8bddff">›</div>
+        </div>
+      `).join('')}
+      <button id="academicBack" class="big-btn ghost" style="max-width:340px;margin-top:12px">↩️ 返回主頁</button>
+    `;
+
+    document.body.appendChild(menu);
+
+    document.getElementById('academicBack').onclick = () => {
+      try { S.click(); } catch(e){}
+      menu.remove();
+    };
+
+    menu.querySelectorAll('.acad-item').forEach(el => {
+      el.onclick = () => {
+        try { S.click(); } catch(e){}
+        state.mode = el.dataset.mode;
+        ensureProgress();
+        if(typeof save === 'function') save();
+        if(typeof renderAll === 'function') renderAll();
+        menu.remove();
+        try {
+          if(typeof toast === 'function') toast(`進入 ${el.querySelector('div > div').textContent}`);
+        } catch(e){}
+      };
+    });
+  }
+
+  /* ========== 更新 GEPT 選單：新增高級 ========== */
+  setTimeout(() => {
+    const geptList = document.querySelector('#screen-gept .gept-level-list');
+    if(!geptList) return;
+    if(document.querySelector('.gept-level[data-level="high"]')) return;
+
+    // 找到原本「高級」的 locked 項目，改成 open
+    const advItem = document.querySelector('.gept-level[data-level="advanced"]');
+    if(advItem){
+      advItem.classList.remove('locked');
+      advItem.classList.add('open');
+      advItem.dataset.level = 'high';
+      const desc = advItem.querySelector('.gl-desc');
+      if(desc) desc.textContent = 'Advanced · 150 字 · 開放中';
+      // 移除「即將推出」的偽元素（透過 CSS class 控制）
+    }
+
+    // 綁定點擊
+    setTimeout(() => {
+      document.querySelectorAll('#screen-gept .gept-level').forEach(el => {
+        if(el.dataset.level === 'high'){
+          el.onclick = () => {
+            try { S.click(); } catch(e){}
+            state.mode = 'geptHigh';
+            ensureProgress();
+            if(typeof save === 'function') save();
+            if(typeof switchScreen === 'function') switchScreen('home');
+            if(typeof renderAll === 'function') renderAll();
+          };
+        }
+      });
+    }, 200);
+  }, 800);
+
+  console.log('[擴充包] 已載入 ✓ (托福 50 + 雅思 50 + GEPT高級 150)');
+})();
+</script>
   
 </body>
 </html>
