@@ -4609,6 +4609,162 @@ init();
   console.log('[TutTaker] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   TutFree：新手教學十連免費 + 老玩家補償 600 金幣
+   ========================================================= */
+(function(){
+  'use strict';
+
+  console.log('[TutFree] 載入中...');
+
+  const COMPENSATION_KEY = 'wordquest_tut_compensation_v1';
+  const TUT_KEY = 'wordquest_tut_final';
+
+  /* ========== 1. 老玩家補償 600 金幣 ========== */
+  let alreadyCompensated = false;
+  try {
+    alreadyCompensated = localStorage.getItem(COMPENSATION_KEY) === '1';
+  } catch(e) {}
+
+  // 判定是否為「已經玩過但還沒拿到補償」的玩家
+  // 條件：教學已標記完成（玩過舊版教學）或帳號已經有進度（金幣/卡牌）
+  let shouldCompensate = false;
+  try {
+    const tutDone = localStorage.getItem(TUT_KEY) === '1';
+
+    // 檢查是否有存檔進度
+    const raw = localStorage.getItem('wordquest_multi_v1');
+    let hasProgress = false;
+    if (raw) {
+      try {
+        const d = JSON.parse(raw);
+        if (d && typeof d === 'object') {
+          // 有玩過的痕跡：金幣不等於初始值，或卡牌超過初始 3 張
+          const totalCards = Object.keys(d.progress?.toeic?.cards || {}).length
+                           + Object.keys(d.progress?.geptMid?.cards || {}).length;
+          const goldNotDefault = (d.gold !== undefined && d.gold !== 600);
+          if (totalCards > 6 || goldNotDefault || d.pityCount > 0) {
+            hasProgress = true;
+          }
+        }
+      } catch(e) {}
+    }
+
+    shouldCompensate = !alreadyCompensated && (tutDone || hasProgress);
+  } catch(e) {}
+
+  if (shouldCompensate) {
+    state.gold += 600;
+    try { localStorage.setItem(COMPENSATION_KEY, '1'); } catch(e) {}
+    save();
+    updateTopbar();
+    console.log('[TutFree] 老玩家補償 +600 金幣 ✓');
+    setTimeout(() => {
+      try {
+        if (typeof pushBanner === 'function') {
+          pushBanner('🎁', '新手教學補償：<b>+600 金幣</b>', 'guild');
+        } else if (typeof toast === 'function') {
+          toast('🎁 補償 +600 金幣');
+        }
+      } catch(e){}
+    }, 1500);
+  } else if (alreadyCompensated) {
+    console.log('[TutFree] 已領過補償，略過');
+  } else {
+    console.log('[TutFree] 新玩家，不需要補償');
+  }
+
+  /* ========== 2. 新手教學的十連抽免費 ========== */
+  // 判斷是否處於教學流程中
+  function isInTutorial(){
+    // 檢查教學 DOM 是否存在
+    const tutRoot = document.getElementById('tutRoot');
+    if (!tutRoot) return false;
+
+    // 檢查教學標記
+    try {
+      return localStorage.getItem(TUT_KEY) !== '1';
+    } catch(e) {
+      return true;
+    }
+  }
+
+  // Hook doDraw：如果教學中且是十連，暫時返還金幣
+  let _tutFreeActive = false;
+
+  if (typeof window.doDraw === 'function') {
+    const _origDoDraw = window.doDraw;
+
+    window.doDraw = function(count){
+      const inTut = isInTutorial();
+
+      if (inTut && count === 10) {
+        // 記錄當前金幣
+        const goldBefore = state.gold;
+        const cost = 600;
+
+        // 如果金幣不足 600，暫時補到 600，讓抽卡能執行
+        if (goldBefore < cost) {
+          state.gold = cost;
+        }
+
+        _tutFreeActive = true;
+        console.log('[TutFree] 教學十連免費，扣款將返還');
+
+        // 呼叫原本的抽卡
+        try {
+          _origDoDraw.call(this, count);
+        } catch(e) {
+          _tutFreeActive = false;
+          throw e;
+        }
+
+        // 教學結束後返還金幣
+        setTimeout(() => {
+          if (_tutFreeActive) {
+            state.gold += 600;  // 返還被扣掉的 600
+            // 如果原本金幣不足 600，恢復到原本的值
+            if (goldBefore < 600) {
+              state.gold = goldBefore + 600;
+            }
+            save();
+            updateTopbar();
+            _tutFreeActive = false;
+            console.log('[TutFree] 教學十連金幣已返還 ✓');
+            try {
+              if (typeof pushBanner === 'function') {
+                pushBanner('🎁', '新手教學：十連抽<b>免費</b>', 'guild');
+              } else if (typeof toast === 'function') {
+                toast('🎁 教學十連免費！');
+              }
+            } catch(e){}
+          }
+        }, 300);
+      } else {
+        // 非教學狀態，正常執行
+        _origDoDraw.call(this, count);
+      }
+    };
+
+    console.log('[TutFree] doDraw hook ✓');
+  } else {
+    console.warn('[TutFree] 找不到 doDraw');
+  }
+
+  /* ========== 3. 額外保險：攔截 TutTaker 的完成事件，標記教學結束 ========== */
+  const _origFinishHook = window.onTutComplete;
+  window.onTutComplete = function(){
+    try { localStorage.setItem(TUT_KEY, '1'); } catch(e){}
+    if (typeof _origFinishHook === 'function') {
+      _origFinishHook.call(this);
+    }
+  };
+
+  console.log('[TutFree] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
