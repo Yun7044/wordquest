@@ -265,11 +265,113 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   opacity:0;transition:all .3s cubic-bezier(.2,1,.3,1);pointer-events:none;
   backdrop-filter:blur(10px);box-shadow:0 10px 30px -10px rgba(0,0,0,.8)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+/* ===== 頂部橫幅通知 ===== */
+#bannerContainer{
+  position:fixed;top:0;left:0;right:0;z-index:900;
+  pointer-events:none;padding-top:calc(8px + env(safe-area-inset-top));
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.banner{
+  max-width:92%;padding:10px 18px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(20,24,40,.97),rgba(30,36,58,.97));
+  border:1px solid rgba(139,124,255,.35);
+  box-shadow:0 8px 32px -8px rgba(0,0,0,.9),0 0 24px -8px rgba(139,124,255,.5);
+  backdrop-filter:blur(14px);
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:700;color:#e8ecf5;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  animation:bannerIn .45s cubic-bezier(.2,1.4,.4,1);
+  position:relative;
+}
+.banner::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,#8b7cff,#00d2ff);border-radius:14px 0 0 14px;
+}
+.banner.guild::before{background:linear-gradient(180deg,#00b894,#00cec9)}
+.banner.boss::before{background:linear-gradient(180deg,#ffd93d,#ff9500)}
+.banner .b-icon{font-size:16px;flex-shrink:0;margin-left:2px}
+.banner .b-text{overflow:hidden;text-overflow:ellipsis}
+.banner .b-text b{color:#8bddff;font-weight:800}
+.banner.out{animation:bannerOut .35s cubic-bezier(.4,0,1,1) forwards}
+@keyframes bannerIn{
+  from{opacity:0;transform:translateY(-120%) scale(.9)}
+  to{opacity:1;transform:none}
+}
+@keyframes bannerOut{
+  to{opacity:0;transform:translateY(-120%) scale(.9)}
+}
+
+/* ===== 公會畫面 ===== */
+.guild-hero{
+  text-align:center;padding:18px 0 14px;
+}
+.guild-hero .g-emblem{font-size:44px;filter:drop-shadow(0 6px 16px rgba(0,206,201,.5))}
+.guild-hero h2{font-size:22px;font-weight:900;margin-top:6px;letter-spacing:1px}
+.guild-hero .g-sub{font-size:12px;color:#8b93b0;margin-top:4px}
+
+.guild-name-input{
+  width:100%;padding:14px 16px;border-radius:14px;
+  border:1.5px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.05);color:#e8ecf5;
+  font-family:inherit;font-size:15px;font-weight:700;
+  letter-spacing:.5px;outline:none;transition:border-color .2s;
+}
+.guild-name-input:focus{border-color:rgba(139,124,255,.7)}
+.guild-name-input::placeholder{color:#4d5470;font-weight:500}
+
+.guild-member{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 12px;border-radius:13px;margin-bottom:7px;
+  background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.07);
+  transition:transform .12s;
+  animation:memberIn .5s cubic-bezier(.2,1.2,.4,1) backwards;
+}
+@keyframes memberIn{
+  from{opacity:0;transform:translateX(-20px)}
+  to{opacity:1;transform:none}
+}
+.guild-member.self{
+  border-color:rgba(139,124,255,.5);
+  background:linear-gradient(160deg,rgba(139,124,255,.14),rgba(74,140,255,.06));
+}
+.gm-avatar{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,var(--av1),var(--av2));
+  box-shadow:0 4px 12px -4px var(--av1);
+}
+.gm-info{flex:1;min-width:0}
+.gm-name{
+  font-size:13.5px;font-weight:800;letter-spacing:.3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.gm-name .npc-tag{
+  font-size:10px;font-weight:700;color:#8b93b0;
+  margin-left:5px;letter-spacing:.3px;
+}
+.gm-meta{font-size:11px;color:#6f7796;margin-top:2px}
+
+.guild-log{
+  max-height:180px;overflow-y:auto;
+  background:rgba(0,0,0,.25);border-radius:12px;
+  padding:10px 12px;font-size:12px;line-height:1.7;
+  border:1px solid rgba(255,255,255,.06);
+}
+.guild-log .log-line{margin-bottom:4px;color:#9aa2bd}
+.guild-log .log-line .who{color:#8bddff;font-weight:700;margin-right:5px}
+.guild-log .log-line .who.npc{color:#c3bcff}
+.guild-log .log-line:last-child{margin-bottom:0}
+.guild-log:empty::before{
+  content:'公會頻道目前很安靜…';color:#4d5470;font-style:italic;
+}
 ::-webkit-scrollbar{width:0;height:0}
 </style>
 </head>
 <body>
 
+<div id="bannerContainer"></div>
 <div id="app">
   <div id="main-ui">
     <header id="topbar">
@@ -389,6 +491,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
       <!-- 卡庫 -->
       <section id="screen-cards" class="screen">
+
         <div id="filterBar">
           <button class="filter-btn active" data-rar="all">全部</button>
           <button class="filter-btn" data-rar="1">R</button>
@@ -398,12 +501,53 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="card-grid" id="cardGrid"></div>
       </section>
 
+            <!-- 公會 -->
+      <section id="screen-guild" class="screen">
+
+        <!-- 未建立公會 -->
+        <div id="guildCreateUI">
+          <div class="hero-panel">
+            <h1 style="font-size:22px">🏰 建立你的公會</h1>
+            <p>創建之後，志同道合的夥伴會陸續前來加入</p>
+          </div>
+
+          <div class="panel">
+            <div class="panel-h">公會名稱</div>
+            <input id="guildNameInput" class="guild-name-input" type="text"
+              maxlength="12" placeholder="取個帥氣的名字吧…" autocomplete="off">
+          </div>
+
+          <button class="big-btn" id="createGuildBtn">✨ 建立公會</button>
+        </div>
+
+        <!-- 已建立公會 -->
+        <div id="guildMainUI" class="hidden">
+          <div class="guild-hero">
+            <div class="g-emblem">🏰</div>
+            <h2 id="guildNameDisplay">公會名稱</h2>
+            <div class="g-sub" id="guildSubDisplay">0 位成員</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-h">成員列表</div>
+            <div id="guildMemberList"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-h">公會頻道</div>
+            <div class="guild-log" id="guildLog"></div>
+          </div>
+        </div>
+
+      </section>
+
     </div>
 
     <nav id="navbar">
       <div class="navbtn active" data-screen="home"><span class="ic">🏠</span>主頁</div>
       <div class="navbtn" data-screen="gacha"><span class="ic">🎴</span>抽卡</div>
       <div class="navbtn" data-screen="cards"><span class="ic">📚</span>卡庫</div>
+            <div class="navbtn" data-screen="guild"><span class="ic">🏰</span>公會</div>
     </nav>
   </div>
 
@@ -1147,6 +1291,7 @@ const DEFAULT_STATE=()=>({
   mode:'toeic',
   music:true,
   sfx:true,
+  guild:null,
   progress:{
     toeic:{
       cards:{office:{lv:1,star:1},meeting:{lv:1,star:1},available:{lv:1,star:1}},
@@ -1249,6 +1394,31 @@ function load(){
       });
     }
 
+        // 公會（單純複製，壞資料就當作沒公會）
+    if (d.guild && typeof d.guild === 'object'
+        && typeof d.guild.name === 'string'
+        && Array.isArray(d.guild.members)) {
+      base.guild = {
+        name: String(d.guild.name).slice(0, 12),
+        createdAt: typeof d.guild.createdAt === 'number' ? d.guild.createdAt : Date.now(),
+        members: d.guild.members.filter(m =>
+          m && typeof m === 'object' && typeof m.name === 'string'
+        ).map(m => ({
+          name: String(m.name).slice(0, 20),
+          isNPC: !!m.isNPC,
+          joinedAt: typeof m.joinedAt === 'number' ? m.joinedAt : Date.now(),
+          level: Math.max(1, Math.min(99, parseInt(m.level) || 1)),
+          avatar: typeof m.avatar === 'string' ? m.avatar : '🙂',
+          av1: typeof m.av1 === 'string' ? m.av1 : '#7c5cff',
+          av2: typeof m.av2 === 'string' ? m.av2 : '#4a8cff',
+        })),
+        messages: Array.isArray(d.guild.messages)
+          ? d.guild.messages.slice(-20).filter(m => m && typeof m.text === 'string')
+          : [],
+        nextJoinAt: typeof d.guild.nextJoinAt === 'number' ? d.guild.nextJoinAt : 0,
+      };
+    }
+
     state=base;
   }catch(e){
     console.error('[Load] 解析失敗：', e);
@@ -1288,6 +1458,16 @@ function sanitize(){
     GEPT_STARTERS.forEach(id=>{ pg.cards[id]={lv:1, star:1}; });
   }
   if(!pg.team || !pg.cards[pg.team]) pg.team=Object.keys(pg.cards)[0];
+
+  // 公會：若存在但結構壞掉就清掉
+  if (state.guild) {
+    if (!Array.isArray(state.guild.members) || !state.guild.members.length) {
+      state.guild = null;
+    } else if (!Array.isArray(state.guild.messages)) {
+      state.guild.messages = [];
+    }
+  }
+
 }
 
 /* ---- 從兩個池子查單字 ---- */
@@ -1330,6 +1510,272 @@ function cardStats(w){
 }
 function lvCost(lv){return 20+15*(lv-1)}
 function starCost(star){return [0,3,6,10,15][star]||999}
+
+/* =========================================================
+   7b. 公會系統
+   ========================================================= */
+const NPC_NAMES = [
+  '這題我不會',
+  '下一題謝謝',
+  '我就爛',
+  '錢錢沒有不見',
+  '我只是把錢變成單字卡',
+  '阿姨我不想努力了',
+  '已放棄治療',
+  '明天再說啦',
+  '開學再讀',
+  '考前才翻書',
+  '單字背了就忘',
+  '多益550路過',
+  '在線等救援',
+  '公會邊緣人',
+  '爆肝中請勿打擾',
+  '我只想下線',
+  '肝帝已上線',
+  '我還有頭髮',
+  '鍵盤小天才',
+  '夜貓子Lv99',
+  'EnglishNoob',
+  'JustHereForFun',
+  'NeverGonnaLearn',
+  'StudyHardOrDie',
+];
+
+const NPC_LINES = [
+  '今天先到這，明天再說',
+  '這題我真的不會',
+  '有人可以教我嗎',
+  '我就爛',
+  '已放棄治療',
+  '單字背了就忘，救命',
+  '錢錢沒有不見，只是變成單字卡了',
+  '阿姨我不想努力了',
+  '剛打完一場，來去休息',
+  '今天多益模考又爆了',
+  '文法真的好難',
+  '誰可以陪我練口說',
+  '剛吃完消夜',
+  '有人在嗎',
+  '公會Boss什麼時候開',
+  '誰要一起打',
+  '我又來簽到了',
+  '終於升等了，感動',
+  '這關卡超難，我卡三天了',
+  '求大神帶飛',
+  '先下線了，晚安',
+  '明天要考試，但我在這',
+  '我今天只答對三題',
+  '連勝中，勿擾',
+  '誰的單字卡比我多',
+  '我抽到SSR了！',
+  '非洲人路過',
+  '歐洲人不要講話',
+];
+
+const AVATAR_COLORS = [
+  ['#7c5cff', '#4a8cff'],
+  ['#00b894', '#00cec9'],
+  ['#e17055', '#fab1a0'],
+  ['#d63031', '#ff7675'],
+  ['#0984e3', '#74b9ff'],
+  ['#6c5ce7', '#a29bfe'],
+  ['#fdcb6e', '#ffeaa7'],
+  ['#fd79a8', '#e84393'],
+];
+
+const AVATAR_EMOJI = ['🙂','😎','🤓','🐱','🐶','🦊','🐼','🐧','🦉','🐢','🐙','🦄'];
+
+function randomFrom(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function makeNPC(){
+  const [av1, av2] = randomFrom(AVATAR_COLORS);
+  return {
+    name: randomFrom(NPC_NAMES),
+    isNPC: true,
+    joinedAt: Date.now(),
+    level: Math.floor(Math.random()*15) + 1,
+    avatar: randomFrom(AVATAR_EMOJI),
+    av1, av2,
+  };
+}
+
+function scheduleNextJoin(){
+  if (!state.guild) return;
+  // 第一次加入快一點（30~60秒），之後 60~180 秒
+  const base = state.guild.members.length <= 1 ? 30000 : 60000;
+  const range = state.guild.members.length <= 1 ? 30000 : 120000;
+  state.guild.nextJoinAt = Date.now() + base + Math.random()*range;
+}
+
+function addNPC(){
+  if (!state.guild) return;
+  if (state.guild.members.length >= 8) {
+    // 滿了就不再加，只是延後下次檢查
+    state.guild.nextJoinAt = Date.now() + 600000;
+    return;
+  }
+  // 名字不重複
+  let npc;
+  let guard = 0;
+  do {
+    npc = makeNPC();
+    guard++;
+  } while (state.guild.members.some(m => m.name === npc.name) && guard < 20);
+  state.guild.members.push(npc);
+  scheduleNextJoin();
+  pushBanner('🏰', `玩家：<b>${npc.name}</b> 已加入公會`, 'guild');
+  save();
+  renderGuild();
+}
+
+function pushNPChat(){
+  if (!state.guild) return;
+  const npcs = state.guild.members.filter(m => m.isNPC);
+  if (!npcs.length) return;
+  const speaker = randomFrom(npcs);
+  const line = randomFrom(NPC_LINES);
+  const now = Date.now();
+  // 避免連續重複同一句
+  const last = state.guild.messages[state.guild.messages.length-1];
+  if (last && last.text === line) return;
+  state.guild.messages.push({
+    name: speaker.name,
+    isNPC: true,
+    text: line,
+    time: now,
+  });
+  if (state.guild.messages.length > 20) {
+    state.guild.messages = state.guild.messages.slice(-20);
+  }
+  save();
+  if (currentScreen === 'guild') renderGuildLog();
+}
+
+/* ---- 定時檢查（每 5 秒看一次） ---- */
+let npcTimersStarted = false;
+function startNpcTimers(){
+  if (npcTimersStarted) return;
+  npcTimersStarted = true;
+
+  setInterval(() => {
+    if (!state.guild) return;
+    // 處理「錯過的加入」（例如關掉分頁很久）
+    let safety = 0;
+    while (state.guild.nextJoinAt && Date.now() >= state.guild.nextJoinAt
+           && state.guild.members.length < 8 && safety < 5) {
+      addNPC();
+      safety++;
+    }
+  }, 5000);
+
+  // NPC 說話：隨機 25~70 秒一次
+  const scheduleChat = () => {
+    setTimeout(() => {
+      if (state.guild && state.guild.members.filter(m=>m.isNPC).length) {
+        pushNPChat();
+      }
+      scheduleChat();
+    }, 25000 + Math.random()*45000);
+  };
+  scheduleChat();
+}
+
+/* ---- 公會 UI ---- */
+function renderGuild(){
+  if (!state.guild) {
+    $('#guildCreateUI').classList.remove('hidden');
+    $('#guildMainUI').classList.add('hidden');
+    return;
+  }
+  $('#guildCreateUI').classList.add('hidden');
+  $('#guildMainUI').classList.remove('hidden');
+
+  $('#guildNameDisplay').textContent = state.guild.name;
+  const n = state.guild.members.length;
+  $('#guildSubDisplay').textContent = `${n} 位成員 · 建立於 ${timeAgo(state.guild.createdAt)}`;
+
+  const selfName = '你';
+  const list = $('#guildMemberList');
+  let html = `
+    <div class="guild-member self" style="--av1:#ffd93d;--av2:#ff9500">
+      <div class="gm-avatar">👑</div>
+      <div class="gm-info">
+        <div class="gm-name">${selfName}</div>
+        <div class="gm-meta">會長 · Lv.${P().stage}</div>
+      </div>
+    </div>`;
+  html += state.guild.members.map(m => `
+    <div class="guild-member" style="--av1:${m.av1};--av2:${m.av2}">
+      <div class="gm-avatar">${m.avatar}</div>
+      <div class="gm-info">
+        <div class="gm-name">${escapeHTML(m.name)}<span class="npc-tag">(NPC)</span></div>
+        <div class="gm-meta">Lv.${m.level} · 加入於 ${timeAgo(m.joinedAt)}</div>
+      </div>
+    </div>`).join('');
+  list.innerHTML = html;
+
+  renderGuildLog();
+}
+
+function renderGuildLog(){
+  const log = $('#guildLog');
+  if (!state.guild || !state.guild.messages.length) {
+    log.innerHTML = '';
+    return;
+  }
+  log.innerHTML = state.guild.messages.map(msg => `
+    <div class="log-line">
+      <span class="who ${msg.isNPC?'npc':''}">${escapeHTML(msg.name)}${msg.isNPC?' (NPC)':''}:</span>
+      ${escapeHTML(msg.text)}
+    </div>`).join('');
+  log.scrollTop = log.scrollHeight;
+}
+
+function timeAgo(ts){
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return '剛剛';
+  const m = Math.floor(s/60);
+  if (m < 60) return `${m} 分鐘前`;
+  const h = Math.floor(m/60);
+  if (h < 24) return `${h} 小時前`;
+  return `${Math.floor(h/24)} 天前`;
+}
+
+function escapeHTML(str){
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+/* ---- 橫幅通知系統 ---- */
+const BannerQueue = {
+  queue: [],
+  showing: false,
+  push(icon, text, type){
+    this.queue.push({ icon, text, type: type || '' });
+    if (!this.showing) this.next();
+  },
+  next(){
+    if (!this.queue.length) { this.showing = false; return; }
+    this.showing = true;
+    const { icon, text, type } = this.queue.shift();
+    const el = document.createElement('div');
+    el.className = 'banner ' + type;
+    el.innerHTML = `<span class="b-icon">${icon}</span><span class="b-text">${text}</span>`;
+    $('#bannerContainer').appendChild(el);
+    setTimeout(() => {
+      el.classList.add('out');
+      setTimeout(() => { el.remove(); this.next(); }, 380);
+    }, 3000);
+  }
+};
+
+function pushBanner(icon, text, type){
+  BannerQueue.push(icon, text, type);
+}
+
 
 /* =========================================================
    8. UI 更新
@@ -1443,6 +1889,7 @@ function renderAll(){
   updateModeUI();
   renderHome();
   renderCards();
+    if (currentScreen === 'guild') renderGuild();
   updateAudioBtns();
   save();
 }
@@ -1965,6 +2412,7 @@ function switchScreen(name){
   $$('.screen').forEach(s=>s.classList.toggle('active',s.id==='screen-'+name));
   $$('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
   if(name==='cards')renderCards();
+    if(name==='guild')renderGuild();
   if(name==='home')renderHome();
   if(name==='gacha')AudioSys.playMusic('gacha');
   else AudioSys.playMusic('home');
@@ -2052,6 +2500,36 @@ function init(){
     if(state.sfx)S.click();
     save();updateAudioBtns();
   };
+
+    // 建立公會
+  $('#createGuildBtn').onclick = () => {
+    const name = $('#guildNameInput').value.trim();
+    if (!name) { toast('請先輸入公會名稱'); S.wrong(); return; }
+    if (name.length > 12) { toast('名稱太長（最多 12 字）'); S.wrong(); return; }
+    state.guild = {
+      name,
+      createdAt: Date.now(),
+      members: [],
+      messages: [{
+        name: '系統', isNPC: false,
+        text: `公會「${name}」正式成立！`, time: Date.now()
+      }],
+      nextJoinAt: 0,
+    };
+    scheduleNextJoin();
+    save();
+    S.rare();
+    renderGuild();
+    toast(`公會「${name}」已建立！`);
+  };
+
+  // 輸入框按 Enter 也能建立
+  $('#guildNameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('#createGuildBtn').click();
+  });
+
+  // 啟動 NPC 計時器
+  startNpcTimers();
 
   renderAll();
 
