@@ -306,6 +306,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         </div>
 
         <button class="big-btn" id="startBattleBtn">⚔️ 開始戰鬥</button>
+        <button class="big-btn ghost" id="grammarBtn" disabled>📝 文法挑戰（第 5 關解鎖）</button>
         <button class="big-btn gept" id="geptBtn">📗 GEPT 專屬模式</button>
         <button class="big-btn ghost hidden" id="backToToeicBtn">↩️ 切回 TOEIC 模式</button>
       </section>
@@ -900,6 +901,78 @@ W("possess","擁有","v",2,"中高級",["possesses","possessed","possessing"],["
 ];
 
 /* =========================================================
+   2b. 文法模式句子庫
+   ========================================================= */
+const G = (q,a,alt) => ({q, a, alt:alt||[]});
+
+const GRAMMAR_SENTENCES = [
+  /* ---- 動詞 ---- */
+  G("Please _____ your report by 5 PM.","submit",["complete","revise"]),
+  G("I will _____ the meeting for next Monday.","arrange",["reschedule"]),
+  G("The manager decided to _____ the proposal.","approve",["review","discuss"]),
+  G("We should _____ the client about the delay.","inform",["notify","contact"]),
+  G("Could you _____ the file to my email?","forward",["attach","submit"]),
+  G("Please _____ a copy of your ID to the form.","attach",["submit"]),
+  G("She needs to _____ her presentation before Friday.","revise",["complete","review"]),
+  G("The company will _____ the contract next week.","review",["discuss","approve"]),
+  G("Don't _____ the order unless it's necessary.","cancel",["postpone"]),
+  G("They had to _____ the event due to the rain.","postpone",["cancel","reschedule"]),
+  G("We should _____ the meeting to next week.","reschedule",["postpone","delay"]),
+  G("The customer wants to _____ this product.","purchase",["review"]),
+  G("Could you _____ the price for me?","confirm",["discuss"]),
+  G("He will _____ the team about the change.","notify",["inform","contact"]),
+  G("We need to _____ the budget for next year.","allocate",["review","increase"]),
+  G("The manager will _____ the new policy.","implement",["announce","approve"]),
+  G("They decided to _____ the merger.","announce",["approve","implement"]),
+  G("We need to _____ our sales strategy.","improve",["revise","review"]),
+  G("We should _____ the meeting until Friday.","delay",["postpone","reschedule"]),
+  G("Please _____ the terms of the contract.","review",["discuss","confirm"]),
+  G("The company decided to _____ a new branch.","establish",["launch","open"]),
+  G("We must _____ the safety regulations.","enforce",["obey","follow"]),
+  G("The manager will _____ the meeting tomorrow.","attend",["arrange","delay"]),
+  G("Please _____ me of any changes.","notify",["inform","contact"]),
+
+  /* ---- 形容詞 ---- */
+  G("The service at this hotel is very _____.","professional",["efficient","reliable"]),
+  G("She is a very _____ employee.","reliable",["diligent","professional"]),
+  G("This report is quite _____.","comprehensive",["substantial"]),
+  G("Our new product is highly _____.","innovative",["competitive","effective"]),
+  G("The deadline is _____, so please hurry.","urgent",["immediate"]),
+  G("The instructions were very _____.","explicit",["specific","general"]),
+  G("This information is strictly _____.","confidential",["proprietary"]),
+  G("The new system is more _____ than the old one.","efficient",["effective","reliable"]),
+  G("The contract terms are quite _____.","ambiguous",["implicit"]),
+  G("His argument was very _____.","coherent",["pertinent","relevant"]),
+  G("The change was _____ given the circumstances.","inevitable",["necessary","immediate"]),
+  G("The supply is _____ for our needs.","adequate",["sufficient","substantial"]),
+  G("The spending was _____, which worried us.","excessive",["considerable","substantial"]),
+  G("His contribution was _____, hardly noticeable.","negligible",["minimal"]),
+  G("The improvement was _____, a huge leap.","significant",["substantial","considerable"]),
+  G("The two events were _____.","simultaneous",["consecutive"]),
+  G("These rules are _____ for everyone.","relevant",["pertinent"]),
+
+  /* ---- 名詞 ---- */
+  G("The _____ will be held in the main hall.","conference",["seminar","workshop"]),
+  G("We received the _____ yesterday.","invoice",["receipt","contract"]),
+  G("The company's _____ has grown steadily.","revenue",["profit","turnover"]),
+  G("Please sign the _____ before the deadline.","contract",["invoice"]),
+  G("The _____ was very satisfied with our service.","client",["customer"]),
+  G("We need to update our _____.","inventory",["catalog"]),
+  G("The _____ of the shipment is next week.","delivery",["shipment"]),
+  G("He submitted his _____ to the HR department.","resume",["report"]),
+  G("The annual _____ is due next month.","report",["budget"]),
+  G("She got a _____ for the damaged product.","refund",["discount"]),
+  G("The _____ will be delivered tomorrow.","shipment",["delivery","product"]),
+  G("We need to reduce our _____.","expenditure",["budget"]),
+  G("They filed a _____ for their new invention.","patent",["trademark","copyright"]),
+  G("The company's _____ has increased this year.","profit",["revenue","turnover"]),
+  G("We must follow all safety _____.","regulation",["compliance"]),
+  G("The project's _____ is next month.","deadline",["schedule"]),
+  G("The new _____ will start next Monday.","employee",["manager"]),
+  G("Please submit the _____ by Friday.","report",["invoice","resume"]),
+];
+
+/* =========================================================
    3. 常數
    ========================================================= */
 const RARITY = {
@@ -1309,6 +1382,17 @@ function renderHome(){
   const idx=(p.stage-1)%ENEMY_TYPES.length;
   $('#stageNum').textContent=p.stage;
   $('#stageEnemyName').textContent=ENEMY_TYPES[idx].n;
+    // 文法模式解鎖檢查
+  const gb = $('#grammarBtn');
+  if (gb) {
+    const stage = P().stage;
+    const unlocked = stage >= 5;
+    gb.disabled = !unlocked;
+    gb.textContent = unlocked
+      ? '📝 文法挑戰'
+      : `📝 文法挑戰（第 5 關解鎖，目前第 ${stage} 關）`;
+    gb.classList.toggle('ghost', !unlocked);
+  }
 }
 
 let cardFilter='all';
@@ -1520,7 +1604,7 @@ let battle=null;
 let qTimer=null;
 const Q_TIME=7000;
 
-function startBattle(){
+function startBattle(grammar){
   const p=P();
   const w=wordOf(p.team);
   if(!w||!p.cards[w.w]){toast('請先選擇出戰卡牌');S.wrong();return}
@@ -1536,6 +1620,7 @@ function startBattle(){
     enemyHp:enemyMaxHp,enemyMaxHp,enemyAtk,
     combo:0,busy:false,over:false,
     qStart:0,currentQ:null,
+    mode: grammar ? 'grammar' : 'vocab',
   };
 
   $('#heroSprite').textContent=POS_SPRITE[w.pos];
@@ -1546,6 +1631,9 @@ function startBattle(){
   $('#battleResult').innerHTML='';
   updateBars();
   updateCombo();
+
+  // 文法模式：隱藏計時條
+  $('#timerWrap').style.display = grammar ? 'none' : '';
 
   $('#battle-ui').classList.remove('closed');
   AudioSys.playMusic('battle');
@@ -1628,33 +1716,95 @@ function generateQuestion(){
   return {text,options,correctIndex:options.indexOf(correct),mult,type,word:w};
 }
 
+/* ---- 文法出題：正確答案來自句子庫，干擾項來自玩家詞庫 ---- */
+function generateGrammarQuestion(){
+  const s = pick(GRAMMAR_SENTENCES);
+  const cardPool = Object.keys(P().cards).map(id => wordOf(id)).filter(Boolean);
+
+  // 找正確答案的詞性（從遊戲池子查）
+  const correctWord = WORDS.find(x=>x.w===s.a) || GEPT_MH.find(x=>x.w===s.a);
+  const targetPos = correctWord ? correctWord.pos : null;
+
+  // 排除正確答案與可接受同義詞
+  const exclude = new Set([s.a.toLowerCase(), ...(s.alt||[]).map(x=>x.toLowerCase())]);
+  const available = cardPool.filter(w => !exclude.has(w.w.toLowerCase()));
+
+  // 優先選同詞性當干擾項
+  const samePos  = targetPos ? available.filter(w => w.pos === targetPos) : [];
+  const otherPos = targetPos ? available.filter(w => w.pos !== targetPos) : available;
+  shuffle(samePos); shuffle(otherPos);
+
+  const distractors = [];
+  const pushUniq = (w) => {
+    if (distractors.length >= 3) return;
+    if (!distractors.some(d => d.w === w.w)) distractors.push(w);
+  };
+  samePos.forEach(pushUniq);
+  otherPos.forEach(pushUniq);
+
+  // 玩家詞庫不夠，從全域池補齊
+  if (distractors.length < 3) {
+    const globalPool = shuffle(currentPool().filter(w =>
+      !exclude.has(w.w.toLowerCase()) && !distractors.some(d=>d.w===w.w)
+    ));
+    for (const w of globalPool) {
+      if (distractors.length >= 3) break;
+      pushUniq(w);
+    }
+  }
+
+  // 合成 4 個選項
+  const allOpts = shuffle([
+    { w: s.a, isCorrect: true },
+    ...distractors.map(w => ({ w: w.w, isCorrect: false }))
+  ]);
+
+  return {
+    text: s.q.replace('___', '<b>_____</b>'),
+    options: allOpts.map(o => o.w),
+    correctIndex: allOpts.findIndex(o => o.isCorrect),
+    correctAnswer: s.a,
+    alternatives: s.alt || [],
+    isGrammar: true,
+    mult: 1.3,
+  };
+}
+  
 function nextQuestion(){
   if(!battle||battle.over)return;
   battle.busy=false;
   clearTimeout(qTimer);
 
-  const q=generateQuestion();
-  battle.currentQ=q;
-  $('#questionText').innerHTML=q.text;
+  const isGrammar = battle.mode === 'grammar';
+  const q = isGrammar ? generateGrammarQuestion() : generateQuestion();
+  battle.currentQ = q;
+  $('#questionText').innerHTML = q.text;
 
   const optEl=$('#options');optEl.innerHTML='';
   q.options.forEach((opt,i)=>{
     const btn=document.createElement('button');
-    btn.className='opt';btn.textContent=opt;
+    btn.className='opt';
+    btn.textContent = (typeof opt === 'string') ? opt : opt.w;
     btn.onclick=()=>answer(i,btn);
     optEl.appendChild(btn);
   });
 
-  const bar=$('#timerBar');
-  bar.style.transition='none';bar.style.width='100%';
-  void bar.offsetWidth;
-  requestAnimationFrame(()=>{
-    bar.style.transition=`width ${Q_TIME}ms linear`;
-    bar.style.width='0%';
-  });
-
-  battle.qStart=Date.now();
-  qTimer=setTimeout(()=>answer(-1,null),Q_TIME);
+  if (isGrammar) {
+    // 文法模式：無時間限制
+    $('#timerWrap').style.display = 'none';
+    battle.qStart = Date.now();
+  } else {
+    $('#timerWrap').style.display = '';
+    const bar=$('#timerBar');
+    bar.style.transition='none';bar.style.width='100%';
+    void bar.offsetWidth;
+    requestAnimationFrame(()=>{
+      bar.style.transition=`width ${Q_TIME}ms linear`;
+      bar.style.width='0%';
+    });
+    battle.qStart=Date.now();
+    qTimer=setTimeout(()=>answer(-1,null),Q_TIME);
+  }
 }
 
 function answer(idx,btn){
@@ -1663,16 +1813,18 @@ function answer(idx,btn){
   const bar=$('#timerBar');bar.style.transition='none';
 
   const q=battle.currentQ;
-  const correct=idx===q.correctIndex;
+  const isGrammar = battle.mode === 'grammar';
+  const correct = idx===q.correctIndex;
   $$('#options .opt').forEach(b=>b.classList.add('disabled'));
 
   if(correct){
     btn.classList.add('correct');S.correct();
     const elapsed=Date.now()-battle.qStart;
-    const speed=clamp(1-elapsed/Q_TIME,0,1);
+    const speed = isGrammar ? 0.5 : clamp(1-elapsed/Q_TIME,0,1);
     let dmg=battle.heroAtk;
     dmg*=(1+Math.min(battle.combo,10)*0.12);
-    dmg*=(1+speed*0.6);dmg*=q.mult;
+    dmg*=(1+speed*0.6);
+    dmg*=(q.mult||1);
     const crit=Math.random()<0.12;
     if(crit)dmg*=2;
     dmg=Math.max(1,Math.round(dmg));
@@ -1854,6 +2006,11 @@ function init(){
   });
 
   $('#startBattleBtn').onclick=()=>{S.click();startBattle()};
+  $('#grammarBtn').onclick=()=>{
+  if($('#grammarBtn').disabled) return;
+  S.click();
+  startBattle(true);
+};
   $('#drawBtn').onclick=()=>{S.click();doDraw(1)};
   $('#drawTenBtn').onclick=()=>{S.click();doDraw(10)};
 
