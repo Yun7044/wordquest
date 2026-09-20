@@ -1062,6 +1062,9 @@ function toast(msg){
 /* =========================================================
    6. 遊戲狀態（含多模式進度）
    ========================================================= */
+/* =========================================================
+   6. 遊戲狀態（含多模式進度）—— 強化存檔版
+   ========================================================= */
 const SAVE_KEY='wordquest_multi_v1';
 const GEPT_STARTERS=['adjust','admire','adopt'];
 
@@ -1086,58 +1089,145 @@ const DEFAULT_STATE=()=>({
 });
 
 let state=DEFAULT_STATE();
+let saveAvailable=true;
 
-// 快速訪問當前模式進度
 function P(){return state.progress[state.mode]}
 function currentPool(){return state.mode==='toeic'?WORDS:GEPT_MH}
 
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state))}catch(e){}}
-function load(){
+/* ---- 儲存可用性檢測 ---- */
+function checkStorage(){
   try{
-    const raw=localStorage.getItem(SAVE_KEY);
-    if(raw){
-      const d=JSON.parse(raw);
-      const base=DEFAULT_STATE();
-      // 合併頂層
-      Object.assign(base,d);
-      // 合併 progress 確保結構完整
-      if(d.progress){
-        if(d.progress.toeic)Object.assign(base.progress.toeic,d.progress.toeic);
-        if(d.progress.geptMid)Object.assign(base.progress.geptMid,d.progress.geptMid);
-      }
-      state=base;
-    }
-  }catch(e){state=DEFAULT_STATE()}
-  if(state.music===undefined)state.music=true;
-  if(state.sfx===undefined)state.sfx=true;
-  if(!state.progress)state.progress=DEFAULT_STATE().progress;
-  if(!state.progress.toeic)state.progress.toeic=DEFAULT_STATE().progress.toeic;
-  if(!state.progress.geptMid)state.progress.geptMid=DEFAULT_STATE().progress.geptMid;
-  if(!state.mode)state.mode='toeic';
+    const test='__wq_test__'+Date.now();
+    localStorage.setItem(test,'1');
+    localStorage.removeItem(test);
+    return true;
+  }catch(e){ return false; }
 }
 
+/* ---- 儲存（會回報失敗） ---- */
+function save(){
+  if(!saveAvailable) return false;
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    return true;
+  }catch(e){
+    console.warn('[Save] 儲存失敗：', e);
+    saveAvailable=false;
+    // 只提示一次
+    if(!save._warned){
+      save._warned=true;
+      setTimeout(()=>toast('⚠️ 無法儲存進度（瀏覽器限制）'), 200);
+    }
+    return false;
+  }
+}
+
+/* ---- 讀取（含結構驗證與深合併） ---- */
+function load(){
+  saveAvailable=checkStorage();
+  if(!saveAvailable){
+    state=DEFAULT_STATE();
+    setTimeout(()=>toast('⚠️ 瀏覽器不支援儲存，進度將不會保留'), 1000);
+    return;
+  }
+
+  let raw=null;
+  try{ raw=localStorage.getItem(SAVE_KEY); }catch(e){ raw=null; }
+
+  if(!raw){ state=DEFAULT_STATE(); return; }
+
+  try{
+    const d=JSON.parse(raw);
+    if(!d || typeof d!=='object'){ state=DEFAULT_STATE(); return; }
+
+    const base=DEFAULT_STATE();
+
+    // 頂層數值（逐項驗證，壞資料不覆蓋）
+    if(typeof d.gold==='number' && isFinite(d.gold) && d.gold>=0)
+      base.gold=Math.floor(d.gold);
+    if(typeof d.dust==='number' && isFinite(d.dust) && d.dust>=0)
+      base.dust=Math.floor(d.dust);
+    if(typeof d.music==='boolean') base.music=d.music;
+    if(typeof d.sfx==='boolean')   base.sfx=d.sfx;
+    if(d.mode==='toeic' || d.mode==='geptMid') base.mode=d.mode;
+
+    // 深合併 progress
+    if(d.progress && typeof d.progress==='object'){
+      ['toeic','geptMid'].forEach(mode=>{
+        const src=d.progress[mode];
+        if(!src || typeof src!=='object') return;
+        const dst=base.progress[mode];
+
+        if(typeof src.stage==='number' && isFinite(src.stage) && src.stage>=1){
+          dst.stage=Math.min(99999, Math.floor(src.stage));
+        }
+        if(typeof src.team==='string') dst.team=src.team;
+
+        if(src.cards && typeof src.cards==='object'){
+          dst.cards={};
+          Object.keys(src.cards).forEach(id=>{
+            const card=src.cards[id];
+            if(!card || typeof card!=='object') return;
+            const lv  =Math.max(1, Math.min(MAX_LV,   parseInt(card.lv)   || 1));
+            const star=Math.max(1, Math.min(MAX_STAR, parseInt(card.star) || 1));
+            dst.cards[id]={lv, star};
+          });
+        }
+      });
+    }
+
+    state=base;
+  }catch(e){
+    console.error('[Load] 解析失敗：', e);
+    state=DEFAULT_STATE();
+  }
+}
+
+/* ---- 結構清理（每項欄位都補齊） ---- */
 function sanitize(){
-  // TOEIC
+  if(!state.progress || typeof state.progress!=='object'){
+    state.progress=DEFAULT_STATE().progress;
+  }
+  ['toeic','geptMid'].forEach(mode=>{
+    if(!state.progress[mode] || typeof state.progress[mode]!=='object'){
+      state.progress[mode]=DEFAULT_STATE().progress[mode];
+    }
+    const p=state.progress[mode];
+    if(!p.cards || typeof p.cards!=='object') p.cards={};
+    if(typeof p.stage!=='number' || !isFinite(p.stage) || p.stage<1) p.stage=1;
+  });
+
+  // TOEIC：過濾無效卡 + 補齊初始卡
   const validT=new Set(WORDS.map(x=>x.w));
   const pt=state.progress.toeic;
-  Object.keys(pt.cards).forEach(id=>{if(!validT.has(id))delete pt.cards[id]});
-  if(!Object.keys(pt.cards).length)pt.cards={office:{lv:1,star:1},meeting:{lv:1,star:1},available:{lv:1,star:1}};
-  if(!pt.team||!pt.cards[pt.team])pt.team=Object.keys(pt.cards)[0];
-  // GEPT
+  Object.keys(pt.cards).forEach(id=>{ if(!validT.has(id)) delete pt.cards[id]; });
+  if(!Object.keys(pt.cards).length){
+    pt.cards={office:{lv:1,star:1},meeting:{lv:1,star:1},available:{lv:1,star:1}};
+  }
+  if(!pt.team || !pt.cards[pt.team]) pt.team=Object.keys(pt.cards)[0];
+
+  // GEPT：過濾無效卡 + 補齊初始卡
   const validG=new Set(GEPT_MH.map(x=>x.w));
   const pg=state.progress.geptMid;
-  Object.keys(pg.cards).forEach(id=>{if(!validG.has(id))delete pg.cards[id]});
+  Object.keys(pg.cards).forEach(id=>{ if(!validG.has(id)) delete pg.cards[id]; });
   if(!Object.keys(pg.cards).length){
     pg.cards={};
-    GEPT_STARTERS.forEach(id=>pg.cards[id]={lv:1,star:1});
+    GEPT_STARTERS.forEach(id=>{ pg.cards[id]={lv:1, star:1}; });
   }
-  if(!pg.team||!pg.cards[pg.team])pg.team=Object.keys(pg.cards)[0];
+  if(!pg.team || !pg.cards[pg.team]) pg.team=Object.keys(pg.cards)[0];
 }
 
-// 從兩個池子查單字
+/* ---- 從兩個池子查單字 ---- */
 function wordOf(id){
-  return WORDS.find(x=>x.w===id)||GEPT_MH.find(x=>x.w===id);
+  return WORDS.find(x=>x.w===id) || GEPT_MH.find(x=>x.w===id);
 }
+
+/* ---- 離開 / 隱藏時自動儲存 ---- */
+window.addEventListener('pagehide', ()=>save());
+window.addEventListener('beforeunload', ()=>save());
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='hidden') save();
+});
 
 /* =========================================================
    7. 卡牌數值
@@ -1670,13 +1760,8 @@ function winBattle(){
   const goldGain=40+P().stage*20;
   state.gold+=goldGain;
   const nextStage=P().stage+1;
+  P().stage=nextStage;              // ← 立刻更新關卡
   showResult(true,goldGain,nextStage);
-  updateTopbar();save();
-}
-function loseBattle(){
-  if(!battle||battle.over)return;
-  battle.over=true;clearTimeout(qTimer);S.lose();
-  showResult(false,0,P().stage);
   updateTopbar();save();
 }
 
@@ -1697,16 +1782,14 @@ function showResult(win,gold,nextStage){
       <button class="big-btn" id="resultBtn">${win?'繼續前進':'返回主頁'}</button>
     </div>`;
 
-  $('#resultBtn').onclick=()=>{
-    S.click();
-    if(win){P().stage=nextStage;save()}
-    box.classList.add('hidden');
-    $('#battle-ui').classList.add('closed');
-    renderAll();
-    AudioSys.playMusic(currentScreen==='gacha'?'gacha':'home');
-    if(win)toast(`抵達第 ${nextStage} 關！`);
-  };
-}
+$('#resultBtn').onclick=()=>{
+  S.click();
+  box.classList.add('hidden');
+  $('#battle-ui').classList.add('closed');
+  renderAll();
+  AudioSys.playMusic(currentScreen==='gacha'?'gacha':'home');
+  if(win)toast(`抵達第 ${nextStage} 關！`);
+};
 
 /* =========================================================
    12. 模式切換
