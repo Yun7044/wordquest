@@ -3987,6 +3987,104 @@ init();
   console.log('[Fix4] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   Fix5：VS 畫面白屏修復 + 視覺升級
+   問題：.vs-flash 動畫結束後回到初始狀態（白色不透明）而卡住
+   解法：覆蓋 CSS，改用 forwards，並升級為金光爆閃
+   ========================================================= */
+(function(){
+  'use strict';
+
+  console.log('[Fix5] VS 畫面修復載入...');
+
+  const cssText = `
+/* ===== 覆蓋原本的 vs-flash ===== */
+#vsScreen .vs-flash{
+  background:radial-gradient(circle at center,
+    #ffffff 0%,
+    #fff5c2 12%,
+    #ffd93d 28%,
+    rgba(255,149,0,.5) 48%,
+    transparent 70%) !important;
+  animation:vsFlashNew .65s cubic-bezier(.2,.8,.3,1) .38s backwards !important;
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+@keyframes vsFlashNew{
+  0%{opacity:0;transform:scale(.2)}
+  10%{opacity:1;transform:scale(1.1)}
+  35%{opacity:.75;transform:scale(1.7)}
+  70%{opacity:.25;transform:scale(2.4)}
+  100%{opacity:0;transform:scale(3.2)}
+}
+
+/* ===== 爆閃後：中央金色餘光（持續到 VS 結束）===== */
+#vsScreen::after{
+  content:'';
+  position:absolute;left:50%;top:50%;
+  width:60vmin;height:60vmin;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(255,217,61,.28) 0%,
+    rgba(255,149,0,.18) 35%,
+    transparent 70%);
+  animation:vsAfterGlow .9s ease-out .55s backwards;
+  pointer-events:none;
+  z-index:1;
+}
+@keyframes vsAfterGlow{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}
+  40%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+  100%{opacity:.85;transform:translate(-50%,-50%) scale(1)}
+}
+
+/* ===== 光環改成更細緻的雙層 ===== */
+#vsScreen .vs-ring{
+  border:2px solid rgba(255,217,61,.9) !important;
+  box-shadow:
+    0 0 40px rgba(255,217,61,.7),
+    0 0 80px rgba(255,149,0,.5),
+    inset 0 0 40px rgba(255,217,61,.35) !important;
+}
+
+/* ===== VS 字樣增加呼吸光暈 ===== */
+#vsScreen .vs-vs{
+  animation:
+    vsVsIn .7s cubic-bezier(.2,1.6,.4,1) .35s backwards,
+    vsVsPulse 1.5s ease-in-out .9s infinite !important;
+}
+@keyframes vsVsPulse{
+  0%,100%{filter:drop-shadow(0 0 24px rgba(255,217,61,.9))}
+  50%{filter:drop-shadow(0 0 44px rgba(255,217,61,1)) drop-shadow(0 0 80px rgba(255,149,0,.7))}
+}
+
+/* ===== 背景網格加一點金色微光 ===== */
+#vsScreen .vs-lines{
+  opacity:.4 !important;
+  background:
+    linear-gradient(90deg,transparent 48%,rgba(255,217,61,.06) 50%,transparent 52%),
+    linear-gradient(0deg,transparent 48%,rgba(255,217,61,.04) 50%,transparent 52%) !important;
+  background-size:80px 80px !important;
+}
+`;
+
+  const styleEl = document.createElement('style');
+  styleEl.textContent = cssText;
+  document.head.appendChild(styleEl);
+
+  // ===== 保險：如果已經有舊的 VS 畫面在，直接修掉 =====
+  const existing = document.querySelector('#vsScreen .vs-flash');
+  if (existing) {
+    existing.style.animation = 'vsFlashNew .65s cubic-bezier(.2,.8,.3,1) .38s backwards forwards';
+    setTimeout(() => existing.remove(), 1200);
+  }
+
+  console.log('[Fix5] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
