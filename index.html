@@ -578,6 +578,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 </div>
 
+
+
 <script>
 /* =========================================================
    1. 單字資料庫 —— TOEIC 250 字
@@ -2538,6 +2540,777 @@ function init(){
 }
 
 init();
+
 </script>
+
+<script>
+/* =========================================================
+   抽卡儀式感強化包 —— 自包含版本
+   貼在原本 之後即可
+   ========================================================= */
+(function(){
+  'use strict';
+
+  /* ========== 1. 注入 CSS ========== */
+  const cssText = `
+#drawConfirm{
+  position:fixed;inset:0;z-index:400;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(4,6,12,.8);backdrop-filter:blur(10px);
+  animation:fadeIn .2s;
+}
+.draw-confirm-box{
+  width:86%;max-width:360px;padding:24px 22px 20px;
+  background:linear-gradient(180deg,#1a2038,#0f1424);
+  border-radius:22px;border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 24px 70px -20px rgba(0,0,0,.95),0 0 40px -10px rgba(139,124,255,.3);
+  text-align:center;
+  animation:confirmPop .35s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes confirmPop{
+  from{opacity:0;transform:scale(.85) translateY(20px)}
+  to{opacity:1;transform:none}
+}
+.draw-confirm-box .dc-icon{
+  font-size:44px;margin-bottom:8px;
+  filter:drop-shadow(0 0 20px rgba(255,217,61,.6));
+  animation:dcIconPulse 1.6s ease-in-out infinite;
+}
+@keyframes dcIconPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.08)}
+}
+.draw-confirm-box h3{
+  font-size:20px;font-weight:900;letter-spacing:1px;margin-bottom:6px;
+  background:linear-gradient(135deg,#ffd93d,#ff9500);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.draw-confirm-box .dc-sub{font-size:12.5px;color:#8b93b0;margin-bottom:16px}
+.draw-confirm-box .dc-info{
+  background:rgba(255,255,255,.05);border-radius:12px;
+  padding:12px 14px;margin-bottom:16px;
+  display:flex;flex-direction:column;gap:8px;font-size:13px;
+}
+.draw-confirm-box .dc-row{display:flex;justify-content:space-between;align-items:center}
+.draw-confirm-box .dc-row span{color:#8b93b0}
+.draw-confirm-box .dc-row b{font-weight:800}
+.draw-confirm-box .dc-row b.gold{color:#ffd93d}
+.draw-confirm-box .dc-row b.ok{color:#7bed9f}
+.draw-confirm-box .dc-row b.no{color:#ff6b81}
+.draw-confirm-box .dc-pity{
+  font-size:11.5px;color:#c3bcff;background:rgba(139,124,255,.14);
+  border:1px solid rgba(139,124,255,.3);border-radius:10px;
+  padding:8px 10px;margin-bottom:16px;line-height:1.5;
+}
+.draw-confirm-box .dc-pity b{color:#ffd93d}
+.draw-confirm-box .dc-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.draw-confirm-box .dc-btn{
+  padding:13px;border-radius:13px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.07);color:#e8ecf5;
+  font-family:inherit;font-size:14px;font-weight:800;
+  cursor:pointer;transition:transform .12s;
+}
+.draw-confirm-box .dc-btn:active{transform:scale(.95)}
+.draw-confirm-box .dc-btn.primary{
+  background:linear-gradient(135deg,#7c5cff,#4a8cff);border:none;
+  box-shadow:0 8px 20px -8px rgba(110,90,255,.9);
+}
+.big-btn.coin-press{animation:coinPress .35s cubic-bezier(.4,0,.2,1)}
+@keyframes coinPress{
+  0%{transform:scale(1)}
+  30%{transform:scale(.94) translateY(2px)}
+  60%{transform:scale(1.02)}
+  100%{transform:scale(1)}
+}
+#gachaCutscene{
+  position:fixed;inset:0;z-index:600;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;pointer-events:none;
+  animation:cutIn .3s ease;
+}
+@keyframes cutIn{from{opacity:0}to{opacity:1}}
+#gachaCutscene.out{animation:cutOut .5s ease forwards}
+@keyframes cutOut{to{opacity:0}}
+.cut-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at center,
+    rgba(255,217,61,.35) 0%,rgba(255,149,0,.22) 30%,rgba(8,10,18,.96) 70%);
+  animation:cutBgPulse 1.8s ease-out;
+}
+@keyframes cutBgPulse{
+  0%{transform:scale(.4);opacity:0}
+  40%{transform:scale(1);opacity:1}
+  100%{transform:scale(1.15);opacity:.85}
+}
+.cut-beam{
+  position:absolute;left:50%;top:50%;
+  width:180px;height:0;
+  transform:translate(-50%,-50%);
+  background:linear-gradient(180deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,240,180,.95) 35%,
+    rgba(255,217,61,1) 50%,
+    rgba(255,240,180,.95) 65%,
+    rgba(255,255,255,0) 100%);
+  border-radius:50%;
+  filter:blur(10px);
+  animation:cutBeam 1.6s cubic-bezier(.2,1.2,.4,1) forwards;
+  box-shadow:0 0 100px 40px rgba(255,217,61,.6);
+}
+@keyframes cutBeam{
+  0%{height:0;width:20px;opacity:0}
+  30%{height:110vh;width:180px;opacity:1}
+  70%{height:110vh;width:220px;opacity:1}
+  100%{height:110vh;width:400px;opacity:0;filter:blur(40px)}
+}
+.cut-ring{
+  position:absolute;left:50%;top:50%;
+  border-radius:50%;border:4px solid rgba(255,217,61,.9);
+  transform:translate(-50%,-50%);
+  animation:cutRing 1.4s cubic-bezier(.2,1,.3,1) forwards;
+  box-shadow:0 0 60px rgba(255,217,61,.8),inset 0 0 60px rgba(255,217,61,.5);
+}
+@keyframes cutRing{
+  0%{width:0;height:0;opacity:1}
+  100%{width:140vmax;height:140vmax;opacity:0}
+}
+.cut-text{
+  position:relative;z-index:5;
+  font-size:88px;font-weight:900;letter-spacing:8px;
+  color:#fff;
+  text-shadow:0 0 20px #ffd93d,0 0 40px #ff9500,0 0 80px #ff6600,0 4px 12px rgba(0,0,0,.8);
+  background:linear-gradient(180deg,#fff8d0,#ffd93d 40%,#ff9500);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:cutText 1.8s cubic-bezier(.2,1.6,.4,1) forwards;
+  transform:scale(0);
+  filter:drop-shadow(0 0 30px rgba(255,217,61,.9));
+}
+@keyframes cutText{
+  0%{transform:scale(0) rotate(-15deg);opacity:0}
+  25%{transform:scale(1.4) rotate(4deg);opacity:1}
+  40%{transform:scale(1) rotate(0deg)}
+  80%{transform:scale(1);opacity:1}
+  100%{transform:scale(1.1);opacity:0}
+}
+.cut-particle{
+  position:absolute;left:50%;top:50%;
+  width:6px;height:6px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 14px #ffd93d,0 0 26px #ff9500;
+  animation:cutParticle 1.4s cubic-bezier(.1,.7,.3,1) forwards;
+  transform:translate(-50%,-50%);
+}
+@keyframes cutParticle{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(2)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2)}
+}
+.cut-flash{
+  position:absolute;inset:0;background:#fff;
+  animation:cutFlash .35s ease-out forwards;
+}
+@keyframes cutFlash{
+  0%{opacity:1}
+  100%{opacity:0}
+}
+.dust-particle{
+  position:fixed;pointer-events:none;
+  width:8px;height:8px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,#ffd93d 40%,#ff9500 80%);
+  box-shadow:0 0 12px #ffd93d,0 0 22px #ff9500;
+  animation:dustFly .9s cubic-bezier(.1,.8,.3,1) forwards;
+  transform:translate(-50%,-50%);
+  z-index:9999;
+}
+@keyframes dustFly{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.3)}
+}
+.gcard.dust-hit{
+  animation:cardIn .45s cubic-bezier(.2,1.4,.4,1) backwards, dustShake .4s .45s;
+}
+@keyframes dustShake{
+  0%,100%{transform:translate(0,0)}
+  25%{transform:translate(-3px,-2px)}
+  50%{transform:translate(3px,2px)}
+  75%{transform:translate(-2px,1px)}
+}
+  `;
+  const styleEl = document.createElement('style');
+  styleEl.textContent = cssText;
+  document.head.appendChild(styleEl);
+
+  /* ========== 2. 注入 HTML 容器 ========== */
+  if (!document.getElementById('drawConfirmLayer')) {
+    const layer = document.createElement('div');
+    layer.id = 'drawConfirmLayer';
+    document.body.appendChild(layer);
+  }
+  if (!document.getElementById('cutsceneLayer')) {
+    const layer = document.createElement('div');
+    layer.id = 'cutsceneLayer';
+    document.body.appendChild(layer);
+  }
+
+  /* ========== 3. 狀態遷移 ========== */
+  const PITY_LIMIT = 50;
+
+  if (typeof state.pityCount !== 'number') {
+    state.pityCount = 0;
+  }
+  // 從存檔恢復（避免重整後歸零）
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (typeof d.pityCount === 'number') state.pityCount = d.pityCount;
+    }
+  } catch (e) {}
+
+  /* ========== 4. 覆蓋 rollCard（支援 forceLevel） ========== */
+  window.rollCard = function(forceLevel) {
+    const pool = currentPool();
+    let rar;
+    if (forceLevel === 3) {
+      rar = 3;
+    } else if (forceLevel === 2) {
+      rar = (Math.random() < 0.15) ? 3 : 2;
+    } else {
+      const r = Math.random();
+      if (r < 0.62) rar = 1;
+      else if (r < 0.92) rar = 2;
+      else rar = 3;
+    }
+    const sub = pool.filter(x => x.rar === rar);
+    return pick(sub.length ? sub : pool);
+  };
+
+  /* ========== 5. 抽卡確認彈窗 ========== */
+  window.showDrawConfirm = function(count, onConfirm) {
+    const cost = count * 60;
+    const canAfford = state.gold >= cost;
+    const pityLeft = PITY_LIMIT - (state.pityCount || 0);
+
+    const layer = document.getElementById('drawConfirmLayer');
+    layer.innerHTML = `
+      <div id="drawConfirm">
+        <div class="draw-confirm-box">
+          <div class="dc-icon">🎴</div>
+          <h3>${count === 1 ? '單次抽卡' : '十連抽卡'}</h3>
+          <div class="dc-sub">從當前模式卡池中抽取</div>
+          <div class="dc-info">
+            <div class="dc-row">
+              <span>花費</span>
+              <b class="gold">${cost} 💰</b>
+            </div>
+            <div class="dc-row">
+              <span>目前金幣</span>
+              <b class="${canAfford ? 'ok' : 'no'}">${state.gold} 💰</b>
+            </div>
+            ${count === 10 ? `
+            <div class="dc-row">
+              <span>十連保底</span>
+              <b class="ok">第 10 張必 SR 以上</b>
+            </div>` : ''}
+          </div>
+          <div class="dc-pity">距離 SSR 保底還有 <b>${pityLeft}</b> 抽</div>
+          <div class="dc-actions">
+            <button class="dc-btn" id="dcCancel">取消</button>
+            <button class="dc-btn primary" id="dcOk"${canAfford ? '' : ' style="opacity:.4;pointer-events:none"'}>確認抽卡</button>
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById('dcCancel').onclick = () => {
+      S.click();
+      layer.innerHTML = '';
+    };
+    document.getElementById('dcOk').onclick = () => {
+      if (!canAfford) { S.wrong(); return; }
+      S.click();
+      layer.innerHTML = '';
+      onConfirm();
+    };
+  };
+
+  /* ========== 6. SSR 全螢幕演出 ========== */
+  window.playSSRCutscene = function() {
+    return new Promise(resolve => {
+      const layer = document.getElementById('cutsceneLayer');
+      const el = document.createElement('div');
+      el.id = 'gachaCutscene';
+      el.innerHTML = `
+        <div class="cut-bg"></div>
+        <div class="cut-beam"></div>
+        <div class="cut-ring"></div>
+        <div class="cut-text">SSR</div>`;
+      layer.appendChild(el);
+
+      for (let i = 0; i < 36; i++) {
+        const p = document.createElement('div');
+        p.className = 'cut-particle';
+        const ang = (i / 36) * Math.PI * 2 + Math.random() * 0.3;
+        const dist = 120 + Math.random() * 260;
+        p.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+        p.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
+        p.style.animationDelay = (Math.random() * 0.15).toFixed(2) + 's';
+        el.appendChild(p);
+      }
+
+      S.rare();
+      setTimeout(() => AudioSys.sfx(1568, .3, 'sine', .12), 150);
+      setTimeout(() => AudioSys.sfx(2093, .4, 'sine', .1), 320);
+
+      setTimeout(() => {
+        const flash = document.createElement('div');
+        flash.className = 'cut-flash';
+        el.appendChild(flash);
+      }, 120);
+
+      setTimeout(() => {
+        el.classList.add('out');
+        setTimeout(() => { el.remove(); resolve(); }, 500);
+      }, 2200);
+    });
+  };
+
+  /* ========== 7. 重複卡星塵噴發 ========== */
+  window.spawnDustOnCard = function(cardEl) {
+    cardEl.classList.add('dust-hit');
+    const rect = cardEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'dust-particle';
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 40 + Math.random() * 70;
+      p.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+      p.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
+      p.style.animationDelay = (i * 0.02).toFixed(2) + 's';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1100);
+    }
+  };
+
+  /* ========== 8. 覆蓋 doDraw（主流程） ========== */
+  window.doDraw = function(count) {
+    showDrawConfirm(count, () => {
+      const cost = count * 60;
+      state.gold -= cost;
+
+      const p = P();
+      const results = [];
+      let gotSSR = false;
+
+      for (let i = 0; i < count; i++) {
+        let forceLevel = null;
+
+        if ((state.pityCount || 0) >= PITY_LIMIT) {
+          forceLevel = 3;
+        } else if (count === 10 && i === count - 1) {
+          forceLevel = 2;
+        }
+
+        const w = rollCard(forceLevel);
+        const isNew = !p.cards[w.w];
+
+        if (isNew) {
+          p.cards[w.w] = { lv: 1, star: 1 };
+          if (!p.team) p.team = w.w;
+        } else {
+          state.dust += 3;
+        }
+
+        if (w.rar === 3) {
+          gotSSR = true;
+          state.pityCount = 0;
+        } else {
+          state.pityCount = (state.pityCount || 0) + 1;
+        }
+
+        results.push({ w, isNew });
+      }
+
+      const renderResults = () => {
+        const host = document.getElementById('gachaResult');
+        host.innerHTML = results.map((r, i) => {
+          const rc = RARITY[r.w.rar].c;
+          return `<div class="gcard" data-idx="${i}" style="--rc:${rc};animation-delay:${i * 0.07}s">
+            <div class="gcard-rar">${RARITY[r.w.rar].n}</div>
+            <span class="gcard-tag ${r.isNew ? 'tag-new' : 'tag-dup'}">${r.isNew ? 'NEW' : '+3✨'}</span>
+            <div class="gcard-word" style="color:${rc}">${r.w.w}</div>
+            <div class="gcard-zh">${r.w.zh}</div>
+          </div>`;
+        }).join('');
+
+        results.forEach((r, i) => {
+          if (!r.isNew) {
+            setTimeout(() => {
+              const el = document.querySelector(`.gcard[data-idx="${i}"]`);
+              if (el) spawnDustOnCard(el);
+            }, 400 + i * 70);
+          }
+        });
+
+        if (!gotSSR) S.draw();
+        updateTopbar();
+        renderHome();
+        renderCards();
+        save();
+      };
+
+      if (gotSSR) {
+        playSSRCutscene().then(renderResults);
+      } else {
+        renderResults();
+      }
+    });
+  };
+
+  /* ========== 9. 重新綁定抽卡按鈕（投幣感） ========== */
+  const coinPress = (btn, cb) => {
+    btn.classList.remove('coin-press');
+    void btn.offsetWidth;
+    btn.classList.add('coin-press');
+    S.click();
+    setTimeout(cb, 180);
+  };
+
+  const drawBtn = document.getElementById('drawBtn');
+  const drawTenBtn = document.getElementById('drawTenBtn');
+
+  if (drawBtn) {
+    drawBtn.onclick = () => coinPress(drawBtn, () => doDraw(1));
+  }
+  if (drawTenBtn) {
+    drawTenBtn.onclick = () => coinPress(drawTenBtn, () => doDraw(10));
+  }
+
+  console.log('[抽卡強化] 已載入 ✓');
+})();
+</script>
+
+<script>
+/* =========================================================
+   里程碑強化包 —— 自包含版本
+   貼在原本最後一個 之後
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._milestoneBLoaded) return;
+  window._milestoneBLoaded = true;
+
+  /* ========== 1. 注入 CSS ========== */
+  const cssText = `
+/* ===== 里程碑全螢幕演出 ===== */
+#milestoneLayer{
+  position:fixed;inset:0;z-index:700;
+  pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+}
+.milestone-cut{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+  animation:mcIn .3s ease;
+}
+.milestone-cut.out{animation:mcOut .45s ease forwards}
+@keyframes mcIn{from{opacity:0}to{opacity:1}}
+@keyframes mcOut{to{opacity:0}}
+
+.mc-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(circle at center,
+    var(--c1) 0%, var(--c2) 25%, rgba(8,10,18,.95) 70%);
+  opacity:.85;
+  animation:mcBgPulse 1.8s ease-out;
+}
+@keyframes mcBgPulse{
+  0%{transform:scale(.5);opacity:0}
+  35%{transform:scale(1);opacity:.9}
+  100%{transform:scale(1.2);opacity:.7}
+}
+
+.mc-ring{
+  position:absolute;left:50%;top:50%;
+  border-radius:50%;
+  border:3px solid var(--c1);
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 50px var(--c1),inset 0 0 50px var(--c1);
+  animation:mcRing 1.5s cubic-bezier(.2,1,.3,1) forwards;
+}
+@keyframes mcRing{
+  0%{width:0;height:0;opacity:1}
+  100%{width:130vmax;height:130vmax;opacity:0}
+}
+
+.mc-content{
+  position:relative;z-index:5;
+  text-align:center;
+  animation:mcContent 1.8s cubic-bezier(.2,1.4,.4,1) forwards;
+}
+@keyframes mcContent{
+  0%{transform:scale(0) rotate(-10deg);opacity:0}
+  25%{transform:scale(1.2) rotate(3deg);opacity:1}
+  40%{transform:scale(1) rotate(0)}
+  80%{transform:scale(1);opacity:1}
+  100%{transform:scale(1.05);opacity:0}
+}
+
+.mc-icon{
+  font-size:72px;
+  margin-bottom:8px;
+  filter:drop-shadow(0 0 30px rgba(255,255,255,.8));
+  animation:mcIconSpin 1.8s ease-out;
+}
+@keyframes mcIconSpin{
+  0%{transform:rotate(-180deg) scale(0)}
+  40%{transform:rotate(10deg) scale(1.3)}
+  60%{transform:rotate(-5deg) scale(1)}
+  100%{transform:rotate(0) scale(1)}
+}
+
+.mc-text{
+  font-size:42px;
+  font-weight:900;
+  letter-spacing:4px;
+  background:linear-gradient(180deg,#fff,var(--c1) 50%,var(--c2));
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 20px var(--c1)) drop-shadow(0 4px 8px rgba(0,0,0,.6));
+  margin-bottom:6px;
+}
+
+.mc-sub{
+  font-size:14px;
+  font-weight:800;
+  color:#c3bcff;
+  letter-spacing:3px;
+  opacity:.9;
+}
+
+.mc-particle{
+  position:absolute;left:50%;top:50%;
+  width:8px;height:8px;border-radius:50%;
+  animation:mcParticle 1.3s cubic-bezier(.1,.7,.3,1) forwards;
+  transform:translate(-50%,-50%);
+}
+@keyframes mcParticle{
+  0%{opacity:1;transform:translate(-50%,-50%) scale(1.5)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2)}
+}
+
+/* ===== 戰鬥光環 ===== */
+.hero-f.hero-maxlv .sprite{
+  animation:heroLvAura 2s ease-in-out infinite;
+}
+@keyframes heroLvAura{
+  0%,100%{filter:drop-shadow(0 10px 20px rgba(0,0,0,.6)) drop-shadow(0 0 12px #7c5cff)}
+  50%{filter:drop-shadow(0 10px 20px rgba(0,0,0,.6)) drop-shadow(0 0 28px #7c5cff)}
+}
+
+.hero-f.hero-maxstar .sprite{
+  animation:heroStarAura 2s ease-in-out infinite;
+}
+@keyframes heroStarAura{
+  0%,100%{filter:drop-shadow(0 10px 20px rgba(0,0,0,.6)) drop-shadow(0 0 14px #ffd93d)}
+  50%{filter:drop-shadow(0 10px 20px rgba(0,0,0,.6)) drop-shadow(0 0 32px #ffd93d)}
+}
+
+.hero-f.hero-maxlv.hero-maxstar .sprite{
+  animation:heroMaxAura 1.5s ease-in-out infinite;
+}
+@keyframes heroMaxAura{
+  0%,100%{
+    filter:drop-shadow(0 10px 20px rgba(0,0,0,.6))
+      drop-shadow(0 0 16px #ffd93d)
+      drop-shadow(0 0 28px #7c5cff);
+  }
+  50%{
+    filter:drop-shadow(0 10px 20px rgba(0,0,0,.6))
+      drop-shadow(0 0 32px #ffd93d)
+      drop-shadow(0 0 52px #7c5cff);
+  }
+}
+
+/* ===== 卡片框：滿級/滿星 在主畫面的視覺強化 ===== */
+.wcard.maxlv-card{
+  background:linear-gradient(160deg,rgba(124,92,255,.16),rgba(74,140,255,.06));
+}
+.wcard.maxstar-card{
+  background:linear-gradient(160deg,rgba(255,217,61,.16),rgba(255,149,0,.06));
+  box-shadow:0 0 20px -6px rgba(255,217,61,.5);
+}
+.wcard.maxlv-card.maxstar-card{
+  background:linear-gradient(160deg,rgba(255,217,61,.16),rgba(124,92,255,.1));
+  box-shadow:0 0 24px -4px rgba(255,217,61,.7),0 0 24px -8px rgba(124,92,255,.6);
+}
+  `;
+  const styleEl = document.createElement('style');
+  styleEl.textContent = cssText;
+  document.head.appendChild(styleEl);
+
+  /* ========== 2. 建立里程碑層 ========== */
+  let milestoneLayer = document.getElementById('milestoneLayer');
+  if (!milestoneLayer) {
+    milestoneLayer = document.createElement('div');
+    milestoneLayer.id = 'milestoneLayer';
+    document.body.appendChild(milestoneLayer);
+  }
+
+  /* ========== 3. 里程碑定義 ========== */
+  const LEVEL_MILESTONES = {
+    3:  { text: '解鎖詞形變化', sub: 'LV 3 · 里程碑', icon: '📖', c1: '#7c5cff', c2: '#4a8cff' },
+    5:  { text: '解鎖更多詞形', sub: 'LV 5 · 里程碑', icon: '📚', c1: '#00b894', c2: '#00cec9' },
+    7:  { text: '解鎖全部詞形', sub: 'LV 7 · 里程碑', icon: '🎓', c1: '#00cec9', c2: '#81ecec' },
+    10: { text: '滿級達陣',     sub: 'LV MAX',        icon: '👑', c1: '#ffd93d', c2: '#ff9500' },
+  };
+  const STAR_MILESTONES = {
+    2: { text: '解鎖近義詞', sub: '★ 2 · 里程碑', icon: '✨', c1: '#7bed9f', c2: '#2ed573' },
+    3: { text: '解鎖反義詞', sub: '★ 3 · 里程碑', icon: '⚡', c1: '#ff8b9c', c2: '#ff4757' },
+    4: { text: '解鎖例句',   sub: '★ 4 · 里程碑', icon: '💬', c1: '#8bddff', c2: '#00d2ff' },
+    5: { text: '滿星榮耀',   sub: '★ 5 · 滿星',   icon: '🌟', c1: '#ffd93d', c2: '#ff9500' },
+  };
+
+  /* ========== 4. 里程碑動畫 ========== */
+  function playMilestoneAnimation(info){
+    return new Promise(resolve => {
+      const el = document.createElement('div');
+      el.className = 'milestone-cut';
+      el.innerHTML = `
+        <div class="mc-bg" style="--c1:${info.c1};--c2:${info.c2}"></div>
+        <div class="mc-ring" style="--c1:${info.c1}"></div>
+        <div class="mc-content">
+          <div class="mc-icon">${info.icon}</div>
+          <div class="mc-text" style="--c1:${info.c1};--c2:${info.c2}">${info.text}</div>
+          <div class="mc-sub">${info.sub}</div>
+        </div>
+      `;
+      milestoneLayer.appendChild(el);
+
+      // 粒子爆發
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement('div');
+        p.className = 'mc-particle';
+        p.style.background = info.c1;
+        p.style.boxShadow = `0 0 12px ${info.c1},0 0 22px ${info.c2}`;
+        const ang = (i / 28) * Math.PI * 2 + Math.random() * 0.3;
+        const dist = 100 + Math.random() * 200;
+        p.style.setProperty('--dx', (Math.cos(ang) * dist).toFixed(1) + 'px');
+        p.style.setProperty('--dy', (Math.sin(ang) * dist).toFixed(1) + 'px');
+        p.style.animationDelay = (Math.random() * 0.15).toFixed(2) + 's';
+        el.appendChild(p);
+      }
+
+      // 音效
+      try {
+        if (typeof S !== 'undefined' && S.rare) S.rare();
+        if (typeof AudioSys !== 'undefined') {
+          setTimeout(() => AudioSys.sfx(1319, .2, 'sine', .1), 100);
+          setTimeout(() => AudioSys.sfx(1760, .3, 'sine', .1), 250);
+        }
+      } catch(e){}
+
+      setTimeout(() => {
+        el.classList.add('out');
+        setTimeout(() => { el.remove(); resolve(); }, 450);
+      }, 2000);
+    });
+  }
+
+  /* ========== 5. 攔截升級/升星點擊（捕獲階段） ========== */
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (!t || !t.closest) return;
+    const btn = t.closest('#mUpLv, #mUpStar');
+    if (!btn || btn.disabled) return;
+    const modal = btn.closest('#modal');
+    if (!modal) return;
+    const wordEl = modal.querySelector('.m-word');
+    if (!wordEl) return;
+    const wordId = wordEl.textContent.trim();
+    const card = P().cards[wordId];
+    if (!card) return;
+
+    if (btn.id === 'mUpLv') {
+      const nextLv = card.lv + 1;
+      if (LEVEL_MILESTONES[nextLv]) {
+        window._pendingMilestone = { type: 'level', value: nextLv, id: wordId };
+      }
+    } else if (btn.id === 'mUpStar') {
+      const nextStar = card.star + 1;
+      if (STAR_MILESTONES[nextStar]) {
+        window._pendingMilestone = { type: 'star', value: nextStar, id: wordId };
+      }
+    }
+  }, true);
+
+  /* ========== 6. 包裝 openCardModal ========== */
+  const _origOpenCardModal = window.openCardModal;
+
+  window.openCardModal = function(id){
+    const pending = window._pendingMilestone;
+    window._pendingMilestone = null;
+
+    if (pending && pending.id === id) {
+      const info = (pending.type === 'level' ? LEVEL_MILESTONES : STAR_MILESTONES)[pending.value];
+      if (info) {
+        // 先播動畫，再重建 modal
+        playMilestoneAnimation(info).then(() => {
+          _origOpenCardModal(id);
+        });
+        return;
+      }
+    }
+    _origOpenCardModal(id);
+  };
+
+  /* ========== 7. 戰鬥視覺效果 ========== */
+  const _origStartBattle = window.startBattle;
+
+  window.startBattle = function(grammar){
+    _origStartBattle(grammar);
+    setTimeout(applyBattleVisuals, 100);
+  };
+
+  function applyBattleVisuals(){
+    try {
+      const p = P();
+      const c = p.cards[p.team];
+      const heroF = document.getElementById('heroF');
+      if (!heroF || !c) return;
+      heroF.classList.remove('hero-maxlv', 'hero-maxstar');
+      if (c.lv >= MAX_LV)   heroF.classList.add('hero-maxlv');
+      if (c.star >= MAX_STAR) heroF.classList.add('hero-maxstar');
+    } catch(e){}
+  }
+
+  /* ========== 8. 卡片列表：滿級/滿星標記 ========== */
+  const _origRenderCards = window.renderCards;
+  window.renderCards = function(){
+    _origRenderCards();
+    try {
+      const p = P();
+      document.querySelectorAll('#cardGrid .wcard').forEach(el => {
+        const id = el.dataset.w;
+        const c = p.cards[id];
+        if (!c) return;
+        el.classList.toggle('maxlv-card',   c.lv   >= MAX_LV);
+        el.classList.toggle('maxstar-card', c.star >= MAX_STAR);
+      });
+    } catch(e){}
+  };
+
+  // 立即重繪一次，讓主畫面卡片有標記
+  try { renderCards(); } catch(e){}
+
+  console.log('[里程碑強化] 已載入 ✓');
+})();
+</script>
+
 </body>
 </html>
