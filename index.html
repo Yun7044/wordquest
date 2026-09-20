@@ -5683,6 +5683,145 @@ init();
   console.log('[Tutorial v3] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   TutFix：接管勝利後的抽卡引導
+   用每 400ms 強制刷新引導，不管 v1/v2 怎麼蓋都蓋不回來
+   ========================================================= */
+(function(){
+  'use strict';
+
+  console.log('[TutFix] 抽卡引導補丁載入');
+
+  let active = false;
+  let step = 'idle';
+  let iv = null;
+
+  function setSpotlight(el, text){
+    const sp  = document.getElementById('tutSpotlight');
+    const tip = document.getElementById('tutTip');
+    const bl  = document.getElementById('tutBlocker');
+    if (!sp || !tip || !el) return;
+
+    const r = el.getBoundingClientRect();
+
+    sp.style.display = 'block';
+    sp.style.left   = (r.left - 8) + 'px';
+    sp.style.top    = (r.top  - 8) + 'px';
+    sp.style.width  = (r.width  + 16) + 'px';
+    sp.style.height = (r.height + 16) + 'px';
+
+    tip.style.display = 'block';
+    const textEl = tip.querySelector('#tutTipText');
+    if (textEl) textEl.innerHTML = text;
+
+    const tipW = tip.offsetWidth || 280;
+    tip.style.left = Math.max(10,
+      Math.min(window.innerWidth - tipW - 10, r.left + r.width/2 - tipW/2)) + 'px';
+    tip.style.top  = Math.max(10, r.top - 82) + 'px';
+
+    // 箭頭朝下（指著下方按鈕）
+    const arrow = tip.querySelector('.tut-tip-arrow');
+    if (arrow) {
+      arrow.dataset.dir = 'down';
+      arrow.style.left = (r.left + r.width/2 - parseFloat(tip.style.left)) + 'px';
+    }
+
+    if (bl) bl.classList.add('active');
+  }
+
+  function hideAll(){
+    const sp  = document.getElementById('tutSpotlight');
+    const tip = document.getElementById('tutTip');
+    const bl  = document.getElementById('tutBlocker');
+    if (sp)  sp.style.display = 'none';
+    if (tip) tip.style.display = 'none';
+    if (bl)  bl.classList.remove('active');
+  }
+
+  // ===== 監聽「繼續前進」按鈕 =====
+  document.addEventListener('click', function(e){
+    if (!e.target.closest || !e.target.closest('#resultBtn')) return;
+    if (active) return;
+    active = true;
+    step = 'gacha';
+    console.log('[TutFix] 偵測到 resultBtn，接管引導');
+
+    // 每 400ms 強制刷新位置，蓋過 v1/v2 的隱藏
+    iv = setInterval(() => {
+      if (step === 'gacha') {
+        const nav = document.querySelector('.navbtn[data-screen="gacha"]');
+        if (nav) setSpotlight(nav, '去抽卡吧！點下面的「抽卡」');
+      } else if (step === 'ten') {
+        const btn = document.getElementById('drawTenBtn');
+        if (btn) setSpotlight(btn, '十連抽試試手氣！<br>新手金幣剛好夠 600');
+      }
+    }, 400);
+
+    // 1.2 秒後先顯示一次（等戰鬥 UI 收尾）
+    setTimeout(() => {
+      const nav = document.querySelector('.navbtn[data-screen="gacha"]');
+      if (nav) setSpotlight(nav, '去抽卡吧！點下面的「抽卡」');
+    }, 1200);
+  }, true);
+
+  // ===== 監聽「抽卡」導航 =====
+  document.addEventListener('click', function(e){
+    if (step !== 'gacha') return;
+    if (!e.target.closest || !e.target.closest('.navbtn[data-screen="gacha"]')) return;
+    step = 'ten';
+    console.log('[TutFix] 進入十連抽引導');
+    setTimeout(() => {
+      const btn = document.getElementById('drawTenBtn');
+      if (btn) setSpotlight(btn, '十連抽試試手氣！<br>新手金幣剛好夠 600');
+    }, 800);
+  }, true);
+
+  // ===== 監聽「十連抽」按鈕 =====
+  document.addEventListener('click', function(e){
+    if (step !== 'ten') return;
+    if (!e.target.closest || !e.target.closest('#drawTenBtn')) return;
+    step = 'done';
+    console.log('[TutFix] 十連抽已點');
+    setTimeout(() => {
+      hideAll();
+      if (iv) { clearInterval(iv); iv = null; }
+
+      const m = document.getElementById('tutModal');
+      if (!m) return;
+      m.classList.remove('hidden');
+      m.innerHTML = `
+        <div class="tut-box">
+          <div class="tut-box-icon">🎉</div>
+          <h2 class="tut-box-title">教學完成！</h2>
+          <p class="tut-box-desc">
+            你已經學會了戰鬥與抽卡<br>
+            接下來就靠自己囉！<br><br>
+            記得每天來打幾場，<br>
+            把卡牌養強吧 💪
+          </p>
+          <button class="big-btn" id="tutFinishBtnX">開始冒險</button>
+        </div>
+      `;
+      const btn = document.getElementById('tutFinishBtnX');
+      if (btn) {
+        btn.onclick = () => {
+          try { localStorage.setItem('wordquest_tut_v1', '1'); } catch(err) {}
+          m.classList.add('hidden');
+          m.innerHTML = '';
+          const r = document.getElementById('tutRoot');
+          if (r) r.remove();
+          hideAll();
+          console.log('[TutFix] 教學完成 ✓');
+        };
+      }
+    }, 3800);
+  }, true);
+
+  console.log('[TutFix] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
