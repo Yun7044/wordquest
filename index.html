@@ -3887,6 +3887,106 @@ init();
   console.log('[Loading+VS] 已載入 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   Fix4：里程碑誤觸發修復
+   問題：升級/升星失敗（資源不足）時，pending 沒有被清掉
+   解法：開啟彈窗時，驗證卡片是否真的達到里程碑等級
+   ========================================================= */
+(function(){
+  'use strict';
+
+  console.log('[Fix4] 里程碑誤觸發修復載入...');
+
+  // 保存目前的 openCardModal（已經被里程碑補丁包裝過的版本）
+  const _wrappedOpenCardModal = window.openCardModal;
+
+  if (typeof _wrappedOpenCardModal !== 'function') {
+    console.error('[Fix4] 找不到 openCardModal，無法修復');
+    return;
+  }
+
+  // 再包一層：驗證 pending 是否合理
+  window.openCardModal = function(id){
+    const pending = window._pendingMilestone;
+
+    if (pending) {
+      // 先取出卡片，檢查是否真的達到里程碑
+      let actuallyReached = false;
+      try {
+        const card = P().cards[pending.id];
+        if (card) {
+          if (pending.type === 'level') {
+            actuallyReached = card.lv >= pending.value;
+          } else if (pending.type === 'star') {
+            actuallyReached = card.star >= pending.value;
+          }
+        }
+      } catch(e) {
+        console.warn('[Fix4] 檢查失敗:', e);
+      }
+
+      if (!actuallyReached) {
+        // 升級/升星實際上沒成功 → 清掉 pending，正常開啟
+        console.log('[Fix4] 偵測到無效的里程碑記錄，已清除:', pending);
+        window._pendingMilestone = null;
+      }
+    }
+
+    // 交給原本的包裝版本處理
+    return _wrappedOpenCardModal.call(window, id);
+  };
+
+  // 額外保險：升級/升星按鈕失敗時，主動清掉 pending
+  document.addEventListener('click', function(e){
+    const t = e.target;
+    if (!t || !t.closest) return;
+    const btn = t.closest('#mUpLv, #mUpStar');
+    if (!btn || btn.disabled) return;
+
+    // 延遲到原本的 onclick 執行完再檢查
+    setTimeout(() => {
+      const pending = window._pendingMilestone;
+      if (!pending) return;
+
+      const card = P().cards[pending.id];
+      if (!card) {
+        window._pendingMilestone = null;
+        return;
+      }
+
+      const reached = (pending.type === 'level')
+        ? card.lv >= pending.value
+        : card.star >= pending.value;
+
+      if (!reached) {
+        console.log('[Fix4] 升級未成功（資源不足），清除 pending');
+        window._pendingMilestone = null;
+      }
+    }, 100);
+  }, true);
+
+  // 保險：如果開啟了「非升級流程」的彈窗（例如切換畫面、點卡庫），清掉所有舊 pending
+  const _prevSwitchScreen = window.switchScreen;
+  if (typeof _prevSwitchScreen === 'function') {
+    window.switchScreen = function(name){
+      // 只要不是同一張卡被立即重開，就清掉 pending
+      if (window._pendingMilestone) {
+        const age = Date.now() - (window._pendingMilestone._ts || 0);
+        // 超過 2 秒就視為過期
+        if (age > 2000) {
+          console.log('[Fix4] pending 過期，清除');
+          window._pendingMilestone = null;
+        }
+      }
+      return _prevSwitchScreen.call(window, name);
+    };
+  }
+
+  console.log('[Fix4] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
