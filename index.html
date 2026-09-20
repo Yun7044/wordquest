@@ -8,52 +8,35 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
-body{
-  font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,-apple-system,sans-serif;
-  background:#080a12;color:#e8ecf5;user-select:none;-webkit-font-smoothing:antialiased;
-}
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:
-    radial-gradient(ellipse 80% 50% at 15% 0%, rgba(90,70,220,.22), transparent 60%),
-    radial-gradient(ellipse 70% 50% at 85% 100%, rgba(200,60,160,.14), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(40,90,200,.08), transparent 70%);
-}
+body{font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;
+  background:#080a12;color:#e8ecf5;user-select:none;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 50% at 15% 0%,rgba(90,70,220,.22),transparent 60%),
+    radial-gradient(ellipse 70% 50% at 85% 100%,rgba(200,60,160,.14),transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 50%,rgba(40,90,200,.08),transparent 70%)}
 #app{position:relative;z-index:1;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #main-ui{flex:1;min-height:0;display:flex;flex-direction:column}
 .hidden{display:none!important}
-
-/* ===== 頂部資源列 ===== */
-#topbar{
-  display:flex;justify-content:space-between;align-items:center;
+#topbar{display:flex;justify-content:space-between;align-items:center;
   padding:9px 12px;padding-top:calc(9px + env(safe-area-inset-top));
   background:rgba(12,15,26,.85);backdrop-filter:blur(14px);
-  border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;z-index:10;
-}
+  border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;z-index:10}
 .brand{font-size:14px;font-weight:800;letter-spacing:.4px;
   background:linear-gradient(135deg,#8b7cff,#00d2ff);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
 .resources{display:flex;gap:6px;align-items:center}
 .res{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;
   background:rgba(255,255,255,.06);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.08)}
 .res .ic{font-size:13px}
-.icon-btn{
-  width:30px;height:30px;border-radius:50%;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
-  color:#c7cce0;font-size:13px;cursor:pointer;padding:0;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .15s;font-family:inherit;
-}
+.icon-btn{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);color:#c7cce0;font-size:13px;cursor:pointer;padding:0;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
 .icon-btn:active{transform:scale(.88)}
 .icon-btn.off{opacity:.4;filter:grayscale(1)}
-
-/* ===== 畫面容器 ===== */
 #screens{flex:1;position:relative;overflow:hidden}
 .screen{position:absolute;inset:0;overflow-y:auto;padding:16px 16px 24px;
   opacity:0;pointer-events:none;transform:translateY(12px);
   transition:opacity .25s ease,transform .25s ease;-webkit-overflow-scrolling:touch}
 .screen.active{opacity:1;pointer-events:auto;transform:none}
-
-/* ===== 底部導覽 ===== */
 #navbar{display:flex;background:rgba(12,15,26,.92);backdrop-filter:blur(14px);
   border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;
   padding-bottom:env(safe-area-inset-bottom);z-index:10}
@@ -62,76 +45,86 @@ body::before{
 .navbtn .ic{font-size:19px;transition:transform .2s}
 .navbtn.active{color:#8b7cff}
 .navbtn.active .ic{transform:translateY(-2px) scale(1.1);filter:drop-shadow(0 0 10px rgba(139,124,255,.8))}
-
-/* ===== 通用面板 / 按鈕 ===== */
 .panel{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);
   border-radius:16px;padding:14px;margin-bottom:12px}
 .panel-h{font-size:12px;font-weight:700;color:#8b93b0;letter-spacing:1px;margin-bottom:10px}
-.big-btn{
-  width:100%;padding:16px;border-radius:16px;border:none;cursor:pointer;
+.big-btn{width:100%;padding:16px;border-radius:16px;border:none;cursor:pointer;
   font-family:inherit;font-size:16px;font-weight:800;color:#fff;letter-spacing:.5px;
   background:linear-gradient(135deg,#7c5cff,#4a8cff);
   box-shadow:0 8px 24px -6px rgba(110,90,255,.7),inset 0 1px 0 rgba(255,255,255,.25);
-  transition:transform .12s,box-shadow .12s;margin-bottom:10px;
-}
+  transition:transform .12s,box-shadow .12s;margin-bottom:10px}
 .big-btn:active{transform:scale(.97);box-shadow:0 4px 12px -6px rgba(110,90,255,.7)}
 .big-btn.ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
   box-shadow:none;color:#c7cce0;font-size:14px;padding:13px}
+.big-btn.gept{background:linear-gradient(135deg,#00b894,#00cec9);
+  box-shadow:0 8px 24px -6px rgba(0,206,201,.6),inset 0 1px 0 rgba(255,255,255,.25)}
 .big-btn:disabled{opacity:.4;pointer-events:none}
-
-/* ===== 首頁 ===== */
-.hero-panel{text-align:center;padding:24px 0 18px}
+.hero-panel{text-align:center;padding:22px 0 16px}
 .hero-panel h1{font-size:28px;font-weight:900;letter-spacing:2px;
   background:linear-gradient(135deg,#a89bff,#00d2ff 60%,#ff7ce0);
   -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px}
 .hero-panel p{font-size:12.5px;color:#6f7796;letter-spacing:.5px}
-
+#modeBadge{display:inline-block;font-size:11px;font-weight:800;padding:3px 11px;
+  border-radius:14px;margin-top:8px;letter-spacing:.5px}
+#modeBadge.toeic{background:rgba(139,124,255,.18);color:#c3bcff;border:1px solid rgba(139,124,255,.4)}
+#modeBadge.gept{background:rgba(0,206,201,.15);color:#5ee8e0;border:1px solid rgba(0,206,201,.4)}
 #homeCard{display:flex;align-items:center;gap:14px}
 #homeCard .hc-sprite{font-size:40px;filter:drop-shadow(0 4px 12px rgba(120,100,255,.6))}
 #homeCard .hc-info{flex:1;min-width:0}
 #homeCard .hc-word{font-size:21px;font-weight:800;letter-spacing:.5px}
 #homeCard .hc-sub{font-size:12px;color:#8b93b0;margin-top:3px}
 #homeCard .hc-stats{font-size:11.5px;color:#6f7796;margin-top:4px}
-
 .stage-row{display:flex;justify-content:space-between;align-items:center;font-size:13.5px}
 .stage-row b{color:#ffd93d;font-size:17px}
 #stageEnemyName{color:#ff8b9c;font-weight:700}
 
-/* ===== 抽卡 ===== */
-.gacha-stage{
-  min-height:220px;display:flex;flex-wrap:wrap;gap:10px;
-  align-items:center;justify-content:center;padding:10px 0;
-}
-.gcard{
-  width:calc(50% - 5px);max-width:160px;
-  border-radius:14px;padding:12px 10px;text-align:center;position:relative;
+/* GEPT 等級選擇 */
+.gept-level-list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.gept-level{position:relative;border-radius:16px;padding:18px 16px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  border:1.5px solid rgba(255,255,255,.1);
+  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  transition:transform .12s,box-shadow .2s;overflow:hidden}
+.gept-level:active{transform:scale(.98)}
+.gept-level.open{border-color:rgba(0,206,201,.55);
+  box-shadow:0 0 24px -8px rgba(0,206,201,.8)}
+.gept-level.open::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,206,201,.08),transparent 60%);pointer-events:none}
+.gept-level.locked{opacity:.5;cursor:not-allowed}
+.gept-level.locked::after{content:'即將推出';position:absolute;top:10px;right:12px;
+  font-size:10px;font-weight:800;color:#6f7796;letter-spacing:.5px;
+  background:rgba(255,255,255,.06);padding:3px 9px;border-radius:8px}
+.gl-left{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+.gl-icon{font-size:28px}
+.gl-name{font-size:17px;font-weight:800;letter-spacing:.5px}
+.gl-desc{font-size:11.5px;color:#8b93b0;margin-top:3px}
+.gl-arrow{font-size:20px;color:#5ee8e0;position:relative;z-index:1}
+.gept-level.locked .gl-arrow{display:none}
+
+.gacha-stage{min-height:220px;display:flex;flex-wrap:wrap;gap:10px;
+  align-items:center;justify-content:center;padding:10px 0}
+.gcard{width:calc(50% - 5px);max-width:160px;border-radius:14px;padding:12px 10px;
+  text-align:center;position:relative;
   background:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03));
   border:1.5px solid var(--rc);box-shadow:0 0 22px -6px var(--rc),inset 0 1px 0 rgba(255,255,255,.12);
-  animation:cardIn .45s cubic-bezier(.2,1.4,.4,1) backwards;
-}
+  animation:cardIn .45s cubic-bezier(.2,1.4,.4,1) backwards}
 @keyframes cardIn{from{opacity:0;transform:scale(.5) rotateY(90deg)}to{opacity:1;transform:none}}
-.gcard-rar{position:absolute;top:7px;left:9px;font-size:9.5px;font-weight:900;color:var(--rc);
-  letter-spacing:1px;text-shadow:0 0 8px var(--rc)}
+.gcard-rar{position:absolute;top:7px;left:9px;font-size:9.5px;font-weight:900;color:var(--rc);letter-spacing:1px;text-shadow:0 0 8px var(--rc)}
 .gcard-word{font-size:17px;font-weight:800;margin-top:14px;letter-spacing:.3px;word-break:break-word}
 .gcard-zh{font-size:11.5px;color:#9aa2bd;margin-top:4px}
-.gcard-tag{position:absolute;top:6px;right:8px;font-size:9.5px;font-weight:800;
-  padding:2px 6px;border-radius:8px}
+.gcard-tag{position:absolute;top:6px;right:8px;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:8px}
 .tag-new{background:linear-gradient(135deg,#2ed573,#7bed9f);color:#04351a}
 .tag-dup{background:rgba(255,217,61,.18);color:#ffd93d;border:1px solid rgba(255,217,61,.4)}
 .gacha-hint{text-align:center;font-size:12px;color:#6f7796;margin-bottom:14px}
-
-/* ===== 卡庫 ===== */
 #filterBar{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px}
 .filter-btn{flex-shrink:0;padding:7px 13px;border-radius:20px;border:1px solid rgba(255,255,255,.12);
   background:rgba(255,255,255,.05);color:#8b93b0;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .filter-btn.active{background:linear-gradient(135deg,rgba(124,92,255,.3),rgba(74,140,255,.3));
   border-color:rgba(139,124,255,.6);color:#c3bcff}
 .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.wcard{
-  position:relative;border-radius:14px;padding:11px 10px 10px;cursor:pointer;
+.wcard{position:relative;border-radius:14px;padding:11px 10px 10px;cursor:pointer;
   background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.02));
-  border:1.5px solid var(--rc);transition:transform .12s,box-shadow .2s;
-}
+  border:1.5px solid var(--rc);transition:transform .12s,box-shadow .2s}
 .wcard:active{transform:scale(.96)}
 .wcard.on{border-color:#ffd93d;box-shadow:0 0 18px -4px rgba(255,217,61,.7)}
 .wcard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
@@ -141,19 +134,13 @@ body::before{
 .wcard-zh{font-size:11.5px;color:#9aa2bd;margin-top:3px}
 .wcard-lv{font-size:10px;color:#6f7796;margin-top:6px;font-weight:700}
 .wcard-on{position:absolute;bottom:8px;right:9px;font-size:9px;font-weight:800;color:#ffd93d}
-
-/* ===== 彈窗 ===== */
-#modal{position:fixed;inset:0;z-index:300;display:flex;align-items:flex-end;
-  justify-content:center;background:rgba(4,6,12,.72);backdrop-filter:blur(6px);
-  animation:fadeIn .2s}
+#modal{position:fixed;inset:0;z-index:300;display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(4,6,12,.72);backdrop-filter:blur(6px);animation:fadeIn .2s}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.modal-box{
-  width:100%;max-width:480px;max-height:88vh;overflow-y:auto;
-  background:linear-gradient(180deg,#151a2e,#0e1220);
-  border-radius:24px 24px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));
-  border:1px solid rgba(255,255,255,.1);border-bottom:none;
-  animation:slideUp .3s cubic-bezier(.2,1,.3,1);
-}
+.modal-box{width:100%;max-width:480px;max-height:88vh;overflow-y:auto;
+  background:linear-gradient(180deg,#151a2e,#0e1220);border-radius:24px 24px 0 0;
+  padding:20px 18px calc(24px + env(safe-area-inset-bottom));
+  border:1px solid rgba(255,255,255,.1);border-bottom:none;animation:slideUp .3s cubic-bezier(.2,1,.3,1)}
 @keyframes slideUp{from{transform:translateY(60px);opacity:.4}to{transform:none;opacity:1}}
 .m-close{position:absolute;top:14px;right:16px;font-size:22px;color:#6f7796;cursor:pointer;line-height:1}
 .m-head{display:flex;align-items:baseline;gap:9px;margin-bottom:4px;flex-wrap:wrap}
@@ -189,163 +176,101 @@ body::before{
 .m-btn.full{grid-column:1/-1}
 .m-btn small{display:block;font-size:10.5px;font-weight:600;opacity:.75;margin-top:1px}
 
-/* ===== 戰鬥 ===== */
-#battle-ui{
-  position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
+#battle-ui{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
   background:linear-gradient(180deg,#0a0d18 0%,#101632 45%,#0a0d18 100%);
-  transition:opacity .3s,transform .3s;
-}
+  transition:opacity .3s,transform .3s}
 #battle-ui.closed{opacity:0;pointer-events:none;transform:scale(.97)}
-#battleStage{
-  flex:1;position:relative;overflow:hidden;display:flex;align-items:center;
-  justify-content:space-between;padding:0 7%;min-height:180px;
-}
-#battleStage::after{
-  content:'';position:absolute;left:0;right:0;bottom:0;height:45%;
-  background:radial-gradient(ellipse 70% 100% at 50% 100%, rgba(90,70,220,.18), transparent 70%);
-  pointer-events:none;
-}
+#battleStage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;
+  justify-content:space-between;padding:0 7%;min-height:180px}
+#battleStage::after{content:'';position:absolute;left:0;right:0;bottom:0;height:45%;
+  background:radial-gradient(ellipse 70% 100% at 50% 100%,rgba(90,70,220,.18),transparent 70%);
+  pointer-events:none}
 .fighter{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;z-index:2}
-.fighter .sprite{font-size:58px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));
-  transition:transform .2s;will-change:transform}
+.fighter .sprite{font-size:58px;filter:drop-shadow(0 10px 20px rgba(0,0,0,.6));transition:transform .2s;will-change:transform}
 .enemy-f .sprite{font-size:66px}
 .nameplate{font-size:11.5px;font-weight:800;letter-spacing:.5px;padding:3px 11px;
   border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1)}
 .enemy-f .nameplate{color:#ff8b9c;border-color:rgba(255,71,87,.35);background:rgba(255,71,87,.12)}
 .hero-f .nameplate{color:#8bddff;border-color:rgba(0,210,255,.35);background:rgba(0,210,255,.1)}
-.hpb{width:96px;height:9px;background:rgba(0,0,0,.55);border-radius:5px;overflow:hidden;
-  border:1px solid rgba(255,255,255,.12)}
-.hpf{height:100%;border-radius:5px;transition:width .35s cubic-bezier(.4,0,.2,1);
-  background:linear-gradient(90deg,#2ed573,#7bed9f)}
+.hpb{width:96px;height:9px;background:rgba(0,0,0,.55);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.hpf{height:100%;border-radius:5px;transition:width .35s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,#2ed573,#7bed9f)}
 .enemy-f .hpf{background:linear-gradient(90deg,#ff4757,#ff8b9c)}
 .hpnum{font-size:10px;color:#8b93b0;font-weight:700}
-
 .hero-f.attacking{animation:heroAtk .55s cubic-bezier(.3,0,.3,1)}
-@keyframes heroAtk{
-  0%{transform:translateX(0) scale(1)}
-  18%{transform:translateX(-14px) scale(.94)}
-  45%{transform:translateX(165px) scale(1.1)}
-  58%{transform:translateX(165px) scale(1.1)}
-  100%{transform:translateX(0) scale(1)}
-}
+@keyframes heroAtk{0%{transform:translateX(0) scale(1)}18%{transform:translateX(-14px) scale(.94)}45%{transform:translateX(165px) scale(1.1)}58%{transform:translateX(165px) scale(1.1)}100%{transform:translateX(0) scale(1)}}
 .enemy-f.attacking{animation:enemyAtk .55s cubic-bezier(.3,0,.3,1)}
-@keyframes enemyAtk{
-  0%{transform:translateX(0) scale(1)}
-  18%{transform:translateX(14px) scale(1.06)}
-  45%{transform:translateX(-150px) scale(1.14)}
-  58%{transform:translateX(-150px) scale(1.14)}
-  100%{transform:translateX(0) scale(1)}
-}
+@keyframes enemyAtk{0%{transform:translateX(0) scale(1)}18%{transform:translateX(14px) scale(1.06)}45%{transform:translateX(-150px) scale(1.14)}58%{transform:translateX(-150px) scale(1.14)}100%{transform:translateX(0) scale(1)}}
 .enemy-f.hit{animation:hitFlash .22s}
 .hero-f.hurt{animation:hurtFlash .32s}
-@keyframes hitFlash{
-  0%,100%{filter:none}
-  50%{filter:brightness(3) saturate(0) drop-shadow(0 0 20px #fff)}
-}
-@keyframes hurtFlash{
-  0%,100%{filter:none;transform:translateX(0)}
-  30%{filter:brightness(2) sepia(1) hue-rotate(-40deg);transform:translateX(-16px)}
-  70%{filter:brightness(2) sepia(1) hue-rotate(-40deg);transform:translateX(-8px)}
-}
+@keyframes hitFlash{0%,100%{filter:none}50%{filter:brightness(3) saturate(0) drop-shadow(0 0 20px #fff)}}
+@keyframes hurtFlash{0%,100%{filter:none;transform:translateX(0)}30%{filter:brightness(2) sepia(1) hue-rotate(-40deg);transform:translateX(-16px)}70%{filter:brightness(2) sepia(1) hue-rotate(-40deg);transform:translateX(-8px)}}
 .shake{animation:shakeAnim .32s}
-@keyframes shakeAnim{
-  0%,100%{transform:translate(0,0)}
-  15%{transform:translate(-7px,4px)}
-  35%{transform:translate(6px,-5px)}
-  55%{transform:translate(-5px,-3px)}
-  75%{transform:translate(4px,4px)}
-}
-
+@keyframes shakeAnim{0%,100%{transform:translate(0,0)}15%{transform:translate(-7px,4px)}35%{transform:translate(6px,-5px)}55%{transform:translate(-5px,-3px)}75%{transform:translate(4px,4px)}}
 #fxLayer{position:absolute;inset:0;pointer-events:none;z-index:8;overflow:hidden}
 .dmg{position:absolute;font-size:24px;font-weight:900;color:#fff;
   text-shadow:0 0 12px #6c5ce7,0 2px 4px rgba(0,0,0,.8);
   animation:dmgFloat .85s cubic-bezier(.2,1,.4,1) forwards;transform:translate(-50%,-50%);white-space:nowrap}
 .dmg.crit{font-size:34px;color:#ffd93d;text-shadow:0 0 20px #ff9500,0 2px 6px rgba(0,0,0,.8)}
 .dmg.heal{color:#ff6b81;text-shadow:0 0 12px #ff4757}
-@keyframes dmgFloat{
-  0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
-  25%{opacity:1;transform:translate(-50%,-90%) scale(1.25)}
-  50%{transform:translate(-50%,-110%) scale(1)}
-  100%{opacity:0;transform:translate(-50%,-190%) scale(.9)}
-}
+@keyframes dmgFloat{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}25%{opacity:1;transform:translate(-50%,-90%) scale(1.25)}50%{transform:translate(-50%,-110%) scale(1)}100%{opacity:0;transform:translate(-50%,-190%) scale(.9)}}
 .particle{position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;
   box-shadow:0 0 12px #8b7cff,0 0 22px #4a8cff;
   animation:particleFly .65s cubic-bezier(.1,.8,.3,1) forwards;transform:translate(-50%,-50%)}
-@keyframes particleFly{
-  0%{opacity:1;transform:translate(-50%,-50%) scale(1.4)}
-  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2)}
-}
+@keyframes particleFly{0%{opacity:1;transform:translate(-50%,-50%) scale(1.4)}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2)}}
 .redflash{position:absolute;inset:0;pointer-events:none;z-index:6;
   background:radial-gradient(ellipse at center,transparent 35%,rgba(255,40,60,.55));
   animation:fadeOut .42s forwards}
 @keyframes fadeOut{to{opacity:0}}
-
-#battleBottom{
-  flex-shrink:0;padding:14px 15px calc(16px + env(safe-area-inset-bottom));
+#battleBottom{flex-shrink:0;padding:14px 15px calc(16px + env(safe-area-inset-bottom));
   background:rgba(9,12,22,.95);backdrop-filter:blur(12px);
-  border-top:1px solid rgba(255,255,255,.08);border-radius:22px 22px 0 0;
-}
+  border-top:1px solid rgba(255,255,255,.08);border-radius:22px 22px 0 0}
 #comboWrap{height:0;overflow:visible;position:relative}
-#comboDisplay{
-  position:absolute;top:-34px;left:50%;transform:translateX(-50%);
+#comboDisplay{position:absolute;top:-34px;left:50%;transform:translateX(-50%);
   font-size:13px;font-weight:900;letter-spacing:1.5px;color:#ffd93d;
   text-shadow:0 0 16px rgba(255,217,61,.9);white-space:nowrap;
-  animation:comboPop .3s cubic-bezier(.2,1.6,.4,1);
-}
+  animation:comboPop .3s cubic-bezier(.2,1.6,.4,1)}
 @keyframes comboPop{from{transform:translateX(-50%) scale(.5);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
 #questionText{font-size:16px;font-weight:700;text-align:center;line-height:1.5;min-height:24px}
 #questionText b{color:#8bddff;font-size:19px;letter-spacing:.5px}
 #options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.opt{
-  padding:13px 8px;border-radius:13px;border:1px solid rgba(255,255,255,.13);
+.opt{padding:13px 8px;border-radius:13px;border:1px solid rgba(255,255,255,.13);
   background:rgba(255,255,255,.055);color:#e8ecf5;font-family:inherit;
   font-size:14.5px;font-weight:700;cursor:pointer;transition:all .14s;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .opt:active{transform:scale(.95);background:rgba(255,255,255,.14)}
-.opt.correct{background:rgba(46,213,115,.22);border-color:#2ed573;color:#7bed9f;
-  box-shadow:0 0 22px -4px rgba(46,213,115,.8)}
+.opt.correct{background:rgba(46,213,115,.22);border-color:#2ed573;color:#7bed9f;box-shadow:0 0 22px -4px rgba(46,213,115,.8)}
 .opt.wrong{background:rgba(255,71,87,.22);border-color:#ff4757;color:#ff8b9c;animation:shakeX .32s}
 @keyframes shakeX{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .opt.disabled{pointer-events:none;opacity:.5}
 #timerWrap{height:5px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:12px;overflow:hidden}
-#timerBar{height:100%;width:100%;border-radius:3px;
-  background:linear-gradient(90deg,#7c6cff,#00d2ff)}
-
-/* ===== 戰鬥結算 ===== */
-#battleResult{position:absolute;inset:0;z-index:50;display:flex;align-items:center;
-  justify-content:center;background:rgba(4,6,12,.85);backdrop-filter:blur(8px);
-  animation:fadeIn .3s}
+#timerBar{height:100%;width:100%;border-radius:3px;background:linear-gradient(90deg,#7c6cff,#00d2ff)}
+#battleResult{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,6,12,.85);backdrop-filter:blur(8px);animation:fadeIn .3s}
 .result-box{text-align:center;padding:32px 28px;width:88%;max-width:340px;
   background:linear-gradient(180deg,#1a2038,#0f1424);border-radius:24px;
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 20px 60px -20px rgba(0,0,0,.9);animation:slideUp .35s cubic-bezier(.2,1,.3,1)}
+  border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px -20px rgba(0,0,0,.9);
+  animation:slideUp .35s cubic-bezier(.2,1,.3,1)}
 .result-title{font-size:32px;font-weight:900;letter-spacing:3px;margin-bottom:8px}
 .result-title.win{background:linear-gradient(135deg,#ffd93d,#ff9500);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 20px rgba(255,180,0,.5))}
+  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 20px rgba(255,180,0,.5))}
 .result-title.lose{color:#ff6b81;filter:drop-shadow(0 0 20px rgba(255,71,87,.4))}
 .result-sub{font-size:12.5px;color:#8b93b0;margin-bottom:18px}
 .result-rewards{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
 .reward-row{display:flex;justify-content:space-between;align-items:center;
   background:rgba(255,255,255,.05);padding:11px 15px;border-radius:12px;font-size:14px}
 .reward-row b{color:#ffd93d;font-size:16px}
-
-/* ===== Toast ===== */
 .toast{position:fixed;left:50%;bottom:20%;transform:translate(-50%,20px);
-  background:rgba(20,24,40,.96);border:1px solid rgba(255,255,255,.14);
-  color:#e8ecf5;padding:11px 22px;border-radius:24px;font-size:13.5px;font-weight:700;
-  z-index:500;opacity:0;transition:all .3s cubic-bezier(.2,1,.3,1);
-  pointer-events:none;backdrop-filter:blur(10px);box-shadow:0 10px 30px -10px rgba(0,0,0,.8)}
+  background:rgba(20,24,40,.96);border:1px solid rgba(255,255,255,.14);color:#e8ecf5;
+  padding:11px 22px;border-radius:24px;font-size:13.5px;font-weight:700;z-index:500;
+  opacity:0;transition:all .3s cubic-bezier(.2,1,.3,1);pointer-events:none;
+  backdrop-filter:blur(10px);box-shadow:0 10px 30px -10px rgba(0,0,0,.8)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-
 ::-webkit-scrollbar{width:0;height:0}
 </style>
 </head>
 <body>
 
 <div id="app">
-
   <div id="main-ui">
     <header id="topbar">
       <div class="brand">⚔️ 單字遠征</div>
@@ -363,7 +288,8 @@ body::before{
       <section id="screen-home" class="screen active">
         <div class="hero-panel">
           <h1>單字遠征</h1>
-          <p>用抽到的單字卡，擊倒知識的敵人</p>
+          <p id="homeSubtitle">用抽到的單字卡，擊倒知識的敵人</p>
+          <div id="modeBadge" class="toeic">TOEIC 模式</div>
         </div>
 
         <div class="panel">
@@ -380,6 +306,75 @@ body::before{
         </div>
 
         <button class="big-btn" id="startBattleBtn">⚔️ 開始戰鬥</button>
+        <button class="big-btn gept" id="geptBtn">📗 GEPT 專屬模式</button>
+        <button class="big-btn ghost hidden" id="backToToeicBtn">↩️ 切回 TOEIC 模式</button>
+      </section>
+
+      <!-- GEPT 等級選擇 -->
+      <section id="screen-gept" class="screen">
+        <div class="hero-panel">
+          <h1 style="font-size:22px">GEPT 全民英檢</h1>
+          <p>選擇級別開始挑戰，單字庫獨立不影響 TOEIC 進度</p>
+        </div>
+
+        <div class="gept-level-list">
+          <div class="gept-level locked" data-level="elementary">
+            <div class="gl-left">
+              <div class="gl-icon">🌱</div>
+              <div>
+                <div class="gl-name">初級</div>
+                <div class="gl-desc">Elementary · 基礎生活字彙</div>
+              </div>
+            </div>
+            <div class="gl-arrow">›</div>
+          </div>
+
+          <div class="gept-level locked" data-level="intermediate">
+            <div class="gl-left">
+              <div class="gl-icon">🌿</div>
+              <div>
+                <div class="gl-name">中級</div>
+                <div class="gl-desc">Intermediate · 進階日常與職場</div>
+              </div>
+            </div>
+            <div class="gl-arrow">›</div>
+          </div>
+
+          <div class="gept-level open" data-level="midhigh">
+            <div class="gl-left">
+              <div class="gl-icon">🌳</div>
+              <div>
+                <div class="gl-name">中高級</div>
+                <div class="gl-desc">High-Intermediate · 200 字 · 開放中</div>
+              </div>
+            </div>
+            <div class="gl-arrow">›</div>
+          </div>
+
+          <div class="gept-level locked" data-level="advanced">
+            <div class="gl-left">
+              <div class="gl-icon">🌲</div>
+              <div>
+                <div class="gl-name">高級</div>
+                <div class="gl-desc">Advanced · 學術與專業字彙</div>
+              </div>
+            </div>
+            <div class="gl-arrow">›</div>
+          </div>
+
+          <div class="gept-level locked" data-level="superior">
+            <div class="gl-left">
+              <div class="gl-icon">🏔️</div>
+              <div>
+                <div class="gl-name">優級</div>
+                <div class="gl-desc">Superior · 精通級字彙</div>
+              </div>
+            </div>
+            <div class="gl-arrow">›</div>
+          </div>
+        </div>
+
+        <button class="big-btn ghost" id="geptBackBtn" style="margin-top:16px">↩️ 返回主頁</button>
       </section>
 
       <!-- 抽卡 -->
@@ -395,9 +390,9 @@ body::before{
       <section id="screen-cards" class="screen">
         <div id="filterBar">
           <button class="filter-btn active" data-rar="all">全部</button>
-          <button class="filter-btn" data-rar="1">R 初級</button>
-          <button class="filter-btn" data-rar="2">SR 中級</button>
-          <button class="filter-btn" data-rar="3">SSR 中高級</button>
+          <button class="filter-btn" data-rar="1">R</button>
+          <button class="filter-btn" data-rar="2">SR</button>
+          <button class="filter-btn" data-rar="3">SSR</button>
         </div>
         <div class="card-grid" id="cardGrid"></div>
       </section>
@@ -411,7 +406,7 @@ body::before{
     </nav>
   </div>
 
-  <!-- ========== 戰鬥介面 ========== -->
+  <!-- 戰鬥介面 -->
   <div id="battle-ui" class="closed">
     <div id="battleStage">
       <div class="fighter hero-f" id="heroF">
@@ -420,27 +415,22 @@ body::before{
         <div class="sprite" id="heroSprite">⚔️</div>
         <div class="nameplate" id="heroName">office</div>
       </div>
-
       <div class="fighter enemy-f" id="enemyF">
         <div class="hpnum" id="enemyHpNum">180/180</div>
         <div class="hpb"><div class="hpf" id="enemyHpF" style="width:100%"></div></div>
         <div class="sprite" id="enemySprite">🟢</div>
         <div class="nameplate" id="enemyName">單字史萊姆</div>
       </div>
-
       <div id="fxLayer"></div>
     </div>
-
     <div id="battleBottom">
       <div id="comboWrap"><div id="comboDisplay" class="hidden">COMBO <span id="comboNum">0</span></div></div>
       <div id="questionText">準備中…</div>
       <div id="options"></div>
       <div id="timerWrap"><div id="timerBar"></div></div>
     </div>
-
     <div id="battleResult" class="hidden"></div>
   </div>
-
 </div>
 
 <script>
@@ -451,7 +441,6 @@ const W = (w,zh,pos,rar,tier,forms,syn,ant,ex) =>
   ({w,zh,pos,rar,tier,forms:forms||[],syn:syn||[],ant:ant||[],ex:ex||''});
 
 const WORDS = [
-/* ================= 初級 TOEIC · 100 字 ================= */
 W("office","辦公室","n",1,"初級",["offices"],["workplace","bureau"],["home"],"She works in a large office."),
 W("meeting","會議","n",1,"初級",["meetings"],["conference","gathering"],[],"We have a meeting at 10 AM."),
 W("report","報告","n",1,"初級",["reports"],["document","record"],[],"Please submit the report by Friday."),
@@ -552,8 +541,6 @@ W("offer","提供","v",1,"初級",["offers","offered","offering"],["give","prese
 W("increase","增加","v",1,"初級",["increases","increased","increasing"],["raise","boost"],["decrease"],"Prices increased by 10%."),
 W("decrease","減少","v",1,"初級",["decreases","decreased","decreasing"],["reduce","lower"],["increase"],"Sales decreased last month."),
 W("improve","改善","v",1,"初級",["improves","improved","improving"],["enhance","better"],["worsen"],"We must improve quality."),
-
-/* ================= 中級 TOEIC · 100 字 ================= */
 W("negotiate","談判","v",2,"中級",["negotiates","negotiated","negotiating"],["bargain","discuss"],[],"We negotiated a better price."),
 W("compromise","妥協","n",2,"中級",["compromises"],["settlement","concession"],[],"Both sides reached a compromise."),
 W("acquisition","收購","n",2,"中級",["acquisitions"],["purchase","takeover"],[],"The acquisition was completed."),
@@ -654,8 +641,6 @@ W("delegate","委派","v",2,"中級",["delegates","delegated","delegating"],["as
 W("evaluate","評估","v",2,"中級",["evaluates","evaluated","evaluating"],["assess","appraise"],[],"We evaluate performance yearly."),
 W("prioritize","優先處理","v",2,"中級",["prioritizes","prioritized","prioritizing"],["rank","order"],[],"Prioritize your tasks."),
 W("supervise","監督","v",2,"中級",["supervises","supervised","supervising"],["oversee","manage"],[],"She supervises the team."),
-
-/* ================= 中高級 TOEIC · 50 字 ================= */
 W("discrepancy","差異","n",3,"中高級",["discrepancies"],["difference","inconsistency"],["agreement"],"There is a discrepancy in the numbers."),
 W("disparity","差距","n",3,"中高級",["disparities"],["gap","imbalance"],["equality"],"The disparity in wages is huge."),
 W("anomaly","異常","n",3,"中高級",["anomalies"],["irregularity","abnormality"],["norm"],"The data shows an anomaly."),
@@ -709,7 +694,213 @@ W("vindicate","證明無罪","v",3,"中高級",["vindicates","vindicated","vindi
 ];
 
 /* =========================================================
-   2. 常數
+   2. GEPT 中高級單字庫 —— 200 字
+   ========================================================= */
+const GEPT_MH = [
+W("abandon","拋棄","v",2,"中高級",["abandons","abandoned","abandoning"],["desert","forsake"],["keep","retain"],"He abandoned his old car."),
+W("absorb","吸收","v",2,"中高級",["absorbs","absorbed","absorbing"],["soak up","take in"],["release"],"Plants absorb sunlight."),
+W("accelerate","加速","v",2,"中高級",["accelerates","accelerated","accelerating"],["speed up","hasten"],["slow down"],"The car accelerated quickly."),
+W("accomplish","完成","v",2,"中高級",["accomplishes","accomplished","accomplishing"],["achieve","complete"],["fail"],"She accomplished her goal."),
+W("accuse","指控","v",2,"中高級",["accuses","accused","accusing"],["blame","charge"],["defend"],"He was accused of theft."),
+W("acknowledge","承認","v",2,"中高級",["acknowledges","acknowledged","acknowledging"],["admit","recognize"],["deny"],"She acknowledged the mistake."),
+W("adapt","適應","v",2,"中高級",["adapts","adapted","adapting"],["adjust","modify"],["resist"],"Animals adapt to their environment."),
+W("adjust","調整","v",1,"中高級",["adjusts","adjusted","adjusting"],["modify","tune"],["disturb"],"Adjust the volume, please."),
+W("admire","欽佩","v",1,"中高級",["admires","admired","admiring"],["respect","esteem"],["despise"],"I admire your courage."),
+W("adopt","採用","v",1,"中高級",["adopts","adopted","adopting"],["accept","embrace"],["reject"],"They adopted a new policy."),
+W("advocate","提倡","v",3,"中高級",["advocates","advocated","advocating"],["support","promote"],["oppose"],"She advocates free education."),
+W("alter","改變","v",1,"中高級",["alters","altered","altering"],["change","modify"],["preserve"],"We altered the design."),
+W("amuse","娛樂","v",1,"中高級",["amuses","amused","amusing"],["entertain","delight"],["bore"],"The clown amused the kids."),
+W("analyze","分析","v",1,"中高級",["analyzes","analyzed","analyzing"],["examine","study"],["synthesize"],"Analyze the data carefully."),
+W("annoy","惹惱","v",1,"中高級",["annoys","annoyed","annoying"],["irritate","bother"],["please"],"The noise annoyed me."),
+W("appeal","吸引","v",2,"中高級",["appeals","appealed","appealing"],["attract","charm"],["repel"],"The idea appeals to me."),
+W("apply","申請","v",1,"中高級",["applies","applied","applying"],["request","use"],["withdraw"],"Apply for the job today."),
+W("appreciate","感激","v",1,"中高級",["appreciates","appreciated","appreciating"],["value","treasure"],["ignore"],"I appreciate your help."),
+W("approach","接近","v",1,"中高級",["approaches","approached","approaching"],["near","advance"],["retreat"],"Winter is approaching."),
+W("arise","出現","v",2,"中高級",["arises","arose","arising"],["emerge","occur"],["vanish"],"Problems may arise."),
+W("assemble","集合","v",2,"中高級",["assembles","assembled","assembling"],["gather","collect"],["disperse"],"Assemble the team now."),
+W("assess","評估","v",2,"中高級",["assesses","assessed","assessing"],["evaluate","judge"],[],"Assess the situation."),
+W("assign","分配","v",1,"中高級",["assigns","assigned","assigning"],["allocate","allot"],[],"Assign tasks to each member."),
+W("assist","協助","v",1,"中高級",["assists","assisted","assisting"],["help","aid"],["hinder"],"She assisted the doctor."),
+W("associate","聯想","v",1,"中高級",["associates","associated","associating"],["connect","link"],["separate"],"I associate tea with calm."),
+W("assume","假設","v",1,"中高級",["assumes","assumed","assuming"],["suppose","presume"],["verify"],"I assume you agree."),
+W("assure","保證","v",2,"中高級",["assures","assured","assuring"],["promise","guarantee"],["doubt"],"I assure you it works."),
+W("attain","達到","v",3,"中高級",["attains","attained","attaining"],["achieve","reach"],["fail"],"She attained her goal."),
+W("attempt","嘗試","v",1,"中高級",["attempts","attempted","attempting"],["try","endeavor"],["give up"],"He attempted the exam."),
+W("attribute","歸因","v",3,"中高級",["attributes","attributed","attributing"],["ascribe","credit"],[],"She attributes success to luck."),
+W("authorize","授權","v",2,"中高級",["authorizes","authorized","authorizing"],["permit","empower"],["forbid"],"Who authorized this?"),
+W("avoid","避免","v",1,"中高級",["avoids","avoided","avoiding"],["evade","prevent"],["face"],"Avoid junk food."),
+W("bargain","議價","v",1,"中高級",["bargains","bargained","bargaining"],["negotiate","haggle"],[],"She bargained for a lower price."),
+W("betray","背叛","v",2,"中高級",["betrays","betrayed","betraying"],["deceive","backstab"],["support"],"He betrayed his friend."),
+W("blame","責備","v",1,"中高級",["blames","blamed","blaming"],["accuse","criticize"],["praise"],"Don't blame me."),
+W("boast","誇耀","v",2,"中高級",["boasts","boasted","boasting"],["brag","show off"],["understate"],"He boasts about his car."),
+W("boost","提升","v",1,"中高級",["boosts","boosted","boosting"],["increase","raise"],["reduce"],"Boost your confidence."),
+W("bother","打擾","v",1,"中高級",["bothers","bothered","bothering"],["disturb","annoy"],["ignore"],"Don't bother him now."),
+W("calculate","計算","v",1,"中高級",["calculates","calculated","calculating"],["compute","reckon"],[],"Calculate the total."),
+W("capture","捕獲","v",1,"中高級",["captures","captured","capturing"],["catch","seize"],["release"],"They captured the thief."),
+W("cease","停止","v",2,"中高級",["ceases","ceased","ceasing"],["stop","halt"],["continue"],"The rain ceased."),
+W("challenge","挑戰","v",1,"中高級",["challenges","challenged","challenging"],["question","confront"],["accept"],"I challenge you."),
+W("cherish","珍惜","v",2,"中高級",["cherishes","cherished","cherishing"],["treasure","value"],["neglect"],"Cherish every moment."),
+W("claim","聲稱","v",1,"中高級",["claims","claimed","claiming"],["assert","declare"],["deny"],"She claims she's innocent."),
+W("clarify","澄清","v",2,"中高級",["clarifies","clarified","clarifying"],["explain","illuminate"],["confuse"],"Clarify your point."),
+W("collapse","崩潰","v",2,"中高級",["collapses","collapsed","collapsing"],["fall","break down"],["stand"],"The bridge collapsed."),
+W("combine","結合","v",1,"中高級",["combines","combined","combining"],["merge","unite"],["separate"],"Combine the ingredients."),
+W("commit","承諾","v",2,"中高級",["commits","committed","committing"],["pledge","dedicate"],["quit"],"She committed to the project."),
+W("compel","強迫","v",3,"中高級",["compels","compelled","compelling"],["force","oblige"],["persuade"],"He was compelled to leave."),
+W("compensate","補償","v",2,"中高級",["compensates","compensated","compensating"],["repay","reimburse"],[],"We'll compensate you."),
+W("compete","競爭","v",1,"中高級",["competes","competed","competing"],["contend","rival"],["cooperate"],"They compete for gold."),
+W("complain","抱怨","v",1,"中高級",["complains","complained","complaining"],["grumble","protest"],["praise"],"Stop complaining."),
+W("conceal","隱藏","v",3,"中高級",["conceals","concealed","concealing"],["hide","cover"],["reveal"],"He concealed the truth."),
+W("concentrate","專注","v",1,"中高級",["concentrates","concentrated","concentrating"],["focus","center"],["distract"],"Concentrate on your work."),
+W("condemn","譴責","v",3,"中高級",["condemns","condemned","condemning"],["blame","denounce"],["praise"],"They condemned the act."),
+W("confront","面對","v",2,"中高級",["confronts","confronted","confronting"],["face","challenge"],["avoid"],"Confront your fears."),
+W("conquer","征服","v",2,"中高級",["conquers","conquered","conquering"],["defeat","overcome"],["surrender"],"He conquered his fear."),
+W("conserve","保存","v",2,"中高級",["conserves","conserved","conserving"],["preserve","save"],["waste"],"Conserve water."),
+W("consist","組成","v",1,"中高級",["consists","consisted","consisting"],["comprise","contain"],[],"Water consists of H and O."),
+W("constitute","構成","v",3,"中高級",["constitutes","constituted","constituting"],["form","compose"],[],"Twelve months constitute a year."),
+W("consult","諮詢","v",1,"中高級",["consults","consulted","consulting"],["advise","refer to"],[],"Consult a doctor."),
+W("consume","消耗","v",1,"中高級",["consumes","consumed","consuming"],["use","devour"],["produce"],"Cars consume fuel."),
+W("contribute","貢獻","v",1,"中高級",["contributes","contributed","contributing"],["donate","give"],["withhold"],"Everyone contributed."),
+W("convey","傳達","v",2,"中高級",["conveys","conveyed","conveying"],["communicate","express"],[],"Words convey meaning."),
+W("convince","說服","v",1,"中高級",["convinces","convinced","convincing"],["persuade","assure"],["dissuade"],"He convinced me."),
+W("cooperate","合作","v",1,"中高級",["cooperates","cooperated","cooperating"],["collaborate","assist"],["compete"],"Let's cooperate."),
+W("cope","應付","v",2,"中高級",["copes","coped","coping"],["handle","manage"],["collapse"],"She copes well with stress."),
+W("criticize","批評","v",2,"中高級",["criticizes","criticized","criticizing"],["condemn","blame"],["praise"],"Don't criticize others."),
+W("cultivate","培養","v",2,"中高級",["cultivates","cultivated","cultivating"],["nurture","develop"],["neglect"],"Cultivate good habits."),
+W("deceive","欺騙","v",2,"中高級",["deceives","deceived","deceiving"],["trick","betray"],["enlighten"],"Don't deceive me."),
+W("declare","宣布","v",1,"中高級",["declares","declared","declaring"],["announce","proclaim"],["conceal"],"They declared war."),
+W("decline","下降","v",1,"中高級",["declines","declined","declining"],["decrease","refuse"],["increase"],"Sales declined."),
+W("dedicate","奉獻","v",2,"中高級",["dedicates","dedicated","dedicating"],["devote","commit"],["neglect"],"She dedicated her life to art."),
+W("defeat","擊敗","v",1,"中高級",["defeats","defeated","defeating"],["beat","conquer"],["lose"],"We defeated them."),
+W("define","定義","v",1,"中高級",["defines","defined","defining"],["explain","specify"],[],"Define the term."),
+W("demonstrate","展示","v",1,"中高級",["demonstrates","demonstrated","demonstrating"],["show","prove"],["hide"],"Demonstrate the process."),
+W("deny","否認","v",1,"中高級",["denies","denied","denying"],["reject","refuse"],["admit"],"He denied the charge."),
+W("depend","依賴","v",1,"中高級",["depends","depended","depending"],["rely","trust"],[],"Don't depend on luck."),
+W("deprive","剝奪","v",3,"中高級",["deprives","deprived","depriving"],["strip","rob"],["provide"],"War deprived them of homes."),
+W("derive","源自","v",3,"中高級",["derives","derived","deriving"],["originate","obtain"],[],"The word derives from Latin."),
+W("deserve","值得","v",1,"中高級",["deserves","deserved","deserving"],["merit","earn"],[],"You deserve it."),
+W("desire","渴望","v",1,"中高級",["desires","desired","desiring"],["want","crave"],["reject"],"She desires freedom."),
+W("destroy","破壞","v",1,"中高級",["destroys","destroyed","destroying"],["ruin","demolish"],["build"],"The storm destroyed houses."),
+W("detect","察覺","v",2,"中高級",["detects","detected","detecting"],["notice","discover"],["miss"],"Detect the error."),
+W("determine","決定","v",1,"中高級",["determines","determined","determining"],["decide","resolve"],["hesitate"],"Determine your goal."),
+W("devote","奉獻","v",2,"中高級",["devotes","devoted","devoting"],["dedicate","commit"],["neglect"],"He devoted time to family."),
+W("diminish","減少","v",3,"中高級",["diminishes","diminished","diminishing"],["reduce","lessen"],["increase"],"His influence diminished."),
+W("discard","丟棄","v",2,"中高級",["discards","discarded","discarding"],["throw away","dump"],["keep"],"Discard old papers."),
+W("disclose","揭露","v",3,"中高級",["discloses","disclosed","disclosing"],["reveal","expose"],["conceal"],"Disclose the facts."),
+W("discourage","使沮喪","v",1,"中高級",["discourages","discouraged","discouraging"],["dishearten","deter"],["encourage"],"Don't be discouraged."),
+W("disguise","偽裝","v",2,"中高級",["disguises","disguised","disguising"],["mask","camouflage"],["reveal"],"He disguised his voice."),
+W("dismiss","解雇","v",2,"中高級",["dismisses","dismissed","dismissing"],["fire","reject"],["hire"],"He was dismissed."),
+W("display","展示","v",1,"中高級",["displays","displayed","displaying"],["show","exhibit"],["hide"],"Display your work."),
+W("dispute","爭論","v",2,"中高級",["disputes","disputed","disputing"],["argue","debate"],["agree"],"They disputed the result."),
+W("distinguish","區分","v",1,"中高級",["distinguishes","distinguished","distinguishing"],["differentiate","tell apart"],["confuse"],"Distinguish right from wrong."),
+W("distribute","分配","v",1,"中高級",["distributes","distributed","distributing"],["allocate","share"],["collect"],"Distribute the flyers."),
+W("disturb","打擾","v",1,"中高級",["disturbs","disturbed","disturbing"],["bother","interrupt"],["calm"],"Don't disturb him."),
+W("dominate","支配","v",2,"中高級",["dominates","dominated","dominating"],["control","rule"],["submit"],"He dominates the market."),
+W("donate","捐贈","v",1,"中高級",["donates","donated","donating"],["give","contribute"],["receive"],"Donate to charity."),
+W("dwell","居住","v",3,"中高級",["dwells","dwelled","dwelling"],["reside","live"],[],"They dwell in the mountains."),
+W("earn","賺取","v",1,"中高級",["earns","earned","earning"],["gain","acquire"],["spend"],"He earns a good salary."),
+W("eliminate","消除","v",2,"中高級",["eliminates","eliminated","eliminating"],["remove","eradicate"],["include"],"Eliminate the errors."),
+W("embrace","擁抱","v",1,"中高級",["embraces","embraced","embracing"],["hug","accept"],["reject"],"Embrace change."),
+W("emerge","出現","v",2,"中高級",["emerges","emerged","emerging"],["appear","surface"],["vanish"],"The sun emerged."),
+W("emphasize","強調","v",1,"中高級",["emphasizes","emphasized","emphasizing"],["stress","highlight"],["understate"],"He emphasized safety."),
+W("employ","雇用","v",1,"中高級",["employs","employed","employing"],["hire","use"],["fire"],"They employ 200 people."),
+W("enable","使能夠","v",1,"中高級",["enables","enabled","enabling"],["allow","empower"],["prevent"],"This enables travel."),
+W("encounter","遭遇","v",2,"中高級",["encounters","encountered","encountering"],["meet","face"],["avoid"],"We encountered problems."),
+W("endure","忍受","v",2,"中高級",["endures","endured","enduring"],["bear","tolerate"],["give up"],"Endure the pain."),
+W("enforce","執行","v",2,"中高級",["enforces","enforced","enforcing"],["implement","apply"],["ignore"],"Enforce the law."),
+W("engage","參與","v",2,"中高級",["engages","engaged","engaging"],["involve","participate"],["withdraw"],"Engage in the discussion."),
+W("enhance","增強","v",2,"中高級",["enhances","enhanced","enhancing"],["improve","boost"],["weaken"],"Enhance your skills."),
+W("enroll","註冊","v",1,"中高級",["enrolls","enrolled","enrolling"],["register","sign up"],["withdraw"],"Enroll in the course."),
+W("ensure","確保","v",1,"中高級",["ensures","ensured","ensuring"],["guarantee","assure"],[],"Ensure the door is locked."),
+W("entertain","娛樂","v",1,"中高級",["entertains","entertained","entertaining"],["amuse","delight"],["bore"],"They entertained the guests."),
+W("envy","嫉妒","v",1,"中高級",["envies","envied","envying"],["covet","begrudge"],["admire"],"I envy her success."),
+W("escape","逃脫","v",1,"中高級",["escapes","escaped","escaping"],["flee","elude"],["capture"],"They escaped from prison."),
+W("establish","建立","v",1,"中高級",["establishes","established","establishing"],["found","set up"],["abolish"],"Establish a business."),
+W("estimate","估計","v",1,"中高級",["estimates","estimated","estimating"],["calculate","assess"],[],"Estimate the cost."),
+W("evolve","進化","v",2,"中高級",["evolves","evolved","evolving"],["develop","grow"],["regress"],"Species evolve over time."),
+W("exaggerate","誇大","v",2,"中高級",["exaggerates","exaggerated","exaggerating"],["overstate","magnify"],["understate"],"Don't exaggerate."),
+W("exceed","超過","v",2,"中高級",["exceeds","exceeded","exceeding"],["surpass","outdo"],["fall short"],"Don't exceed the limit."),
+W("exclude","排除","v",2,"中高級",["excludes","excluded","excluding"],["omit","ban"],["include"],"Exclude him from the list."),
+W("exhibit","展出","v",2,"中高級",["exhibits","exhibited","exhibiting"],["display","show"],["hide"],"They exhibit paintings."),
+W("expand","擴展","v",1,"中高級",["expands","expanded","expanding"],["enlarge","extend"],["shrink"],"Expand your business."),
+W("explore","探索","v",1,"中高級",["explores","explored","exploring"],["investigate","discover"],["ignore"],"Explore the cave."),
+W("expose","暴露","v",2,"中高級",["exposes","exposed","exposing"],["reveal","uncover"],["conceal"],"Expose the truth."),
+W("extend","延伸","v",1,"中高級",["extends","extended","extending"],["lengthen","prolong"],["shorten"],"Extend the deadline."),
+W("fascinate","使著迷","v",2,"中高級",["fascinates","fascinated","fascinating"],["captivate","charm"],["bore"],"The story fascinated me."),
+W("favor","支持","v",1,"中高級",["favors","favored","favoring"],["support","prefer"],["oppose"],"I favor this plan."),
+W("flee","逃跑","v",2,"中高級",["flees","fled","fleeing"],["escape","run away"],["stay"],"They fled the fire."),
+W("forbid","禁止","v",2,"中高級",["forbids","forbade","forbidding"],["prohibit","ban"],["allow"],"Smoking is forbidden."),
+W("foster","培養","v",3,"中高級",["fosters","fostered","fostering"],["nurture","encourage"],["discourage"],"Foster creativity."),
+W("fulfill","實現","v",2,"中高級",["fulfills","fulfilled","fulfilling"],["achieve","complete"],["fail"],"Fulfill your dream."),
+W("gain","獲得","v",1,"中高級",["gains","gained","gaining"],["obtain","acquire"],["lose"],"Gain new skills."),
+W("gather","聚集","v",1,"中高級",["gathers","gathered","gathering"],["collect","assemble"],["scatter"],"Gather around."),
+W("generate","產生","v",2,"中高級",["generates","generated","generating"],["produce","create"],["destroy"],"Generate electricity."),
+W("glance","瞥一眼","v",2,"中高級",["glances","glanced","glancing"],["peek","look"],[],"She glanced at her watch."),
+W("govern","統治","v",2,"中高級",["governs","governed","governing"],["rule","control"],[],"The king governs the land."),
+W("grasp","抓住","v",2,"中高級",["grasps","grasped","grasping"],["seize","understand"],["release"],"Grasp the concept."),
+W("guarantee","保證","v",1,"中高級",["guarantees","guaranteed","guaranteeing"],["assure","promise"],[],"We guarantee quality."),
+W("handle","處理","v",1,"中高級",["handles","handled","handling"],["manage","deal with"],[],"Handle the situation."),
+W("hesitate","猶豫","v",2,"中高級",["hesitates","hesitated","hesitating"],["pause","waver"],["decide"],"Don't hesitate to ask."),
+W("highlight","強調","v",2,"中高級",["highlights","highlighted","highlighting"],["emphasize","stress"],["hide"],"Highlight the main point."),
+W("hinder","阻礙","v",3,"中高級",["hinders","hindered","hindering"],["obstruct","impede"],["help"],"Don't hinder progress."),
+W("identify","辨識","v",1,"中高級",["identifies","identified","identifying"],["recognize","name"],[],"Identify the problem."),
+W("ignore","忽略","v",1,"中高級",["ignores","ignored","ignoring"],["neglect","disregard"],["notice"],"Ignore the noise."),
+W("illustrate","舉例說明","v",2,"中高級",["illustrates","illustrated","illustrating"],["demonstrate","explain"],[],"Let me illustrate."),
+W("imagine","想像","v",1,"中高級",["imagines","imagined","imagining"],["envision","picture"],[],"Imagine the future."),
+W("impose","強加","v",3,"中高級",["imposes","imposed","imposing"],["enforce","demand"],[],"Don't impose your views."),
+W("impress","使印象深刻","v",1,"中高級",["impresses","impressed","impressing"],["amaze","inspire"],["disappoint"],"You impressed me."),
+W("indicate","指出","v",1,"中高級",["indicates","indicated","indicating"],["show","point out"],["conceal"],"Indicate your choice."),
+W("induce","引誘","v",3,"中高級",["induces","induced","inducing"],["persuade","cause"],["deter"],"Nothing can induce me."),
+W("influence","影響","v",1,"中高級",["influences","influenced","influencing"],["affect","sway"],[],"Parents influence children."),
+W("inherit","繼承","v",2,"中高級",["inherits","inherited","inheriting"],["receive","succeed"],[],"She inherited the house."),
+W("initiate","發起","v",3,"中高級",["initiates","initiated","initiating"],["start","launch"],["end"],"They initiated the plan."),
+W("inquire","詢問","v",2,"中高級",["inquires","inquired","inquiring"],["ask","question"],[],"I inquired about the job."),
+W("insist","堅持","v",1,"中高級",["insists","insisted","insisting"],["demand","persist"],["yield"],"She insisted on going."),
+W("inspire","激勵","v",1,"中高級",["inspires","inspired","inspiring"],["motivate","encourage"],["discourage"],"You inspire me."),
+W("install","安裝","v",1,"中高級",["installs","installed","installing"],["set up","fix"],["remove"],"Install the app."),
+W("instruct","指導","v",2,"中高級",["instructs","instructed","instructing"],["teach","direct"],[],"He instructed the class."),
+W("insure","保險","v",2,"中高級",["insures","insured","insuring"],["protect","cover"],[],"Insure your car."),
+W("intend","打算","v",1,"中高級",["intends","intended","intending"],["plan","mean"],[],"I intend to leave."),
+W("interpret","詮釋","v",2,"中高級",["interprets","interpreted","interpreting"],["explain","translate"],["misread"],"Interpret the dream."),
+W("intervene","干預","v",3,"中高級",["intervenes","intervened","intervening"],["interfere","step in"],["ignore"],"Don't intervene."),
+W("introduce","介紹","v",1,"中高級",["introduces","introduced","introducing"],["present","bring in"],["remove"],"Introduce yourself."),
+W("invade","入侵","v",2,"中高級",["invades","invaded","invading"],["attack","intrude"],["retreat"],"They invaded the country."),
+W("invest","投資","v",1,"中高級",["invests","invested","investing"],["fund","finance"],[],"Invest wisely."),
+W("investigate","調查","v",1,"中高級",["investigates","investigated","investigating"],["examine","probe"],["ignore"],"Investigate the case."),
+W("involve","涉及","v",1,"中高級",["involves","involved","involving"],["include","engage"],["exclude"],"The job involves travel."),
+W("isolate","隔離","v",2,"中高級",["isolates","isolated","isolating"],["separate","seclude"],["integrate"],"Isolate the virus."),
+W("justify","證明正當","v",3,"中高級",["justifies","justified","justifying"],["defend","vindicate"],["condemn"],"Justify your actions."),
+W("launch","發起","v",1,"中高級",["launches","launched","launching"],["start","initiate"],["end"],"Launch the project."),
+W("lean","傾斜","v",1,"中高級",["leans","leaned","leaning"],["tilt","incline"],["straighten"],"Lean on me."),
+W("locate","定位","v",1,"中高級",["locates","located","locating"],["find","situate"],[],"Locate the exit."),
+W("maintain","維持","v",1,"中高級",["maintains","maintained","maintaining"],["keep","preserve"],["abandon"],"Maintain the standard."),
+W("manipulate","操作","v",3,"中高級",["manipulates","manipulated","manipulating"],["control","handle"],[],"Manipulate the data."),
+W("manufacture","製造","v",2,"中高級",["manufactures","manufactured","manufacturing"],["produce","make"],["destroy"],"Manufacture cars."),
+W("marvel","驚嘆","v",3,"中高級",["marvels","marveled","marveling"],["wonder","admire"],[],"I marvel at her talent."),
+W("master","掌握","v",1,"中高級",["masters","mastered","mastering"],["learn","command"],["fail"],"Master the language."),
+W("measure","測量","v",1,"中高級",["measures","measured","measuring"],["gauge","assess"],[],"Measure the length."),
+W("mend","修補","v",1,"中高級",["mends","mended","mending"],["repair","fix"],["break"],"Mend the shirt."),
+W("neglect","忽略","v",2,"中高級",["neglects","neglected","neglecting"],["ignore","overlook"],["attend"],"Don't neglect your health."),
+W("nourish","滋養","v",3,"中高級",["nourishes","nourished","nourishing"],["feed","nurture"],["starve"],"Nourish the body."),
+W("obey","服從","v",1,"中高級",["obeys","obeyed","obeying"],["comply","follow"],["disobey"],"Obey the rules."),
+W("observe","觀察","v",1,"中高級",["observes","observed","observing"],["watch","notice"],["ignore"],"Observe carefully."),
+W("obtain","獲得","v",2,"中高級",["obtains","obtained","obtaining"],["acquire","gain"],["lose"],"Obtain permission."),
+W("occupy","占據","v",2,"中高級",["occupies","occupied","occupying"],["fill","take up"],["vacate"],"The books occupy the shelf."),
+W("occur","發生","v",1,"中高級",["occurs","occurred","occurring"],["happen","arise"],[],"When did it occur?"),
+W("offend","得罪","v",2,"中高級",["offends","offended","offending"],["insult","upset"],["please"],"I didn't mean to offend."),
+W("operate","操作","v",1,"中高級",["operates","operated","operating"],["run","manage"],[],"Operate the machine."),
+W("oppose","反對","v",2,"中高級",["opposes","opposed","opposing"],["resist","object"],["support"],"I oppose the plan."),
+W("overcome","克服","v",1,"中高級",["overcomes","overcame","overcoming"],["conquer","defeat"],["surrender"],"Overcome your fear."),
+W("overlook","忽略","v",2,"中高級",["overlooks","overlooked","overlooking"],["ignore","miss"],["notice"],"Don't overlook details."),
+W("participate","參與","v",1,"中高級",["participates","participated","participating"],["join","engage"],["withdraw"],"Participate in class."),
+W("perceive","察覺","v",3,"中高級",["perceives","perceived","perceiving"],["notice","sense"],["miss"],"I perceive a change."),
+W("perform","表演","v",1,"中高級",["performs","performed","performing"],["act","execute"],[],"Perform on stage."),
+W("permit","允許","v",1,"中高級",["permits","permitted","permitting"],["allow","authorize"],["forbid"],"Smoking is not permitted."),
+W("persuade","說服","v",2,"中高級",["persuades","persuaded","persuading"],["convince","urge"],["dissuade"],"Persuade him to come."),
+W("possess","擁有","v",2,"中高級",["possesses","possessed","possessing"],["own","have"],["lack"],"She possesses great talent."),
+];
+
+/* =========================================================
+   3. 常數
    ========================================================= */
 const RARITY = {
   1:{n:"R",  c:"#7a9cc6", atk:20, hp:100},
@@ -718,331 +909,306 @@ const RARITY = {
 };
 
 const ENEMY_TYPES = [
-  {n:"單字史萊姆",e:"🟢"},
-  {n:"文法哥布林",e:"👺"},
-  {n:"拼音蝙蝠",  e:"🦇"},
-  {n:"時態骷髏",  e:"💀"},
-  {n:"詞彙巨魔",  e:"👹"},
-  {n:"語法巫師",  e:"🧙"},
-  {n:"遺忘巨龍",  e:"🐲"},
-  {n:"沉默幽靈",  e:"👻"},
-  {n:"拼字蜘蛛",  e:"🕷️"},
-  {n:"混亂惡魔",  e:"😈"},
+  {n:"單字史萊姆",e:"🟢"},{n:"文法哥布林",e:"👺"},{n:"拼音蝙蝠",e:"🦇"},
+  {n:"時態骷髏",e:"💀"},{n:"詞彙巨魔",e:"👹"},{n:"語法巫師",e:"🧙"},
+  {n:"遺忘巨龍",e:"🐲"},{n:"沉默幽靈",e:"👻"},{n:"拼字蜘蛛",e:"🕷️"},{n:"混亂惡魔",e:"😈"},
 ];
 
 const POS_SPRITE = {v:"⚔️", adj:"🔮", n:"🛡️"};
 const POS_LABEL  = {v:"動詞", adj:"形容詞", n:"名詞"};
 
 /* =========================================================
-   3. 音訊系統 —— 全部用 WebAudio 即時合成
+   4. 音訊系統
    ========================================================= */
 function noteFreq(name){
-  const map = {C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
-  const m = /^([A-G]#?)(\d)$/.exec(name);
-  if(!m) return 440;
-  const midi = (parseInt(m[2])+1)*12 + map[m[1]];
-  return 440 * Math.pow(2, (midi-69)/12);
+  const map={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
+  const m=/^([A-G]#?)(\d)$/.exec(name);
+  if(!m)return 440;
+  const midi=(parseInt(m[2])+1)*12+map[m[1]];
+  return 440*Math.pow(2,(midi-69)/12);
 }
 
-/* ---- BGM 曲目資料 ---- */
 const TRACKS = {
-  home: {
-    bpm: 84, stepsPerBeat: 2,
-    bassType: 'sine', arpType: 'triangle',
-    bassVol: 0.075, arpVol: 0.032,
-    chords: [
-      {bass:'A2', arp:['A3','C4','E4','A4','E4','C4','A3','C4']},  // Am
-      {bass:'F2', arp:['F3','A3','C4','F4','C4','A3','F3','A3']},  // F
-      {bass:'C3', arp:['C4','E4','G4','C5','G4','E4','C4','E4']},  // C
-      {bass:'G2', arp:['G3','B3','D4','G4','D4','B3','G3','B3']},  // G
-    ],
-  },
-  battle: {
-    bpm: 132, stepsPerBeat: 2,
-    bassType: 'square', arpType: 'sawtooth',
-    bassVol: 0.055, arpVol: 0.022,
-    chords: [
-      {bass:'A2', arp:['A3','E4','A4','E4','A3','E4','A4','C5']},  // Am
-      {bass:'F2', arp:['F3','C4','F4','C4','F3','C4','F4','A4']},  // F
-      {bass:'G2', arp:['G3','D4','G4','D4','G3','D4','G4','B4']},  // G
-      {bass:'E2', arp:['E3','B3','E4','B3','E3','G#3','B3','E4']}, // E
-    ],
-  },
-  gacha: {
-    bpm: 118, stepsPerBeat: 2,
-    bassType: 'sine', arpType: 'triangle',
-    bassVol: 0.06, arpVol: 0.04,
-    chords: [
-      {bass:'C3', arp:['C4','E4','G4','C5','G4','E4','C4','E4']},  // C
-      {bass:'A2', arp:['A3','C4','E4','A4','E4','C4','A3','C4']},  // Am
-      {bass:'F2', arp:['F3','A3','C4','F4','C4','A3','F3','A3']},  // F
-      {bass:'G2', arp:['G3','B3','D4','G4','D4','B3','G3','B3']},  // G
-    ],
-  },
+  home:{bpm:84,stepsPerBeat:2,bassType:'sine',arpType:'triangle',bassVol:.075,arpVol:.032,
+    chords:[
+      {bass:'A2',arp:['A3','C4','E4','A4','E4','C4','A3','C4']},
+      {bass:'F2',arp:['F3','A3','C4','F4','C4','A3','F3','A3']},
+      {bass:'C3',arp:['C4','E4','G4','C5','G4','E4','C4','E4']},
+      {bass:'G2',arp:['G3','B3','D4','G4','D4','B3','G3','B3']},
+    ]},
+  battle:{bpm:132,stepsPerBeat:2,bassType:'square',arpType:'sawtooth',bassVol:.055,arpVol:.022,
+    chords:[
+      {bass:'A2',arp:['A3','E4','A4','E4','A3','E4','A4','C5']},
+      {bass:'F2',arp:['F3','C4','F4','C4','F3','C4','F4','A4']},
+      {bass:'G2',arp:['G3','D4','G4','D4','G3','D4','G4','B4']},
+      {bass:'E2',arp:['E3','B3','E4','B3','E3','G#3','B3','E4']},
+    ]},
+  gacha:{bpm:118,stepsPerBeat:2,bassType:'sine',arpType:'triangle',bassVol:.06,arpVol:.04,
+    chords:[
+      {bass:'C3',arp:['C4','E4','G4','C5','G4','E4','C4','E4']},
+      {bass:'A2',arp:['A3','C4','E4','A4','E4','C4','A3','C4']},
+      {bass:'F2',arp:['F3','A3','C4','F4','C4','A3','F3','A3']},
+      {bass:'G2',arp:['G3','B3','D4','G4','D4','B3','G3','B3']},
+    ]},
 };
 
-/* ---- 音樂播放器（lookahead 調度） ---- */
 class MusicPlayer{
-  constructor(){
-    this.ctx=null; this.gain=null; this.timer=null;
-    this.step=0; this.nextTime=0; this.track=null; this.trackName=null;
-    this.secPerStep=0;
-  }
-  attach(ctx, gain){ this.ctx=ctx; this.gain=gain; }
+  constructor(){this.ctx=null;this.gain=null;this.timer=null;this.step=0;this.nextTime=0;this.track=null;this.trackName=null;this.secPerStep=0}
+  attach(ctx,gain){this.ctx=ctx;this.gain=gain}
   play(name){
-    if(!this.ctx) return;
-    if(this.trackName===name && this.timer) return;
+    if(!this.ctx)return;
+    if(this.trackName===name&&this.timer)return;
     this.stop();
-    const t = TRACKS[name];
-    if(!t) return;
-    this.track=t; this.trackName=name; this.step=0;
-    this.secPerStep = 60 / t.bpm / (t.stepsPerBeat||2);
-    this.nextTime = this.ctx.currentTime + 0.08;
-    this.timer = setInterval(()=>this.tick(), 25);
+    const t=TRACKS[name];if(!t)return;
+    this.track=t;this.trackName=name;this.step=0;
+    this.secPerStep=60/t.bpm/(t.stepsPerBeat||2);
+    this.nextTime=this.ctx.currentTime+0.08;
+    this.timer=setInterval(()=>this.tick(),25);
     this.tick();
   }
-  stop(){
-    if(this.timer){ clearInterval(this.timer); this.timer=null; }
-    this.trackName=null;
-  }
+  stop(){if(this.timer){clearInterval(this.timer);this.timer=null}this.trackName=null}
   tick(){
-    if(!this.ctx||!this.track) return;
-    const now = this.ctx.currentTime;
-    if(this.nextTime < now - 0.5) this.nextTime = now + 0.05;  // 後台切回時重新對齊
-    while(this.nextTime < now + 0.15){
-      this.scheduleStep(this.step, this.nextTime);
-      this.nextTime += this.secPerStep;
-      this.step++;
+    if(!this.ctx||!this.track)return;
+    const now=this.ctx.currentTime;
+    if(this.nextTime<now-0.5)this.nextTime=now+0.05;
+    while(this.nextTime<now+0.15){
+      this.scheduleStep(this.step,this.nextTime);
+      this.nextTime+=this.secPerStep;this.step++;
     }
   }
-  scheduleStep(step, time){
-    const t = this.track;
-    const SPC = 8;
-    const total = t.chords.length * SPC;
-    const s = step % total;
-    const chord = t.chords[Math.floor(s / SPC)];
-    const pos = s % SPC;
-    if(pos===0 || pos===4){
-      this.playNote(chord.bass, time, this.secPerStep*3.2, t.bassVol, t.bassType);
-    }
-    if(chord.arp[pos]){
-      this.playNote(chord.arp[pos], time, this.secPerStep*0.85, t.arpVol, t.arpType);
-    }
+  scheduleStep(step,time){
+    const t=this.track;const SPC=8;
+    const total=t.chords.length*SPC;
+    const s=step%total;
+    const chord=t.chords[Math.floor(s/SPC)];const pos=s%SPC;
+    if(pos===0||pos===4)this.playNote(chord.bass,time,this.secPerStep*3.2,t.bassVol,t.bassType);
+    if(chord.arp[pos])this.playNote(chord.arp[pos],time,this.secPerStep*0.85,t.arpVol,t.arpType);
   }
-  playNote(name, time, dur, vol, type){
+  playNote(name,time,dur,vol,type){
     try{
-      const osc = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      osc.type = type||'sine';
-      osc.frequency.value = noteFreq(name);
-      osc.connect(g); g.connect(this.gain);
-      g.gain.setValueAtTime(0, time);
-      g.gain.linearRampToValueAtTime(vol, time + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
-      osc.start(time);
-      osc.stop(time + dur + 0.05);
+      const osc=this.ctx.createOscillator();const g=this.ctx.createGain();
+      osc.type=type||'sine';osc.frequency.value=noteFreq(name);
+      osc.connect(g);g.connect(this.gain);
+      g.gain.setValueAtTime(0,time);
+      g.gain.linearRampToValueAtTime(vol,time+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,time+dur);
+      osc.start(time);osc.stop(time+dur+0.05);
     }catch(e){}
   }
 }
 
-/* ---- 音訊總管 ---- */
-const AudioSys = {
-  ctx:null, master:null, sfxGain:null, musicGain:null,
-  music:null, ready:false,
-  musicEnabled:true, sfxEnabled:true,
-
+const AudioSys={
+  ctx:null,master:null,sfxGain:null,musicGain:null,music:null,ready:false,
+  musicEnabled:true,sfxEnabled:true,
   init(){
-    if(this.ctx) return;
+    if(this.ctx)return;
     try{
-      this.ctx = new (window.AudioContext||window.webkitAudioContext)();
-      this.master = this.ctx.createGain();
-      this.master.gain.value = 0.9;
-      this.master.connect(this.ctx.destination);
-
-      this.sfxGain = this.ctx.createGain();
-      this.sfxGain.gain.value = 0.85;
-      this.sfxGain.connect(this.master);
-
-      this.musicGain = this.ctx.createGain();
-      this.musicGain.gain.value = 0.4;
-      this.musicGain.connect(this.master);
-
-      this.music = new MusicPlayer();
-      this.music.attach(this.ctx, this.musicGain);
-      this.ready = true;
-    }catch(e){ this.ready = false; }
+      this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+      this.master=this.ctx.createGain();this.master.gain.value=0.9;this.master.connect(this.ctx.destination);
+      this.sfxGain=this.ctx.createGain();this.sfxGain.gain.value=0.85;this.sfxGain.connect(this.master);
+      this.musicGain=this.ctx.createGain();this.musicGain.gain.value=0.4;this.musicGain.connect(this.master);
+      this.music=new MusicPlayer();this.music.attach(this.ctx,this.musicGain);this.ready=true;
+    }catch(e){this.ready=false}
   },
-
-  resume(){
-    if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-  },
-
-  sfx(freq, dur, type, vol, slideTo){
-    if(!this.ready || !this.sfxEnabled) return;
+  resume(){if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume()},
+  sfx(freq,dur,type,vol,slideTo){
+    if(!this.ready||!this.sfxEnabled)return;
     this.resume();
     try{
-      const o = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      o.type = type || 'sine';
-      o.connect(g); g.connect(this.sfxGain);
-      const t = this.ctx.currentTime;
-      o.frequency.setValueAtTime(freq, t);
-      if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
-      g.gain.setValueAtTime(vol || 0.1, t);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.start(t); o.stop(t + dur + 0.03);
+      const o=this.ctx.createOscillator();const g=this.ctx.createGain();
+      o.type=type||'sine';o.connect(g);g.connect(this.sfxGain);
+      const t=this.ctx.currentTime;
+      o.frequency.setValueAtTime(freq,t);
+      if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+      g.gain.setValueAtTime(vol||0.1,t);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      o.start(t);o.stop(t+dur+0.03);
     }catch(e){}
   },
-
-  playMusic(name){
-    if(!this.ready || !this.musicEnabled) return;
-    this.resume();
-    this.music.play(name);
-  },
-
-  stopMusic(){ if(this.music) this.music.stop(); },
+  playMusic(name){if(!this.ready||!this.musicEnabled)return;this.resume();this.music.play(name)},
+  stopMusic(){if(this.music)this.music.stop()},
 };
 
-/* ---- 音效庫 ---- */
-const S = {
-  hit:      ()=>AudioSys.sfx(300, .1, 'square', .07, 110),
-  crit:     ()=>AudioSys.sfx(520, .14, 'sawtooth', .09, 1000),
-  correct:  ()=>{AudioSys.sfx(660, .09, 'sine', .09); setTimeout(()=>AudioSys.sfx(990, .12, 'sine', .09), 75);},
-  wrong:    ()=>AudioSys.sfx(180, .26, 'sawtooth', .09, 80),
-  draw:     ()=>AudioSys.sfx(440, .14, 'triangle', .07, 880),
-  rare:     ()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.18,'sine',.09), i*80));},
-  upgrade:  ()=>{[440,554,659,880].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.1,'triangle',.08), i*55));},
-  star:     ()=>{[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.2,'sine',.1), i*70));},
-  win:      ()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.2,'sine',.1), i*95));},
-  lose:     ()=>{[400,330,260,180].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.24,'triangle',.09), i*115));},
-  click:    ()=>AudioSys.sfx(700, .04, 'sine', .05),
-  boot:     ()=>{[392,523,659].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.12,'sine',.06), i*70));},
+const S={
+  hit:()=>AudioSys.sfx(300,.1,'square',.07,110),
+  crit:()=>AudioSys.sfx(520,.14,'sawtooth',.09,1000),
+  correct:()=>{AudioSys.sfx(660,.09,'sine',.09);setTimeout(()=>AudioSys.sfx(990,.12,'sine',.09),75)},
+  wrong:()=>AudioSys.sfx(180,.26,'sawtooth',.09,80),
+  draw:()=>AudioSys.sfx(440,.14,'triangle',.07,880),
+  rare:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.18,'sine',.09),i*80))},
+  upgrade:()=>{[440,554,659,880].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.1,'triangle',.08),i*55))},
+  star:()=>{[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.2,'sine',.1),i*70))},
+  win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.2,'sine',.1),i*95))},
+  lose:()=>{[400,330,260,180].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.24,'triangle',.09),i*115))},
+  click:()=>AudioSys.sfx(700,.04,'sine',.05),
+  boot:()=>{[392,523,659].forEach((f,i)=>setTimeout(()=>AudioSys.sfx(f,.12,'sine',.06),i*70))},
 };
 
 /* =========================================================
-   4. 工具
+   5. 工具
    ========================================================= */
-const $  = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-const pick = a => a[Math.floor(Math.random()*a.length)];
-function shuffle(a){
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a;
-}
-function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function toast(msg){
-  const t=document.createElement('div');
-  t.className='toast'; t.textContent=msg;
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
   document.body.appendChild(t);
   requestAnimationFrame(()=>t.classList.add('show'));
-  setTimeout(()=>{t.classList.remove('show'); setTimeout(()=>t.remove(),320);},1500);
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),320)},1500);
 }
 
 /* =========================================================
-   5. 遊戲狀態
+   6. 遊戲狀態（含多模式進度）
    ========================================================= */
-const SAVE_KEY='wordquest_toeic_v1';
+const SAVE_KEY='wordquest_multi_v1';
+const GEPT_STARTERS=['adjust','admire','adopt'];
 
-const DEFAULT_STATE = () => ({
-  gold : 600,
-  dust : 0,
-  cards: { office:{lv:1,star:1}, meeting:{lv:1,star:1}, available:{lv:1,star:1} },
-  team : 'office',
-  stage: 1,
-  music: true,
-  sfx  : true,
+const DEFAULT_STATE=()=>({
+  gold:600,
+  dust:0,
+  mode:'toeic',
+  music:true,
+  sfx:true,
+  progress:{
+    toeic:{
+      cards:{office:{lv:1,star:1},meeting:{lv:1,star:1},available:{lv:1,star:1}},
+      team:'office',
+      stage:1,
+    },
+    geptMid:{
+      cards:{adjust:{lv:1,star:1},admire:{lv:1,star:1},adopt:{lv:1,star:1}},
+      team:'adjust',
+      stage:1,
+    },
+  },
 });
 
-let state = DEFAULT_STATE();
-let currentScreen = 'home';
+let state=DEFAULT_STATE();
 
-function save(){
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
-}
+// 快速訪問當前模式進度
+function P(){return state.progress[state.mode]}
+function currentPool(){return state.mode==='toeic'?WORDS:GEPT_MH}
+
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state))}catch(e){}}
 function load(){
   try{
-    const raw = localStorage.getItem(SAVE_KEY);
+    const raw=localStorage.getItem(SAVE_KEY);
     if(raw){
-      const d = JSON.parse(raw);
-      state = Object.assign(DEFAULT_STATE(), d);
+      const d=JSON.parse(raw);
+      const base=DEFAULT_STATE();
+      // 合併頂層
+      Object.assign(base,d);
+      // 合併 progress 確保結構完整
+      if(d.progress){
+        if(d.progress.toeic)Object.assign(base.progress.toeic,d.progress.toeic);
+        if(d.progress.geptMid)Object.assign(base.progress.geptMid,d.progress.geptMid);
+      }
+      state=base;
     }
-  }catch(e){ state = DEFAULT_STATE(); }
-  if(state.music === undefined) state.music = true;
-  if(state.sfx   === undefined) state.sfx   = true;
+  }catch(e){state=DEFAULT_STATE()}
+  if(state.music===undefined)state.music=true;
+  if(state.sfx===undefined)state.sfx=true;
+  if(!state.progress)state.progress=DEFAULT_STATE().progress;
+  if(!state.progress.toeic)state.progress.toeic=DEFAULT_STATE().progress.toeic;
+  if(!state.progress.geptMid)state.progress.geptMid=DEFAULT_STATE().progress.geptMid;
+  if(!state.mode)state.mode='toeic';
 }
-function sanitizeCards(){
-  const valid = new Set(WORDS.map(x=>x.w));
-  Object.keys(state.cards).forEach(id=>{
-    if(!valid.has(id)) delete state.cards[id];
-  });
-  if(!Object.keys(state.cards).length){
-    state.cards = { office:{lv:1,star:1}, meeting:{lv:1,star:1}, available:{lv:1,star:1} };
+
+function sanitize(){
+  // TOEIC
+  const validT=new Set(WORDS.map(x=>x.w));
+  const pt=state.progress.toeic;
+  Object.keys(pt.cards).forEach(id=>{if(!validT.has(id))delete pt.cards[id]});
+  if(!Object.keys(pt.cards).length)pt.cards={office:{lv:1,star:1},meeting:{lv:1,star:1},available:{lv:1,star:1}};
+  if(!pt.team||!pt.cards[pt.team])pt.team=Object.keys(pt.cards)[0];
+  // GEPT
+  const validG=new Set(GEPT_MH.map(x=>x.w));
+  const pg=state.progress.geptMid;
+  Object.keys(pg.cards).forEach(id=>{if(!validG.has(id))delete pg.cards[id]});
+  if(!Object.keys(pg.cards).length){
+    pg.cards={};
+    GEPT_STARTERS.forEach(id=>pg.cards[id]={lv:1,star:1});
   }
-  if(!state.team || !state.cards[state.team]){
-    state.team = Object.keys(state.cards)[0];
-  }
+  if(!pg.team||!pg.cards[pg.team])pg.team=Object.keys(pg.cards)[0];
+}
+
+// 從兩個池子查單字
+function wordOf(id){
+  return WORDS.find(x=>x.w===id)||GEPT_MH.find(x=>x.w===id);
 }
 
 /* =========================================================
-   6. 卡牌數值
+   7. 卡牌數值
    ========================================================= */
-const MAX_LV = 10, MAX_STAR = 5;
+const MAX_LV=10,MAX_STAR=5;
 
-function wordOf(id){ return WORDS.find(x=>x.w===id); }
-
-function formsUnlocked(card, lv){
-  if(lv>=7) return 3;
-  if(lv>=5) return 2;
-  if(lv>=3) return 1;
+function formsUnlocked(card,lv){
+  if(lv>=7)return 3;
+  if(lv>=5)return 2;
+  if(lv>=3)return 1;
   return 0;
 }
-function countUnlocked(w, c){
-  let n = Math.min(formsUnlocked(w, c.lv), (w.forms||[]).length);
-  if(c.star>=2) n += (w.syn||[]).length;
-  if(c.star>=3) n += (w.ant||[]).length;
+function countUnlocked(w,c){
+  let n=Math.min(formsUnlocked(w,c.lv),(w.forms||[]).length);
+  if(c.star>=2)n+=(w.syn||[]).length;
+  if(c.star>=3)n+=(w.ant||[]).length;
   return n;
 }
 function cardStats(w){
-  const c = state.cards[w.w];
-  if(!c) return null;
-  const base = RARITY[w.rar];
-  const unlocked = countUnlocked(w, c);
-  const atk = Math.round(
-    base.atk * (1 + 0.12*(c.lv-1)) * (1 + 0.22*(c.star-1)) * (1 + 0.05*unlocked)
-  );
-  const hp = Math.round(
-    base.hp * (1 + 0.10*(c.lv-1)) * (1 + 0.18*(c.star-1))
-  );
-  return { atk, hp };
+  const c=P().cards[w.w];
+  if(!c)return null;
+  const base=RARITY[w.rar];
+  const unlocked=countUnlocked(w,c);
+  const atk=Math.round(base.atk*(1+0.12*(c.lv-1))*(1+0.22*(c.star-1))*(1+0.05*unlocked));
+  const hp=Math.round(base.hp*(1+0.10*(c.lv-1))*(1+0.18*(c.star-1)));
+  return {atk,hp};
 }
-function lvCost(lv){ return 20 + 15*(lv-1); }
-function starCost(star){ return [0,3,6,10,15][star] || 999; }
+function lvCost(lv){return 20+15*(lv-1)}
+function starCost(star){return [0,3,6,10,15][star]||999}
 
 /* =========================================================
-   7. UI 更新
+   8. UI 更新
    ========================================================= */
 function updateTopbar(){
-  $('#goldVal').textContent = state.gold;
-  $('#dustVal').textContent = state.dust;
+  $('#goldVal').textContent=state.gold;
+  $('#dustVal').textContent=state.dust;
 }
 function updateAudioBtns(){
-  const mb = $('#musicBtn'), sb = $('#sfxBtn');
-  mb.classList.toggle('off', !state.music);
-  sb.classList.toggle('off', !state.sfx);
-  mb.textContent = state.music ? '🎵' : '🔇';
-  sb.textContent = state.sfx   ? '🔊' : '🔈';
+  const mb=$('#musicBtn'),sb=$('#sfxBtn');
+  mb.classList.toggle('off',!state.music);
+  sb.classList.toggle('off',!state.sfx);
+  mb.textContent=state.music?'🎵':'🔇';
+  sb.textContent=state.sfx?'🔊':'🔈';
+}
+function updateModeUI(){
+  const badge=$('#modeBadge');
+  const sub=$('#homeSubtitle');
+  const geptBtn=$('#geptBtn');
+  const backBtn=$('#backToToeicBtn');
+  if(state.mode==='toeic'){
+    badge.className='toeic';badge.textContent='TOEIC 模式';
+    sub.textContent='用抽到的單字卡，擊倒知識的敵人';
+    geptBtn.classList.remove('hidden');
+    backBtn.classList.add('hidden');
+  }else{
+    badge.className='gept';badge.textContent='GEPT 中高級模式';
+    sub.textContent='全民英檢中高級 · 200 字單字庫';
+    geptBtn.classList.add('hidden');
+    backBtn.classList.remove('hidden');
+  }
 }
 
 function renderHome(){
-  const w = wordOf(state.team);
-  const host = $('#homeCard');
+  const p=P();
+  const w=wordOf(p.team);
+  const host=$('#homeCard');
   if(!w){
-    host.innerHTML = '<div style="color:#6f7796;font-size:13px">尚未選擇出戰卡牌</div>';
+    host.innerHTML='<div style="color:#6f7796;font-size:13px">尚未選擇出戰卡牌</div>';
   }else{
-    const st = cardStats(w);
-    const c  = state.cards[w.w];
-    host.innerHTML = `
+    const st=cardStats(w);const c=p.cards[w.w];
+    host.innerHTML=`
       <div class="hc-sprite">${POS_SPRITE[w.pos]}</div>
       <div class="hc-info">
         <div class="hc-word" style="color:${RARITY[w.rar].c}">${w.w}</div>
@@ -1050,34 +1216,37 @@ function renderHome(){
         <div class="hc-stats">攻擊 ${st.atk} · 生命 ${st.hp} · Lv.${c.lv}</div>
       </div>`;
   }
-  const idx = (state.stage-1) % ENEMY_TYPES.length;
-  $('#stageNum').textContent = state.stage;
-  $('#stageEnemyName').textContent = ENEMY_TYPES[idx].n;
+  const idx=(p.stage-1)%ENEMY_TYPES.length;
+  $('#stageNum').textContent=p.stage;
+  $('#stageEnemyName').textContent=ENEMY_TYPES[idx].n;
 }
 
-let cardFilter = 'all';
+let cardFilter='all';
 
 function renderCards(){
-  const grid = $('#cardGrid');
-  let ids = Object.keys(state.cards);
-  if(cardFilter !== 'all') ids = ids.filter(id => String(wordOf(id).rar) === cardFilter);
+  const grid=$('#cardGrid');
+  const p=P();
+  let ids=Object.keys(p.cards);
+  if(cardFilter!=='all')ids=ids.filter(id=>{const w=wordOf(id);return w&&String(w.rar)===cardFilter});
 
   ids.sort((a,b)=>{
-    const wa=wordOf(a), wb=wordOf(b);
-    if(wa.rar!==wb.rar) return wb.rar-wa.rar;
-    const ca=state.cards[a], cb=state.cards[b];
-    if(ca.star!==cb.star) return cb.star-ca.star;
+    const wa=wordOf(a),wb=wordOf(b);
+    if(!wa||!wb)return 0;
+    if(wa.rar!==wb.rar)return wb.rar-wa.rar;
+    const ca=p.cards[a],cb=p.cards[b];
+    if(ca.star!==cb.star)return cb.star-ca.star;
     return a.localeCompare(b);
   });
 
   if(!ids.length){
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#6f7796;font-size:13px;padding:40px 0">此分類尚無卡牌，去抽卡吧！</div>';
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#6f7796;font-size:13px;padding:40px 0">此分類尚無卡牌，去抽卡吧！</div>';
     return;
   }
 
-  grid.innerHTML = ids.map(id=>{
-    const w = wordOf(id); const c = state.cards[id];
-    const on = state.team===id;
+  grid.innerHTML=ids.map(id=>{
+    const w=wordOf(id);const c=p.cards[id];
+    if(!w)return '';
+    const on=p.team===id;
     return `<div class="wcard ${on?'on':''}" data-w="${id}" style="--rc:${RARITY[w.rar].c}">
       <div class="wcard-top">
         <span class="wcard-rar">${RARITY[w.rar].n}</span>
@@ -1089,13 +1258,15 @@ function renderCards(){
       ${on?'<div class="wcard-on">出戰中</div>':''}
     </div>`;
   }).join('');
+
   $$('#cardGrid .wcard').forEach(el=>{
-    el.onclick = ()=>{ S.click(); openCardModal(el.dataset.w); };
+    el.onclick=()=>{S.click();openCardModal(el.dataset.w)};
   });
 }
 
 function renderAll(){
   updateTopbar();
+  updateModeUI();
   renderHome();
   renderCards();
   updateAudioBtns();
@@ -1103,43 +1274,42 @@ function renderAll(){
 }
 
 /* =========================================================
-   8. 卡牌詳細彈窗
+   9. 卡牌詳細彈窗
    ========================================================= */
 function openCardModal(id){
-  const w = wordOf(id);
-  const c = state.cards[id];
-  if(!w || !c) return;
+  const w=wordOf(id);
+  const p=P();
+  const c=p.cards[id];
+  if(!w||!c)return;
 
-  const st = cardStats(w);
-  const base = RARITY[w.rar];
-  const unlockedForms = Math.min(formsUnlocked(w, c.lv), (w.forms||[]).length);
+  const st=cardStats(w);
+  const base=RARITY[w.rar];
+  const unlockedForms=Math.min(formsUnlocked(w,c.lv),(w.forms||[]).length);
 
-  const formChips = (w.forms||[]).length
-    ? w.forms.map((f,i)=> i<unlockedForms
-        ? `<span class="chip">${f}</span>`
-        : `<span class="chip lock">？？？</span>`).join('')
+  const formChips=(w.forms||[]).length
+    ? w.forms.map((f,i)=>i<unlockedForms?`<span class="chip">${f}</span>`:`<span class="chip lock">？？？</span>`).join('')
     : '<span class="chip lock">此單字無詞形變化</span>';
 
-  const synChips = (w.syn||[]).length
-    ? w.syn.map(s=> c.star>=2 ? `<span class="chip g">${s}</span>` : `<span class="chip lock">？？？</span>`).join('')
+  const synChips=(w.syn||[]).length
+    ? w.syn.map(s=>c.star>=2?`<span class="chip g">${s}</span>`:`<span class="chip lock">？？？</span>`).join('')
     : '<span class="chip lock">無資料</span>';
 
-  const antChips = (w.ant||[]).length
-    ? w.ant.map(s=> c.star>=3 ? `<span class="chip r">${s}</span>` : `<span class="chip lock">？？？</span>`).join('')
+  const antChips=(w.ant||[]).length
+    ? w.ant.map(s=>c.star>=3?`<span class="chip r">${s}</span>`:`<span class="chip lock">？？？</span>`).join('')
     : '<span class="chip lock">無資料</span>';
 
-  const exBlock = c.star>=4 && w.ex
+  const exBlock=c.star>=4&&w.ex
     ? `<div class="m-ex">“${w.ex}”</div>`
     : `<div class="m-ex" style="color:#4d5470;font-style:normal">例句 ─ ★4 解鎖</div>`;
 
-  const canLv = c.lv < MAX_LV;
-  const canStar = c.star < MAX_STAR;
-  const lvC = lvCost(c.lv);
-  const stC = starCost(c.star);
+  const canLv=c.lv<MAX_LV;
+  const canStar=c.star<MAX_STAR;
+  const lvC=lvCost(c.lv);
+  const stC=starCost(c.star);
 
-  const modal = document.createElement('div');
-  modal.id = 'modal';
-  modal.innerHTML = `
+  const modal=document.createElement('div');
+  modal.id='modal';
+  modal.innerHTML=`
     <div class="modal-box" style="position:relative">
       <div class="m-close" id="mClose">✕</div>
       <div class="m-head">
@@ -1149,128 +1319,98 @@ function openCardModal(id){
         <span class="m-tier">${w.tier}</span>
       </div>
       <div class="m-zh">${w.zh}</div>
-
       <div class="m-stats">
         <span>攻擊 <b>${st.atk}</b></span>
         <span>生命 <b>${st.hp}</b></span>
         <span>等級 <b>Lv.${c.lv}</b></span>
         <span>星級 <b>${'★'.repeat(c.star)}</b></span>
       </div>
-
       <div class="m-sec">
-        <div class="m-sec-h">
-          <span>詞形變化 / 時態</span>
-          <span class="lock">Lv.3 / 5 / 7 解鎖</span>
-        </div>
+        <div class="m-sec-h"><span>詞形變化 / 時態</span><span class="lock">Lv.3 / 5 / 7 解鎖</span></div>
         <div class="chips">${formChips}</div>
       </div>
-
       <div class="m-sec">
-        <div class="m-sec-h">
-          <span>近義詞</span>
-          <span class="lock">★2 解鎖</span>
-        </div>
+        <div class="m-sec-h"><span>近義詞</span><span class="lock">★2 解鎖</span></div>
         <div class="chips">${synChips}</div>
       </div>
-
       <div class="m-sec">
-        <div class="m-sec-h">
-          <span>反義詞</span>
-          <span class="lock">★3 解鎖</span>
-        </div>
+        <div class="m-sec-h"><span>反義詞</span><span class="lock">★3 解鎖</span></div>
         <div class="chips">${antChips}</div>
       </div>
-
       ${exBlock}
-
       <div class="m-actions">
-        <button class="m-btn primary" id="mUpLv" ${canLv?'':'disabled'}>
-          ⬆️ 升級<small>${canLv? lvC+' 💰' : '已滿級'}</small>
-        </button>
-        <button class="m-btn primary" id="mUpStar" ${canStar?'':'disabled'}>
-          ⭐ 升星<small>${canStar? stC+' ✨' : '已滿星'}</small>
-        </button>
-        <button class="m-btn full" id="mSetTeam">${state.team===id?'✔️ 出戰中':'設為出戰卡牌'}</button>
+        <button class="m-btn primary" id="mUpLv" ${canLv?'':'disabled'}>⬆️ 升級<small>${canLv?lvC+' 💰':'已滿級'}</small></button>
+        <button class="m-btn primary" id="mUpStar" ${canStar?'':'disabled'}>⭐ 升星<small>${canStar?stC+' ✨':'已滿星'}</small></button>
+        <button class="m-btn full" id="mSetTeam">${p.team===id?'✔️ 出戰中':'設為出戰卡牌'}</button>
       </div>
     </div>`;
 
   document.body.appendChild(modal);
-  modal.onclick = e => { if(e.target===modal) modal.remove(); };
-  $('#mClose',modal).onclick = ()=> modal.remove();
+  modal.onclick=e=>{if(e.target===modal)modal.remove()};
+  $('#mClose',modal).onclick=()=>modal.remove();
 
-  $('#mUpLv',modal).onclick = ()=>{
-    if(c.lv>=MAX_LV) return;
-    const cost = lvCost(c.lv);
-    if(state.gold < cost){ toast('金幣不足'); S.wrong(); return; }
-    state.gold -= cost;
-    c.lv++;
-    S.upgrade();
-    save();
-    modal.remove(); openCardModal(id);
-    updateTopbar(); renderHome(); renderCards();
+  $('#mUpLv',modal).onclick=()=>{
+    if(c.lv>=MAX_LV)return;
+    const cost=lvCost(c.lv);
+    if(state.gold<cost){toast('金幣不足');S.wrong();return}
+    state.gold-=cost;c.lv++;S.upgrade();save();
+    modal.remove();openCardModal(id);
+    updateTopbar();renderHome();renderCards();
     toast(`升級成功！Lv.${c.lv}`);
   };
-
-  $('#mUpStar',modal).onclick = ()=>{
-    if(c.star>=MAX_STAR) return;
-    const cost = starCost(c.star);
-    if(state.dust < cost){ toast('星塵不足（抽到重複卡可獲得）'); S.wrong(); return; }
-    state.dust -= cost;
-    c.star++;
-    S.star();
-    save();
-    modal.remove(); openCardModal(id);
-    updateTopbar(); renderHome(); renderCards();
+  $('#mUpStar',modal).onclick=()=>{
+    if(c.star>=MAX_STAR)return;
+    const cost=starCost(c.star);
+    if(state.dust<cost){toast('星塵不足（抽到重複卡可獲得）');S.wrong();return}
+    state.dust-=cost;c.star++;S.star();save();
+    modal.remove();openCardModal(id);
+    updateTopbar();renderHome();renderCards();
     toast(`升星成功！${'★'.repeat(c.star)}`);
   };
-
-  $('#mSetTeam',modal).onclick = ()=>{
-    state.team = id;
-    S.click();
-    save();
-    modal.remove();
-    renderHome(); renderCards();
+  $('#mSetTeam',modal).onclick=()=>{
+    p.team=id;S.click();save();
+    modal.remove();renderHome();renderCards();
     toast(`已設為出戰：${w.w}`);
   };
 }
 
 /* =========================================================
-   9. 抽卡
+   10. 抽卡
    ========================================================= */
 function rollCard(){
-  const r = Math.random();
+  const pool=currentPool();
+  const r=Math.random();
   let rar;
-  if(r < 0.62) rar = 1;
-  else if(r < 0.92) rar = 2;
-  else rar = 3;
-  const pool = WORDS.filter(x=>x.rar===rar);
-  return pick(pool);
+  if(r<0.62)rar=1;else if(r<0.92)rar=2;else rar=3;
+  const sub=pool.filter(x=>x.rar===rar);
+  return pick(sub.length?sub:pool);
 }
 
 function doDraw(count){
-  const cost = count * 60;
-  if(state.gold < cost){ toast('金幣不足，去戰鬥賺錢吧！'); S.wrong(); return; }
-  state.gold -= cost;
+  const cost=count*60;
+  if(state.gold<cost){toast('金幣不足，去戰鬥賺錢吧！');S.wrong();return}
+  state.gold-=cost;
 
-  const results = [];
-  let gotRare = false;
+  const p=P();
+  const results=[];
+  let gotRare=false;
 
   for(let i=0;i<count;i++){
-    const w = rollCard();
-    const isNew = !state.cards[w.w];
+    const w=rollCard();
+    const isNew=!p.cards[w.w];
     if(isNew){
-      state.cards[w.w] = { lv:1, star:1 };
-      if(!state.team) state.team = w.w;
+      p.cards[w.w]={lv:1,star:1};
+      if(!p.team)p.team=w.w;
     }else{
-      state.dust += 3;
+      state.dust+=3;
     }
-    if(w.rar===3) gotRare = true;
-    results.push({ w, isNew });
+    if(w.rar===3)gotRare=true;
+    results.push({w,isNew});
   }
 
-  const host = $('#gachaResult');
-  host.innerHTML = results.map((r,i)=>{
-    const rc = RARITY[r.w.rar].c;
+  const host=$('#gachaResult');
+  host.innerHTML=results.map((r,i)=>{
+    const rc=RARITY[r.w.rar].c;
     return `<div class="gcard" style="--rc:${rc};animation-delay:${i*0.07}s">
       <div class="gcard-rar">${RARITY[r.w.rar].n}</div>
       <span class="gcard-tag ${r.isNew?'tag-new':'tag-dup'}">${r.isNew?'NEW':'+3✨'}</span>
@@ -1279,470 +1419,403 @@ function doDraw(count){
     </div>`;
   }).join('');
 
-  if(gotRare) S.rare(); else S.draw();
-
-  updateTopbar(); renderHome(); renderCards(); save();
+  if(gotRare)S.rare();else S.draw();
+  updateTopbar();renderHome();renderCards();save();
 }
 
 /* =========================================================
-   10. 戰鬥系統
+   11. 戰鬥系統
    ========================================================= */
-let battle = null;
-let qTimer = null;
-const Q_TIME = 7000;
+let battle=null;
+let qTimer=null;
+const Q_TIME=7000;
 
 function startBattle(){
-  const w = wordOf(state.team);
-  if(!w || !state.cards[w.w]){ toast('請先選擇出戰卡牌'); S.wrong(); return; }
-  const st = cardStats(w);
+  const p=P();
+  const w=wordOf(p.team);
+  if(!w||!p.cards[w.w]){toast('請先選擇出戰卡牌');S.wrong();return}
+  const st=cardStats(w);
 
-  const idx = (state.stage-1) % ENEMY_TYPES.length;
-  const et  = ENEMY_TYPES[idx];
-  const enemyMaxHp = Math.round(120 + state.stage*62);
-  const enemyAtk   = Math.round(8 + state.stage*3.2);
+  const idx=(p.stage-1)%ENEMY_TYPES.length;
+  const et=ENEMY_TYPES[idx];
+  const enemyMaxHp=Math.round(120+p.stage*62);
+  const enemyAtk=Math.round(8+p.stage*3.2);
 
-  battle = {
-    heroHp: st.hp, heroMaxHp: st.hp, heroAtk: st.atk,
-    enemyHp: enemyMaxHp, enemyMaxHp, enemyAtk,
-    combo: 0, busy: false, over: false,
-    qStart: 0, currentQ: null,
+  battle={
+    heroHp:st.hp,heroMaxHp:st.hp,heroAtk:st.atk,
+    enemyHp:enemyMaxHp,enemyMaxHp,enemyAtk,
+    combo:0,busy:false,over:false,
+    qStart:0,currentQ:null,
   };
 
-  $('#heroSprite').textContent  = POS_SPRITE[w.pos];
-  $('#heroName').textContent    = w.w;
-  $('#enemySprite').textContent = et.e;
-  $('#enemyName').textContent   = et.n;
-
+  $('#heroSprite').textContent=POS_SPRITE[w.pos];
+  $('#heroName').textContent=w.w;
+  $('#enemySprite').textContent=et.e;
+  $('#enemyName').textContent=et.n;
   $('#battleResult').classList.add('hidden');
-  $('#battleResult').innerHTML = '';
-
+  $('#battleResult').innerHTML='';
   updateBars();
   updateCombo();
 
   $('#battle-ui').classList.remove('closed');
-  AudioSys.playMusic('battle');           // 切換戰鬥音樂
-  setTimeout(nextQuestion, 350);
+  AudioSys.playMusic('battle');
+  setTimeout(nextQuestion,350);
 }
 
 function updateBars(){
-  const eh = clamp(battle.enemyHp/battle.enemyMaxHp, 0, 1);
-  const hh = clamp(battle.heroHp/battle.heroMaxHp, 0, 1);
-  $('#enemyHpF').style.width = (eh*100)+'%';
-  $('#heroHpF').style.width  = (hh*100)+'%';
-  $('#enemyHpNum').textContent = Math.max(0,Math.round(battle.enemyHp))+'/'+battle.enemyMaxHp;
-  $('#heroHpNum').textContent  = Math.max(0,Math.round(battle.heroHp))+'/'+battle.heroMaxHp;
+  const eh=clamp(battle.enemyHp/battle.enemyMaxHp,0,1);
+  const hh=clamp(battle.heroHp/battle.heroMaxHp,0,1);
+  $('#enemyHpF').style.width=(eh*100)+'%';
+  $('#heroHpF').style.width=(hh*100)+'%';
+  $('#enemyHpNum').textContent=Math.max(0,Math.round(battle.enemyHp))+'/'+battle.enemyMaxHp;
+  $('#heroHpNum').textContent=Math.max(0,Math.round(battle.heroHp))+'/'+battle.heroMaxHp;
 }
-
 function updateCombo(){
-  const d = $('#comboDisplay');
-  if(battle.combo >= 2){
+  const d=$('#comboDisplay');
+  if(battle.combo>=2){
     d.classList.remove('hidden');
-    $('#comboNum').textContent = battle.combo;
-    d.style.animation='none'; void d.offsetWidth; d.style.animation='';
-  }else{
-    d.classList.add('hidden');
-  }
+    $('#comboNum').textContent=battle.combo;
+    d.style.animation='none';void d.offsetWidth;d.style.animation='';
+  }else d.classList.add('hidden');
 }
 
-/* ---- 出題 ---- */
 function allEnglishPool(){
-  const s = new Set();
-  WORDS.forEach(w=>{
+  const s=new Set();
+  currentPool().forEach(w=>{
     (w.syn||[]).forEach(x=>s.add(x));
     (w.ant||[]).forEach(x=>s.add(x));
   });
   return [...s];
 }
-function pickDistractors(excludeSet, n, pool){
-  const uniq = [...new Set(pool)];
-  const cands = shuffle(uniq.filter(x=>!excludeSet.has(String(x).toLowerCase())));
-  const out = [];
-  for(const c of cands){
-    if(out.length>=n) break;
-    if(!out.includes(c)) out.push(c);
-  }
+function pickDistractors(excludeSet,n,pool){
+  const uniq=[...new Set(pool)];
+  const cands=shuffle(uniq.filter(x=>!excludeSet.has(String(x).toLowerCase())));
+  const out=[];
+  for(const c of cands){if(out.length>=n)break;if(!out.includes(c))out.push(c)}
   return out;
 }
 
 function generateQuestion(){
-  const ids = Object.keys(state.cards);
-  const id  = pick(ids);
-  const w   = wordOf(id);
-  const c   = state.cards[id];
+  const p=P();
+  const ids=Object.keys(p.cards);
+  const id=pick(ids);
+  const w=wordOf(id);
+  const c=p.cards[id];
 
-  const roll = Math.random();
-  let type = 'meaning';
-  if(roll < 0.20 && c.star>=2 && (w.syn||[]).length) type = 'syn';
-  else if(roll < 0.40 && c.star>=3 && (w.ant||[]).length) type = 'ant';
+  const roll=Math.random();
+  let type='meaning';
+  if(roll<0.20&&c.star>=2&&(w.syn||[]).length)type='syn';
+  else if(roll<0.40&&c.star>=3&&(w.ant||[]).length)type='ant';
 
-  let text, correct, options, mult;
+  let text,correct,options,mult;
+  const pool=currentPool();
 
-  if(type === 'meaning'){
-    text = `「<b>${w.w}</b>」是什麼意思？`;
-    correct = w.zh;
-    mult = 1.0;
-    const pool = WORDS.filter(x=>x.zh!==w.zh).map(x=>x.zh);
-    const dis = pickDistractors(new Set([w.zh]), 3, pool);
-    options = shuffle([correct, ...dis]);
-  }
-  else if(type === 'syn'){
-    text = `「<b>${w.w}</b>」的近義詞是？`;
-    correct = pick(w.syn);
-    mult = 1.5;
-    const excl = new Set([...w.syn, ...(w.ant||[]), w.w].map(s=>s.toLowerCase()));
-    const dis = pickDistractors(excl, 3, allEnglishPool());
-    options = shuffle([correct, ...dis]);
-  }
-  else{
-    text = `「<b>${w.w}</b>」的反義詞是？`;
-    correct = pick(w.ant);
-    mult = 1.5;
-    const excl = new Set([...w.syn, ...(w.ant||[]), w.w].map(s=>s.toLowerCase()));
-    const dis = pickDistractors(excl, 3, allEnglishPool());
-    options = shuffle([correct, ...dis]);
+  if(type==='meaning'){
+    text=`「<b>${w.w}</b>」是什麼意思？`;
+    correct=w.zh;mult=1.0;
+    const pz=pool.filter(x=>x.zh!==w.zh).map(x=>x.zh);
+    const dis=pickDistractors(new Set([w.zh]),3,pz);
+    options=shuffle([correct,...dis]);
+  }else if(type==='syn'){
+    text=`「<b>${w.w}</b>」的近義詞是？`;
+    correct=pick(w.syn);mult=1.5;
+    const excl=new Set([...w.syn,...(w.ant||[]),w.w].map(s=>s.toLowerCase()));
+    const dis=pickDistractors(excl,3,allEnglishPool());
+    options=shuffle([correct,...dis]);
+  }else{
+    text=`「<b>${w.w}</b>」的反義詞是？`;
+    correct=pick(w.ant);mult=1.5;
+    const excl=new Set([...w.syn,...(w.ant||[]),w.w].map(s=>s.toLowerCase()));
+    const dis=pickDistractors(excl,3,allEnglishPool());
+    options=shuffle([correct,...dis]);
   }
 
-  options = [...new Set(options)];
-  while(options.length < 4){
-    const extra = pick(WORDS).zh;
-    if(!options.includes(extra)) options.push(extra);
+  options=[...new Set(options)];
+  while(options.length<4){
+    const extra=pick(pool).zh;
+    if(!options.includes(extra))options.push(extra);
   }
-
-  return { text, options, correctIndex: options.indexOf(correct), mult, type, word:w };
+  return {text,options,correctIndex:options.indexOf(correct),mult,type,word:w};
 }
 
 function nextQuestion(){
-  if(!battle || battle.over) return;
-  battle.busy = false;
+  if(!battle||battle.over)return;
+  battle.busy=false;
   clearTimeout(qTimer);
 
-  const q = generateQuestion();
-  battle.currentQ = q;
+  const q=generateQuestion();
+  battle.currentQ=q;
+  $('#questionText').innerHTML=q.text;
 
-  $('#questionText').innerHTML = q.text;
-
-  const optEl = $('#options');
-  optEl.innerHTML = '';
+  const optEl=$('#options');optEl.innerHTML='';
   q.options.forEach((opt,i)=>{
-    const btn = document.createElement('button');
-    btn.className = 'opt';
-    btn.textContent = opt;
-    btn.onclick = ()=> answer(i, btn);
+    const btn=document.createElement('button');
+    btn.className='opt';btn.textContent=opt;
+    btn.onclick=()=>answer(i,btn);
     optEl.appendChild(btn);
   });
 
-  const bar = $('#timerBar');
-  bar.style.transition = 'none';
-  bar.style.width = '100%';
+  const bar=$('#timerBar');
+  bar.style.transition='none';bar.style.width='100%';
   void bar.offsetWidth;
   requestAnimationFrame(()=>{
-    bar.style.transition = `width ${Q_TIME}ms linear`;
-    bar.style.width = '0%';
+    bar.style.transition=`width ${Q_TIME}ms linear`;
+    bar.style.width='0%';
   });
 
-  battle.qStart = Date.now();
-  qTimer = setTimeout(()=> answer(-1, null), Q_TIME);
+  battle.qStart=Date.now();
+  qTimer=setTimeout(()=>answer(-1,null),Q_TIME);
 }
 
-function answer(idx, btn){
-  if(!battle || battle.busy || battle.over) return;
-  battle.busy = true;
-  clearTimeout(qTimer);
+function answer(idx,btn){
+  if(!battle||battle.busy||battle.over)return;
+  battle.busy=true;clearTimeout(qTimer);
+  const bar=$('#timerBar');bar.style.transition='none';
 
-  const bar = $('#timerBar');
-  bar.style.transition = 'none';
-
-  const q = battle.currentQ;
-  const correct = idx === q.correctIndex;
-
+  const q=battle.currentQ;
+  const correct=idx===q.correctIndex;
   $$('#options .opt').forEach(b=>b.classList.add('disabled'));
 
   if(correct){
-    btn.classList.add('correct');
-    S.correct();
-
-    const elapsed = Date.now() - battle.qStart;
-    const speed   = clamp(1 - elapsed/Q_TIME, 0, 1);
-
-    let dmg = battle.heroAtk;
-    dmg *= (1 + Math.min(battle.combo,10) * 0.12);
-    dmg *= (1 + speed * 0.6);
-    dmg *= q.mult;
-    const crit = Math.random() < 0.12;
-    if(crit) dmg *= 2;
-    dmg = Math.max(1, Math.round(dmg));
-
-    battle.combo++;
-    updateCombo();
-
-    doHeroAttack(dmg, crit);
+    btn.classList.add('correct');S.correct();
+    const elapsed=Date.now()-battle.qStart;
+    const speed=clamp(1-elapsed/Q_TIME,0,1);
+    let dmg=battle.heroAtk;
+    dmg*=(1+Math.min(battle.combo,10)*0.12);
+    dmg*=(1+speed*0.6);dmg*=q.mult;
+    const crit=Math.random()<0.12;
+    if(crit)dmg*=2;
+    dmg=Math.max(1,Math.round(dmg));
+    battle.combo++;updateCombo();
+    doHeroAttack(dmg,crit);
   }else{
-    if(btn) btn.classList.add('wrong');
-    const opts = $$('#options .opt');
-    if(opts[q.correctIndex]) opts[q.correctIndex].classList.add('correct');
-    S.wrong();
-
-    battle.combo = 0;
-    updateCombo();
-
-    setTimeout(doEnemyAttack, 420);
+    if(btn)btn.classList.add('wrong');
+    const opts=$$('#options .opt');
+    if(opts[q.correctIndex])opts[q.correctIndex].classList.add('correct');
+    S.wrong();battle.combo=0;updateCombo();
+    setTimeout(doEnemyAttack,420);
   }
 }
 
-function doHeroAttack(dmg, crit){
-  const heroF  = $('#heroF');
-  const enemyF = $('#enemyF');
-
-  heroF.classList.remove('attacking');
-  void heroF.offsetWidth;
-  heroF.classList.add('attacking');
-
+function doHeroAttack(dmg,crit){
+  const heroF=$('#heroF'),enemyF=$('#enemyF');
+  heroF.classList.remove('attacking');void heroF.offsetWidth;heroF.classList.add('attacking');
   setTimeout(()=>{
     spawnBurst(enemyF);
-    spawnDamage(enemyF, dmg, crit ? 'crit' : '');
-    shake();
-    crit ? S.crit() : S.hit();
-
+    spawnDamage(enemyF,dmg,crit?'crit':'');
+    shake();crit?S.crit():S.hit();
     enemyF.classList.add('hit');
-    setTimeout(()=> enemyF.classList.remove('hit'), 220);
-
-    battle.enemyHp -= dmg;
-    updateBars();
-
-    if(battle.enemyHp <= 0){
-      setTimeout(winBattle, 420);
-    }else{
-      setTimeout(()=>{
-        heroF.classList.remove('attacking');
-        nextQuestion();
-      }, 340);
-    }
-  }, 245);
+    setTimeout(()=>enemyF.classList.remove('hit'),220);
+    battle.enemyHp-=dmg;updateBars();
+    if(battle.enemyHp<=0)setTimeout(winBattle,420);
+    else setTimeout(()=>{heroF.classList.remove('attacking');nextQuestion()},340);
+  },245);
 }
 
 function doEnemyAttack(){
-  if(!battle || battle.over) return;
-  const heroF  = $('#heroF');
-  const enemyF = $('#enemyF');
-
-  enemyF.classList.remove('attacking');
-  void enemyF.offsetWidth;
-  enemyF.classList.add('attacking');
-
+  if(!battle||battle.over)return;
+  const heroF=$('#heroF'),enemyF=$('#enemyF');
+  enemyF.classList.remove('attacking');void enemyF.offsetWidth;enemyF.classList.add('attacking');
   setTimeout(()=>{
-    const dmg = battle.enemyAtk;
-    battle.heroHp -= dmg;
-    updateBars();
-    S.hit();
-    flashRed();
-    shake();
-    spawnDamage(heroF, dmg, 'heal');
-
+    const dmg=battle.enemyAtk;
+    battle.heroHp-=dmg;updateBars();
+    S.hit();flashRed();shake();
+    spawnDamage(heroF,dmg,'heal');
     heroF.classList.add('hurt');
-    setTimeout(()=> heroF.classList.remove('hurt'), 340);
-
-    if(battle.heroHp <= 0){
-      setTimeout(loseBattle, 420);
-    }else{
-      setTimeout(()=>{
-        enemyF.classList.remove('attacking');
-        if(battle) nextQuestion();
-      }, 380);
-    }
-  }, 245);
+    setTimeout(()=>heroF.classList.remove('hurt'),340);
+    if(battle.heroHp<=0)setTimeout(loseBattle,420);
+    else setTimeout(()=>{enemyF.classList.remove('attacking');if(battle)nextQuestion()},380);
+  },245);
 }
 
-function spawnDamage(target, val, cls){
-  const layer = $('#fxLayer');
-  const tr = target.getBoundingClientRect();
-  const sr = $('#battleStage').getBoundingClientRect();
-  const d = document.createElement('div');
-  d.className = 'dmg ' + cls;
-  d.textContent = (cls==='heal' ? '-' : '') + val;
-  d.style.left = (tr.left - sr.left + tr.width/2) + 'px';
-  d.style.top  = (tr.top  - sr.top  + tr.height*0.35) + 'px';
-  layer.appendChild(d);
-  setTimeout(()=> d.remove(), 900);
+function spawnDamage(target,val,cls){
+  const layer=$('#fxLayer');
+  const tr=target.getBoundingClientRect();
+  const sr=$('#battleStage').getBoundingClientRect();
+  const d=document.createElement('div');
+  d.className='dmg '+(cls||'');
+  d.textContent=(cls==='heal'?'-':'')+val;
+  d.style.left=(tr.left-sr.left+tr.width/2)+'px';
+  d.style.top=(tr.top-sr.top+tr.height*0.35)+'px';
+  layer.appendChild(d);setTimeout(()=>d.remove(),900);
 }
-
 function spawnBurst(target){
-  const layer = $('#fxLayer');
-  const tr = target.getBoundingClientRect();
-  const sr = $('#battleStage').getBoundingClientRect();
-  const cx = tr.left - sr.left + tr.width/2;
-  const cy = tr.top  - sr.top  + tr.height/2;
+  const layer=$('#fxLayer');
+  const tr=target.getBoundingClientRect();
+  const sr=$('#battleStage').getBoundingClientRect();
+  const cx=tr.left-sr.left+tr.width/2;
+  const cy=tr.top-sr.top+tr.height/2;
   for(let i=0;i<10;i++){
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = cx + 'px';
-    p.style.top  = cy + 'px';
-    const ang = Math.random()*Math.PI*2;
-    const dist = 35 + Math.random()*70;
-    p.style.setProperty('--dx', (Math.cos(ang)*dist).toFixed(1)+'px');
-    p.style.setProperty('--dy', (Math.sin(ang)*dist).toFixed(1)+'px');
-    layer.appendChild(p);
-    setTimeout(()=> p.remove(), 700);
+    const p=document.createElement('div');p.className='particle';
+    p.style.left=cx+'px';p.style.top=cy+'px';
+    const ang=Math.random()*Math.PI*2;const dist=35+Math.random()*70;
+    p.style.setProperty('--dx',(Math.cos(ang)*dist).toFixed(1)+'px');
+    p.style.setProperty('--dy',(Math.sin(ang)*dist).toFixed(1)+'px');
+    layer.appendChild(p);setTimeout(()=>p.remove(),700);
   }
 }
-
 function shake(){
-  const s = $('#battleStage');
-  s.classList.remove('shake');
-  void s.offsetWidth;
-  s.classList.add('shake');
-  setTimeout(()=> s.classList.remove('shake'), 340);
+  const s=$('#battleStage');
+  s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake');
+  setTimeout(()=>s.classList.remove('shake'),340);
 }
-
 function flashRed(){
-  const f = document.createElement('div');
-  f.className = 'redflash';
-  $('#battleStage').appendChild(f);
-  setTimeout(()=> f.remove(), 450);
+  const f=document.createElement('div');f.className='redflash';
+  $('#battleStage').appendChild(f);setTimeout(()=>f.remove(),450);
 }
 
 function winBattle(){
-  if(!battle || battle.over) return;
-  battle.over = true;
-  clearTimeout(qTimer);
-  S.win();
-
-  const goldGain = 40 + state.stage*20;
-  state.gold += goldGain;
-  const nextStage = state.stage + 1;
-
-  showResult(true, goldGain, nextStage);
-  updateTopbar(); save();
+  if(!battle||battle.over)return;
+  battle.over=true;clearTimeout(qTimer);S.win();
+  const goldGain=40+P().stage*20;
+  state.gold+=goldGain;
+  const nextStage=P().stage+1;
+  showResult(true,goldGain,nextStage);
+  updateTopbar();save();
 }
-
 function loseBattle(){
-  if(!battle || battle.over) return;
-  battle.over = true;
-  clearTimeout(qTimer);
-  S.lose();
-
-  showResult(false, 0, state.stage);
-  updateTopbar(); save();
+  if(!battle||battle.over)return;
+  battle.over=true;clearTimeout(qTimer);S.lose();
+  showResult(false,0,P().stage);
+  updateTopbar();save();
 }
 
-function showResult(win, gold, nextStage){
-  const box = $('#battleResult');
+function showResult(win,gold,nextStage){
+  const box=$('#battleResult');
   box.classList.remove('hidden');
-  box.innerHTML = `
+  box.innerHTML=`
     <div class="result-box">
       <div class="result-title ${win?'win':'lose'}">${win?'勝 利':'敗 北'}</div>
       <div class="result-sub">${win?'知識就是力量！':'別灰心，單字會越記越牢的'}</div>
       <div class="result-rewards">
         ${win
-          ? `<div class="reward-row"><span>💰 金幣</span><b>+${gold}</b></div>
+          ?`<div class="reward-row"><span>💰 金幣</span><b>+${gold}</b></div>
              <div class="reward-row"><span>🎯 下一關</span><b>第 ${nextStage} 關</b></div>`
-          : `<div class="reward-row"><span>💡 提示</span><b>答對越快傷害越高</b></div>
+          :`<div class="reward-row"><span>💡 提示</span><b>答對越快傷害越高</b></div>
              <div class="reward-row"><span>⚔️ 建議</span><b>升級卡牌再挑戰</b></div>`}
       </div>
       <button class="big-btn" id="resultBtn">${win?'繼續前進':'返回主頁'}</button>
     </div>`;
 
-  $('#resultBtn').onclick = ()=>{
+  $('#resultBtn').onclick=()=>{
     S.click();
-    if(win){
-      state.stage = nextStage;
-      save();
-      box.classList.add('hidden');
-      $('#battle-ui').classList.add('closed');
-      renderAll();
-      AudioSys.playMusic('home');
-      toast(`抵達第 ${nextStage} 關！`);
-    }else{
-      box.classList.add('hidden');
-      $('#battle-ui').classList.add('closed');
-      renderAll();
-      AudioSys.playMusic('home');
-    }
+    if(win){P().stage=nextStage;save()}
+    box.classList.add('hidden');
+    $('#battle-ui').classList.add('closed');
+    renderAll();
+    AudioSys.playMusic(currentScreen==='gacha'?'gacha':'home');
+    if(win)toast(`抵達第 ${nextStage} 關！`);
   };
 }
 
 /* =========================================================
-   11. 導覽 & 初始化
+   12. 模式切換
    ========================================================= */
-function switchScreen(name){
-  currentScreen = name;
-  $$('.screen').forEach(s=>s.classList.toggle('active', s.id === 'screen-'+name));
-  $$('.navbtn').forEach(b=>b.classList.toggle('active', b.dataset.screen === name));
-  if(name === 'cards') renderCards();
-  if(name === 'home')  renderHome();
-  // 依畫面切換背景音樂
-  if(name === 'gacha') AudioSys.playMusic('gacha');
-  else                  AudioSys.playMusic('home');
+function switchMode(newMode){
+  if(state.mode===newMode)return;
+  state.mode=newMode;
+  save();
+  renderAll();
+  toast(newMode==='geptMid'?'進入 GEPT 中高級模式':'切回 TOEIC 模式');
 }
 
-/* ---- 首次互動啟動音訊（瀏覽器自動播放限制） ---- */
-let audioBooted = false;
+/* =========================================================
+   13. 導覽 & 初始化
+   ========================================================= */
+let currentScreen='home';
+
+function switchScreen(name){
+  currentScreen=name;
+  $$('.screen').forEach(s=>s.classList.toggle('active',s.id==='screen-'+name));
+  $$('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));
+  if(name==='cards')renderCards();
+  if(name==='home')renderHome();
+  if(name==='gacha')AudioSys.playMusic('gacha');
+  else AudioSys.playMusic('home');
+}
+
+let audioBooted=false;
 function bootAudio(){
-  if(audioBooted) return;
-  audioBooted = true;
+  if(audioBooted)return;
+  audioBooted=true;
   AudioSys.init();
-  AudioSys.musicEnabled = state.music;
-  AudioSys.sfxEnabled   = state.sfx;
+  AudioSys.musicEnabled=state.music;
+  AudioSys.sfxEnabled=state.sfx;
   AudioSys.resume();
   S.boot();
   if(state.music){
     setTimeout(()=>{
-      if(currentScreen === 'gacha') AudioSys.playMusic('gacha');
+      if(currentScreen==='gacha')AudioSys.playMusic('gacha');
       else AudioSys.playMusic('home');
-    }, 140);
+    },140);
   }
 }
 
 function init(){
   load();
-  sanitizeCards();
+  sanitize();
 
-  // 導覽
   $$('.navbtn').forEach(btn=>{
-    btn.onclick = ()=>{ S.click(); switchScreen(btn.dataset.screen); };
+    btn.onclick=()=>{S.click();switchScreen(btn.dataset.screen)};
   });
 
-  // 卡庫篩選
   $$('.filter-btn').forEach(btn=>{
-    btn.onclick = ()=>{
+    btn.onclick=()=>{
       S.click();
       $$('.filter-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      cardFilter = btn.dataset.rar;
+      cardFilter=btn.dataset.rar;
       renderCards();
     };
   });
 
-  // 首頁
-  $('#startBattleBtn').onclick = ()=>{ S.click(); startBattle(); };
+  $('#startBattleBtn').onclick=()=>{S.click();startBattle()};
+  $('#drawBtn').onclick=()=>{S.click();doDraw(1)};
+  $('#drawTenBtn').onclick=()=>{S.click();doDraw(10)};
 
-  // 抽卡
-  $('#drawBtn').onclick    = ()=>{ S.click(); doDraw(1); };
-  $('#drawTenBtn').onclick = ()=>{ S.click(); doDraw(10); };
+  // 進入 GEPT 選單
+  $('#geptBtn').onclick=()=>{S.click();switchScreen('gept')};
+  // 從 GEPT 選單返回
+  $('#geptBackBtn').onclick=()=>{S.click();switchScreen('home')};
+  // 從首頁切回 TOEIC
+  $('#backToToeicBtn').onclick=()=>{S.click();switchMode('toeic')};
 
-  // 音樂 / 音效開關
-  $('#musicBtn').onclick = ()=>{
-    state.music = !state.music;
-    AudioSys.musicEnabled = state.music;
+  // GEPT 等級選擇
+  $$('.gept-level').forEach(el=>{
+    el.onclick=()=>{
+      const lv=el.dataset.level;
+      if(el.classList.contains('locked')){
+        S.wrong();
+        toast('此級別即將推出，敬請期待！');
+        return;
+      }
+      S.click();
+      switchMode('geptMid');
+      switchScreen('home');
+    };
+  });
+
+  // 音效 / 音樂開關
+  $('#musicBtn').onclick=()=>{
+    state.music=!state.music;
+    AudioSys.musicEnabled=state.music;
     if(state.music){
       AudioSys.resume();
-      AudioSys.playMusic(currentScreen === 'gacha' ? 'gacha' : 'home');
-    }else{
-      AudioSys.stopMusic();
-    }
-    save(); updateAudioBtns();
+      AudioSys.playMusic(currentScreen==='gacha'?'gacha':'home');
+    }else AudioSys.stopMusic();
+    save();updateAudioBtns();
   };
-  $('#sfxBtn').onclick = ()=>{
-    state.sfx = !state.sfx;
-    AudioSys.sfxEnabled = state.sfx;
-    if(state.sfx) S.click();
-    save(); updateAudioBtns();
+  $('#sfxBtn').onclick=()=>{
+    state.sfx=!state.sfx;
+    AudioSys.sfxEnabled=state.sfx;
+    if(state.sfx)S.click();
+    save();updateAudioBtns();
   };
 
   renderAll();
 
-  // 第一次點擊/觸控時啟動音訊
-  document.addEventListener('touchstart', bootAudio, {once:true, passive:true});
-  document.addEventListener('click',      bootAudio, {once:true});
+  document.addEventListener('touchstart',bootAudio,{once:true,passive:true});
+  document.addEventListener('click',bootAudio,{once:true});
 }
 
 init();
