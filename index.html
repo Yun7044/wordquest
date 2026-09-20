@@ -4330,38 +4330,64 @@ init();
     }, 250);
   }
 
-  function stepClickResult(){
-    tut.step = 'clickResult';
-    hideSpotlight();
-    setTimeout(() => retrySpotlight('#resultBtn', '太棒了！點這裡繼續'), 500);
-  }
+function stepClickResult(){
+  tut.step = 'clickResult';
+  hideSpotlight();
+  setTimeout(() => retrySpotlight('#resultBtn', '太棒了！點這裡繼續'), 500);
 
-  function stepGoGacha(){
-    tut.step = 'goGacha';
-    hideSpotlight();
-    setTimeout(() => retrySpotlight('.navbtn[data-screen="gacha"]', '去抽卡吧！點下面的「抽卡」'), 400);
-  }
+  // 輪詢：#resultBtn 消失 = 玩家按了 → 進入抽卡引導
+  const check = setInterval(() => {
+    if(tut.step !== 'clickResult'){ clearInterval(check); return; }
+    const btn = document.getElementById('resultBtn');
+    if(!btn || !btn.offsetParent){
+      clearInterval(check);
+      hideSpotlight();
+      setTimeout(stepGoGacha, 800);
+    }
+  }, 300);
+}stepGoGacha
+function stepGoGacha(){
+  tut.step = 'goGacha';
+  hideSpotlight();
+  setTimeout(() => {
+    retrySpotlight('.navbtn[data-screen="gacha"]', '去抽卡吧！點下面的「抽卡」');
+  }, 400);
 
-  function stepClickTenDraw(){
-    tut.step = 'clickTenDraw';
-    hideSpotlight();
-    setTimeout(() => retrySpotlight('#drawTenBtn', '十連抽試試手氣！<br>新手金幣剛好夠 600'), 400);
-  }
+  // 輪詢：偵測畫面切到 gacha
+  const check = setInterval(() => {
+    if(tut.step !== 'goGacha'){ clearInterval(check); return; }
+    try {
+      if(typeof currentScreen !== 'undefined' && currentScreen === 'gacha'){
+        clearInterval(check);
+        setTimeout(stepClickTenDraw, 500);
+      }
+    } catch(e){}
+  }, 300);
+}
 
-  function stepDone(){
-    tut.step = 'done';
-    hideSpotlight();
-    showModal(`
-      <div class="tut-box">
-        <div class="tut-box-icon">🎉</div>
-        <h2 class="tut-box-title">教學完成！</h2>
-        <p class="tut-box-desc">你已經學會了戰鬥與抽卡<br>接下來就靠自己囉！<br><br>記得每天來打幾場，<br>把卡牌養強吧 💪</p>
-        <button class="big-btn" id="tutFinishBtn">開始冒險</button>
-      </div>
-    `);
-    const b = $id('tutFinishBtn');
-    if(b) b.onclick = () => { try{S.rare();}catch(e){} finishTutorial(); };
-  }
+function stepClickTenDraw(){
+  tut.step = 'clickTenDraw';
+  hideSpotlight();
+
+  setTimeout(() => {
+    retrySpotlight('#drawTenBtn', '十連抽試試手氣！<br>新手金幣剛好夠 600');
+  }, 400);
+
+  // 記錄目前抽卡結果區的內容長度
+  const resultEl = document.getElementById('gachaResult');
+  const initialLen = resultEl ? resultEl.innerHTML.length : 0;
+
+  // 輪詢：偵測十連抽被點（gachaResult 內容變長）
+  const check = setInterval(() => {
+    if(tut.step !== 'clickTenDraw'){ clearInterval(check); return; }
+    const el = document.getElementById('gachaResult');
+    if(el && el.innerHTML.length > initialLen + 200){
+      clearInterval(check);
+      hideSpotlight();
+      setTimeout(() => { tut.step = 'done'; stepDone(); }, 3500);
+    }
+  }, 500);
+}
 
   /* ========== Blocker ========== */
   $id('tutBlocker').addEventListener('click', (e) => {
@@ -4387,22 +4413,6 @@ init();
       tut.step = 'fighting';
       console.log('[Tutorial] 進入教學戰鬥');
     }
-
-    if(tut.step === 'clickResult' && t.closest('#resultBtn')){
-      hideSpotlight();
-      setTimeout(stepGoGacha, 500);
-    }
-
-    if(tut.step === 'goGacha' && t.closest('.navbtn[data-screen="gacha"]')){
-      hideSpotlight();
-      setTimeout(stepClickTenDraw, 500);
-    }
-
-    if(tut.step === 'clickTenDraw' && t.closest('#drawTenBtn')){
-      hideSpotlight();
-      setTimeout(() => { tut.step = 'done'; stepDone(); }, 3500);
-    }
-  }, true);
 
   /* ========== Hook: nextQuestion ========== */
   if(typeof window.nextQuestion === 'function'){
@@ -4464,149 +4474,6 @@ init();
 
   setTimeout(() => stepWelcome(), 800);
   console.log('[Tutorial] 就緒 ✓');
-})();
-</script>
-
-<script>
-/* =========================================================
-   TutTaker：用 pointerdown 繞過 stopImmediatePropagation
-   接管「繼續前進 → 抽卡 → 十連抽 → 完成」的引導
-   ========================================================= */
-(function(){
-  'use strict';
-
-  console.log('[TutTaker] 接管補丁載入');
-
-  const $id = id => document.getElementById(id);
-  const $qs = sel => document.querySelector(sel);
-
-  function isVisible(el){
-    if(!el) return false;
-    const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
-  }
-
-  function hideTut(){
-    const sp  = $id('tutSpotlight');
-    const tip = $id('tutTip');
-    const bl  = $id('tutBlocker');
-    if(sp)  sp.style.display = 'none';
-    if(tip) tip.style.display = 'none';
-    if(bl)  bl.classList.remove('active');
-  }
-
-  function showTut(selector, text){
-    const el = typeof selector === 'string' ? $qs(selector) : selector;
-    if(!el || !isVisible(el)) return false;
-
-    const sp     = $id('tutSpotlight');
-    const tip    = $id('tutTip');
-    const bl     = $id('tutBlocker');
-    const textEl = $id('tutTipText');
-    if(!sp || !tip || !textEl) return false;
-
-    const r = el.getBoundingClientRect();
-    sp.style.display = 'block';
-    sp.style.left   = (r.left - 8) + 'px';
-    sp.style.top    = (r.top  - 8) + 'px';
-    sp.style.width  = (r.width  + 16) + 'px';
-    sp.style.height = (r.height + 16) + 'px';
-
-    tip.style.display = 'block';
-    textEl.innerHTML = text;
-    const tipW = tip.offsetWidth || 280;
-    tip.style.left = Math.max(10,
-      Math.min(window.innerWidth - tipW - 10, r.left + r.width/2 - tipW/2)) + 'px';
-    tip.style.top = Math.max(10, r.top - 82) + 'px';
-
-    const arrow = tip.querySelector('.tut-tip-arrow');
-    if(arrow){
-      arrow.dataset.dir = 'down';
-      arrow.style.left = (r.left + r.width/2 - parseFloat(tip.style.left)) + 'px';
-    }
-    if(bl) bl.classList.add('active');
-    return true;
-  }
-
-  function showComplete(){
-    const m = $id('tutModal');
-    if(!m) return;
-    m.classList.remove('hidden');
-    m.innerHTML = `
-      <div class="tut-box">
-        <div class="tut-box-icon">🎉</div>
-        <h2 class="tut-box-title">教學完成！</h2>
-        <p class="tut-box-desc">你已經學會了戰鬥與抽卡<br>接下來就靠自己囉！<br><br>記得每天來打幾場，<br>把卡牌養強吧 💪</p>
-        <button class="big-btn" id="tutFinishBtnX">開始冒險</button>
-      </div>
-    `;
-    const btn = $id('tutFinishBtnX');
-    if(btn){
-      btn.onclick = () => {
-        try { localStorage.setItem('wordquest_tut_final', '1'); } catch(e){}
-        try { S.rare(); } catch(e){}
-        m.classList.add('hidden');
-        m.innerHTML = '';
-        const r = $id('tutRoot');
-        if(r) r.remove();
-        hideTut();
-        console.log('[TutTaker] 教學完成 ✓');
-      };
-    }
-  }
-
-  // ===== 監聽 resultBtn（用 pointerdown 繞過 click 的 stopImmediatePropagation）=====
-  document.addEventListener('pointerdown', function(e){
-    if(!e.target || !e.target.closest || !e.target.closest('#resultBtn')) return;
-    console.log('[TutTaker] 攔截到 resultBtn');
-
-    // 立刻隱藏卡住的 spotlight
-    hideTut();
-
-    // 800ms 後引導抽卡
-    setTimeout(() => {
-      const nav = $qs('.navbtn[data-screen="gacha"]');
-      if(!nav) return;
-
-      showTut(nav, '去抽卡吧！點下面的「抽卡」');
-      const iv = setInterval(() => {
-        const n = $qs('.navbtn[data-screen="gacha"]');
-        if(n && isVisible(n)) showTut(n, '去抽卡吧！點下面的「抽卡」');
-      }, 500);
-
-      // 監聽 gacha 點擊
-      const onceGacha = function(ev){
-        if(!ev.target.closest || !ev.target.closest('.navbtn[data-screen="gacha"]')) return;
-        document.removeEventListener('pointerdown', onceGacha, true);
-        clearInterval(iv);
-        hideTut();
-        console.log('[TutTaker] 進入 gacha');
-
-        setTimeout(() => {
-          const btn = $id('drawTenBtn');
-          if(!btn) return;
-          showTut(btn, '十連抽試試手氣！<br>新手金幣剛好夠 600');
-          const iv2 = setInterval(() => {
-            const b = $id('drawTenBtn');
-            if(b && isVisible(b)) showTut(b, '十連抽試試手氣！<br>新手金幣剛好夠 600');
-          }, 500);
-
-          const onceTen = function(ev2){
-            if(!ev2.target.closest || !ev2.target.closest('#drawTenBtn')) return;
-            document.removeEventListener('pointerdown', onceTen, true);
-            clearInterval(iv2);
-            hideTut();
-            console.log('[TutTaker] 十連抽已點');
-            setTimeout(showComplete, 3800);
-          };
-          document.addEventListener('pointerdown', onceTen, true);
-        }, 800);
-      };
-      document.addEventListener('pointerdown', onceGacha, true);
-    }, 800);
-  }, true);
-
-  console.log('[TutTaker] 就緒 ✓');
 })();
 </script>
 
