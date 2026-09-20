@@ -3393,6 +3393,64 @@ init();
   console.log('[Fix] 戰敗退出已就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   最終修復：補上遺失的 loseBattle / winBattle 函式
+   ========================================================= */
+(function(){
+  'use strict';
+
+  console.log('[Fix2] 最終修復啟動...');
+
+  // 吞掉瀏覽器擴充套件丟出的無關 promise 錯誤
+  window.addEventListener('unhandledrejection', function(e){
+    const r = e.reason;
+    if (r && typeof r === 'object' && (r.code === 403 || r.httpStatus)) {
+      e.preventDefault();
+      console.log('[Fix2] 已忽略無關錯誤:', r.code);
+    }
+  });
+
+  // ====== 補上 loseBattle ======
+  if (typeof window.loseBattle !== 'function') {
+    console.log('[Fix2] loseBattle 未定義，補上中...');
+    window.loseBattle = function(){
+      if (!battle || battle.over) return;
+      battle.over = true;
+      clearTimeout(qTimer);
+      try { S.lose(); } catch(e){}
+      showResult(false, 0, P().stage);
+      updateTopbar();
+      save();
+    };
+    console.log('[Fix2] loseBattle 已補上 ✓');
+  } else {
+    console.log('[Fix2] loseBattle 已存在');
+  }
+
+  // ====== 補上 winBattle（保險，因為之前也可能漏掉）======
+  if (typeof window.winBattle !== 'function') {
+    console.log('[Fix2] winBattle 未定義，補上中...');
+    window.winBattle = function(){
+      if (!battle || battle.over) return;
+      battle.over = true;
+      clearTimeout(qTimer);
+      try { S.win(); } catch(e){}
+      const gold = 40 + P().stage * 20;
+      state.gold += gold;
+      const nextStage = P().stage + 1;
+      P().stage = nextStage;
+      showResult(true, gold, nextStage);
+      updateTopbar();
+      save();
+    };
+    console.log('[Fix2] winBattle 已補上 ✓');
+  }
+
+  console.log('[Fix2] 全部就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
