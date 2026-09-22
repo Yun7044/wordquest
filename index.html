@@ -9490,6 +9490,195 @@ if (!isVIP) {
   console.log('[TutFix4] 就緒 ✓');
 })();
 </script>
-  
+
+<script>
+/* =========================================================
+   TutDialogFix：修復導師對話框卡住
+   - 打字機改用 setInterval，可隨時打斷
+   - 快速連點不會卡
+   - 全螢幕點擊都能推進
+   - 加入明顯的「點擊繼續」提示
+   ========================================================= */
+(function(){
+  'use strict';
+  if (window._tutDialogFixLoaded) return;
+  window._tutDialogFixLoaded = true;
+
+  console.log('[TutDialogFix] 載入...');
+
+  // 攔截 stepDone 被呼叫：觀察 #tutRPG 出現，然後接管點擊
+  let dialogEl = null;
+  let lines = [];
+  let idx = 0;
+  let typing = false;
+  let typingInterval = null;
+  let currentLine = '';
+  let finished = false;
+
+  function typeLine(str, done){
+    typing = true;
+    currentLine = str;
+    const textEl = dialogEl && dialogEl.querySelector('#tutRpgText');
+    if (!textEl) { typing = false; done(); return; }
+
+    textEl.textContent = '';
+    let i = 0;
+
+    if (typingInterval) clearInterval(typingInterval);
+    typingInterval = setInterval(() => {
+      if (i >= str.length){
+        clearInterval(typingInterval);
+        typingInterval = null;
+        typing = false;
+        done();
+        return;
+      }
+      textEl.textContent = str.slice(0, ++i);
+    }, 45);
+  }
+
+  function skipTyping(){
+    if (typingInterval) clearInterval(typingInterval);
+    typingInterval = null;
+    typing = false;
+    const textEl = dialogEl && dialogEl.querySelector('#tutRpgText');
+    if (textEl) textEl.textContent = currentLine;
+    showNextHint();
+  }
+
+  function showNextHint(){
+    if (!dialogEl) return;
+    const nextEl = dialogEl.querySelector('#tutRpgNext');
+    if (!nextEl) return;
+    nextEl.style.display = 'block';
+
+    // 如果是最後一句，改成更明顯的提示
+    if (idx >= lines.length){
+      nextEl.textContent = '點擊結束 ✦';
+      nextEl.style.fontSize = '13px';
+      nextEl.style.color = '#ffd93d';
+      nextEl.style.fontWeight = '900';
+    } else {
+      nextEl.textContent = '▼';
+    }
+  }
+
+  function advance(){
+    if (finished) return;
+
+    if (typing){
+      skipTyping();
+      return;
+    }
+
+    if (idx >= lines.length){
+      // 結束
+      finished = true;
+      closeDialog();
+      return;
+    }
+
+    const line = lines[idx++];
+    const nextEl = dialogEl.querySelector('#tutRpgNext');
+    if (nextEl) nextEl.style.display = 'none';
+    typeLine(line, showNextHint);
+  }
+
+  function closeDialog(){
+    if (!dialogEl) return;
+    dialogEl.style.transition = 'opacity .3s';
+    dialogEl.style.opacity = '0';
+    const el = dialogEl;
+    dialogEl = null;
+    setTimeout(() => {
+      el.remove();
+      try { if (typeof S !== 'undefined' && S.rare) S.rare(); } catch(e){}
+      try { if (typeof finishTutorial === 'function') finishTutorial(); } catch(e){}
+      // 如果 finishTutorial 不在外部 scope，用備用清理
+      try {
+        localStorage.setItem('wordquest_tut_final', '1');
+        const r = document.getElementById('tutRoot');
+        if (r) r.remove();
+        const m = document.getElementById('tutModal');
+        if (m) { m.classList.add('hidden'); m.innerHTML = ''; }
+        const sp = document.getElementById('tutSpotlight');
+        const tp = document.getElementById('tutTip');
+        const bl = document.getElementById('tutBlocker');
+        if (sp) sp.style.display = 'none';
+        if (tp) tp.style.display = 'none';
+        if (bl) bl.classList.remove('active');
+      } catch(e){}
+      console.log('[TutDialogFix] 對話結束 ✓');
+    }, 300);
+  }
+
+  // ===== 接管：觀察 #tutRPG 出現 =====
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations){
+      for (const node of m.addedNodes){
+        if (node.nodeType === 1 && node.id === 'tutRPG'){
+          setTimeout(() => bindDialog(node), 60);
+        }
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  function bindDialog(el){
+    if (dialogEl === el) return; // 已綁定
+    dialogEl = el;
+    idx = 0;
+    finished = false;
+    typing = false;
+    if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
+
+    // 取原始對話
+    const ja = (window._i18nCurrentLang === 'ja');
+    lines = ja ? [
+      'バトルとガチャを覚えました。',
+      'ここからは自分の力で進もう。',
+      '毎日バトルしてカードを育てよう 💪'
+    ] : [
+      '你已經學會了戰鬥與抽卡。',
+      '接下來的路，就要靠自己了。',
+      '記得每天來打幾場，把卡牌養強吧 💪'
+    ];
+
+    // 接管點擊：全螢幕都能點
+    el.style.cursor = 'pointer';
+    el.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      advance();
+    };
+    el.ontouchend = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      advance();
+    };
+
+    // 停用內部 box 原本的 onclick（避免重複）
+    const box = el.querySelector('.tut-rpg-box');
+    if (box){
+      box.onclick = (e) => { e.stopPropagation(); advance(); };
+    }
+
+    // 開始第一句
+    setTimeout(() => advance(), 80);
+    console.log('[TutDialogFix] 對話框已接管 ✓');
+  }
+
+  // 保險：如果 #tutRPG 已經存在（例如使用者切到背景再回來）
+  setInterval(() => {
+    const el = document.getElementById('tutRPG');
+    if (el && el !== dialogEl){
+      bindDialog(el);
+    }
+  }, 800);
+
+  console.log('[TutDialogFix] 就緒 ✓');
+})();
+</script>
+    
 </body>
 </html>
