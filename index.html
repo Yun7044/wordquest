@@ -9679,6 +9679,67 @@ if (!isVIP) {
   console.log('[TutDialogFix] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   DrawFix：修復教學免費十連可以被重複觸發
+   - 加全域冷卻鎖，防止連點與並發
+   - 教學完成後，強制移除 tutRoot 讓 TutFree 徹底失效
+   ========================================================= */
+(function(){
+  'use strict';
+  if (window._drawFixLoaded) return;
+  window._drawFixLoaded = true;
+
+  console.log('[DrawFix] 抽卡頻率修復載入...');
+
+  let _drawLock = false;
+  let _lockTimer = null;
+  const LOCK_MS = 2200;
+
+  const _prevDoDraw = window.doDraw;
+  if (typeof _prevDoDraw !== 'function') {
+    console.error('[DrawFix] 找不到 doDraw');
+    return;
+  }
+
+  window.doDraw = function(count){
+    // 冷卻中 → 直接拒絕
+    if (_drawLock) {
+      console.log('[DrawFix] 抽卡冷卻中，忽略此次點擊');
+      try { if (typeof S !== 'undefined' && S.wrong) S.wrong(); } catch(e){}
+      try { if (typeof toast === 'function') toast('請稍候…'); } catch(e){}
+      return;
+    }
+
+    // 上鎖
+    _drawLock = true;
+    clearTimeout(_lockTimer);
+    _lockTimer = setTimeout(() => {
+      _drawLock = false;
+      console.log('[DrawFix] 冷卻結束');
+    }, LOCK_MS);
+
+    return _prevDoDraw.apply(this, arguments);
+  };
+
+  // 教學完成後，強制移除 tutRoot，讓 TutFree 徹底失效
+  const _origSave = window.save;
+  if (typeof _origSave === 'function'){
+    window.save = function(){
+      try {
+        if (localStorage.getItem('wordquest_tut_final') === '1') {
+          const r = document.getElementById('tutRoot');
+          if (r) r.remove();
+        }
+      } catch(e){}
+      return _origSave.apply(this, arguments);
+    };
+  }
+
+  console.log('[DrawFix] 就緒 ✓ · 冷卻', LOCK_MS, 'ms');
+})();
+</script>
     
 </body>
 </html>
