@@ -5297,6 +5297,371 @@ function stepDone(){
   console.log('[擴充包] 已載入 ✓ (托福 50 + 雅思 50 + GEPT高級 150)');
 })();
 </script>
+
+<script>
+/* =========================================================
+   勝利結算畫面
+   - 全螢幕金色光芒 + 星星評價
+   - 獎勵列表逐項浮現
+   - 從底部噴射的粒子
+   - 攔截 showResult，只有勝利時接管
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._victoryScreenLoaded) return;
+  window._victoryScreenLoaded = true;
+
+  console.log('[Victory] 載入...');
+
+  /* ========== CSS ========== */
+  const css = `
+#victoryOverlay{
+  position:fixed;inset:0;z-index:1200;
+  display:none;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center, rgba(40,25,70,.88), rgba(4,6,12,.97));
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  overflow:hidden;padding:20px;
+}
+#victoryOverlay.show{display:flex;animation:vcFadeIn .4s ease}
+@keyframes vcFadeIn{from{opacity:0}to{opacity:1}}
+
+.vc-rays{
+  position:absolute;left:50%;top:50%;
+  width:200vmax;height:200vmax;
+  transform:translate(-50%,-50%);
+  background:repeating-conic-gradient(from 0deg,
+    rgba(255,217,61,0) 0deg 12deg,
+    rgba(255,217,61,.07) 12deg 14deg);
+  animation:vcRaysSpin 60s linear infinite;
+  pointer-events:none;
+}
+@keyframes vcRaysSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+.vc-glow{
+  position:absolute;left:50%;top:50%;
+  width:80vmin;height:80vmin;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(255,217,61,.28) 0%,
+    rgba(255,149,0,.15) 40%,
+    transparent 70%);
+  animation:vcGlowPulse 3s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes vcGlowPulse{
+  0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.85}
+  50%{transform:translate(-50%,-50%) scale(1.15);opacity:1}
+}
+
+.vc-card{
+  position:relative;z-index:5;
+  width:100%;max-width:380px;
+  padding:30px 24px 22px;
+  background:linear-gradient(180deg,#1a2038,#0f1424);
+  border:1.5px solid rgba(255,217,61,.55);
+  border-radius:24px;
+  text-align:center;
+  box-shadow:
+    0 24px 60px -20px rgba(0,0,0,.95),
+    0 0 60px -10px rgba(255,217,61,.5),
+    inset 0 1px 0 rgba(255,255,255,.1);
+  animation:vcCardIn .55s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes vcCardIn{
+  from{opacity:0;transform:translateY(40px) scale(.85)}
+  to{opacity:1;transform:none}
+}
+
+.vc-ribbon{
+  position:absolute;top:-14px;left:50%;
+  transform:translateX(-50%);
+  padding:5px 18px;
+  border-radius:20px;
+  background:linear-gradient(135deg,#ffd93d,#ff9500);
+  color:#1a1208;
+  font-size:10.5px;font-weight:900;letter-spacing:4px;
+  box-shadow:0 6px 20px -4px rgba(255,150,0,.7);
+  white-space:nowrap;
+}
+
+.vc-title{
+  font-size:44px;font-weight:900;letter-spacing:8px;
+  padding-left:8px;
+  background:linear-gradient(180deg,#fff8d0,#ffd93d 40%,#ff9500);
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 0 22px rgba(255,217,61,.85));
+  margin:8px 0 4px;
+  animation:vcTitlePop .8s cubic-bezier(.2,1.6,.4,1) .15s backwards;
+}
+@keyframes vcTitlePop{
+  0%{transform:scale(0) rotate(-15deg);opacity:0}
+  60%{transform:scale(1.15) rotate(3deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+
+.vc-sub{
+  font-size:10.5px;color:#8b93b0;letter-spacing:5px;
+  margin-bottom:20px;font-weight:700;padding-left:5px;
+}
+
+.vc-stars{
+  display:flex;justify-content:center;gap:8px;margin-bottom:20px;
+  min-height:44px;
+}
+.vc-star{
+  font-size:38px;line-height:1;
+  opacity:0;
+}
+.vc-star.on{
+  filter:drop-shadow(0 0 16px rgba(255,217,61,.95));
+  animation:vcStarPop .55s cubic-bezier(.2,1.6,.4,1) forwards;
+}
+.vc-star.off{
+  filter:grayscale(1) brightness(.35);
+  animation:vcStarOff .45s cubic-bezier(.2,1.4,.4,1) forwards;
+}
+@keyframes vcStarPop{
+  0%{opacity:0;transform:scale(0) rotate(-180deg)}
+  70%{transform:scale(1.35) rotate(12deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+@keyframes vcStarOff{
+  0%{opacity:0;transform:scale(.4)}
+  100%{opacity:.45;transform:scale(1)}
+}
+
+.vc-rewards{
+  background:rgba(0,0,0,.32);
+  border-radius:14px;
+  padding:6px 16px;
+  margin-bottom:20px;
+  border:1px solid rgba(255,255,255,.05);
+}
+.vc-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  opacity:0;
+  animation:vcRowIn .5s cubic-bezier(.2,1,.3,1) forwards;
+}
+.vc-row:last-child{border-bottom:none}
+@keyframes vcRowIn{
+  from{opacity:0;transform:translateX(-24px)}
+  to{opacity:1;transform:none}
+}
+.vc-row .vc-label{
+  font-size:12.5px;color:#8b93b0;font-weight:700;letter-spacing:.5px;
+  display:flex;align-items:center;gap:6px;
+}
+.vc-row .vc-value{
+  font-size:15.5px;font-weight:900;
+}
+.vc-row .vc-value.gold{
+  color:#ffd93d;text-shadow:0 0 10px rgba(255,217,61,.6);
+}
+.vc-row .vc-value.stage{
+  color:#8bddff;text-shadow:0 0 10px rgba(139,221,255,.6);
+}
+.vc-row .vc-value.hp{
+  color:#7bed9f;text-shadow:0 0 10px rgba(123,237,159,.6);
+}
+
+.vc-btn{
+  width:100%;padding:16px;border-radius:15px;border:none;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:900;color:#1a1208;
+  letter-spacing:3px;
+  background:linear-gradient(135deg,#ffd93d,#ff9500);
+  box-shadow:
+    0 8px 24px -6px rgba(255,150,0,.75),
+    inset 0 1px 0 rgba(255,255,255,.5);
+  transition:transform .12s;
+  animation:vcBtnIn .5s cubic-bezier(.2,1.4,.4,1) .85s backwards;
+}
+.vc-btn:active{transform:scale(.96)}
+@keyframes vcBtnIn{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:none}
+}
+
+.vc-particle{
+  position:absolute;
+  width:8px;height:8px;border-radius:50%;
+  pointer-events:none;
+  z-index:3;
+  animation:vcParticleUp 2.2s cubic-bezier(.15,.85,.3,1) forwards;
+}
+@keyframes vcParticleUp{
+  0%{opacity:1;transform:translate(0,0) scale(1.3)}
+  60%{opacity:.9}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}
+}
+  `;
+  const st = document.createElement('style');
+  st.textContent = css;
+  document.head.appendChild(st);
+
+  /* ========== overlay 容器 ========== */
+  const overlay = document.createElement('div');
+  overlay.id = 'victoryOverlay';
+  document.body.appendChild(overlay);
+
+  /* ========== 包裝 showResult ========== */
+  const _origShowResult = window.showResult;
+
+  if (typeof _origShowResult !== 'function') {
+    console.warn('[Victory] 找不到 showResult，無法攔截');
+    return;
+  }
+
+  window.showResult = function(win, gold, nextStage){
+    if (win) {
+      showVictoryScreen(gold, nextStage);
+      return;
+    }
+    // 戰敗：走原本邏輯
+    return _origShowResult.call(this, win, gold, nextStage);
+  };
+
+  /* ========== 顯示勝利結算 ========== */
+  function showVictoryScreen(gold, nextStage){
+    // 計算星星評價（依剩餘血量）
+    let hpPercent = 1;
+    let hpText = '—';
+    try {
+      if (window.battle && battle.heroMaxHp > 0) {
+        hpPercent = Math.max(0, battle.heroHp / battle.heroMaxHp);
+        hpText = Math.round(battle.heroHp) + ' / ' + battle.heroMaxHp;
+      }
+    } catch(e){}
+
+    let stars = 1;
+    if (hpPercent >= 0.99) stars = 3;
+    else if (hpPercent >= 0.6) stars = 2;
+    else stars = 1;
+
+    // 組合星星 HTML
+    let starHTML = '';
+    for (let i = 0; i < 3; i++){
+      const isOn = i < stars;
+      starHTML += `<div class="vc-star ${isOn ? 'on' : 'off'}"
+        style="animation-delay:${0.4 + i * 0.15}s">⭐</div>`;
+    }
+
+    // 目前模式的關卡
+    let stageNum = nextStage;
+    try { if (typeof P === 'function' && P().stage) stageNum = P().stage; } catch(e){}
+
+    overlay.innerHTML = `
+      <div class="vc-rays"></div>
+      <div class="vc-glow"></div>
+      <div class="vc-card">
+        <div class="vc-ribbon">BATTLE CLEAR</div>
+        <div class="vc-title">VICTORY</div>
+        <div class="vc-sub">勝 · 利</div>
+
+        <div class="vc-stars">${starHTML}</div>
+
+        <div class="vc-rewards">
+          <div class="vc-row" style="animation-delay:.7s">
+            <div class="vc-label">💰 獲得金幣</div>
+            <div class="vc-value gold">+${gold}</div>
+          </div>
+          <div class="vc-row" style="animation-delay:.85s">
+            <div class="vc-label">🎯 目前關卡</div>
+            <div class="vc-value stage">第 ${stageNum} 關</div>
+          </div>
+          <div class="vc-row" style="animation-delay:1.0s">
+            <div class="vc-label">❤️ 剩餘生命</div>
+            <div class="vc-value hp">${hpText}</div>
+          </div>
+        </div>
+
+        <button class="vc-btn" id="victoryBtn">繼續前進</button>
+      </div>
+    `;
+
+    overlay.classList.add('show');
+
+    // 音效
+    try { S.win(); } catch(e){}
+    setTimeout(() => { try { AudioSys.sfx(1568, .3, 'sine', .12); } catch(e){} }, 300);
+    setTimeout(() => { try { AudioSys.sfx(2093, .4, 'sine', .1); } catch(e){} }, 500);
+
+    // 粒子
+    spawnParticles();
+
+    // 按鈕綁定（延遲，避免動畫中誤觸）
+    setTimeout(() => {
+      const btn = document.getElementById('victoryBtn');
+      if (btn) {
+        btn.onclick = closeVictory;
+      }
+    }, 900);
+  }
+
+  /* ========== 粒子噴射 ========== */
+  function spawnParticles(){
+    const colors = ['#ffd93d', '#ff9500', '#fff8d0', '#8bddff', '#ff7ce0'];
+    for (let i = 0; i < 36; i++){
+      const p = document.createElement('div');
+      p.className = 'vc-particle';
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const size = 4 + Math.random() * 8;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.background = color;
+      p.style.boxShadow = `0 0 12px ${color}, 0 0 24px ${color}`;
+      p.style.left = (10 + Math.random() * 80) + '%';
+      p.style.bottom = '-10px';
+      const dx = (Math.random() - 0.5) * 300;
+      const dy = -(300 + Math.random() * 500);
+      p.style.setProperty('--dx', dx.toFixed(1) + 'px');
+      p.style.setProperty('--dy', dy.toFixed(1) + 'px');
+      p.style.animationDelay = (Math.random() * 0.8).toFixed(2) + 's';
+      overlay.appendChild(p);
+      setTimeout(() => p.remove(), 3500);
+    }
+  }
+
+  /* ========== 關閉結算 ========== */
+  function closeVictory(){
+    try { S.click(); } catch(e){}
+
+    overlay.classList.remove('show');
+    setTimeout(() => {
+      overlay.innerHTML = '';
+    }, 420);
+
+    // 關閉戰鬥 UI
+    const bui = document.getElementById('battle-ui');
+    if (bui) bui.classList.add('closed');
+
+    const box = document.getElementById('battleResult');
+    if (box) {
+      box.classList.add('hidden');
+      box.innerHTML = '';
+    }
+
+    // 重繪主畫面
+    try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+
+    // 切回主畫面音樂
+    try {
+      if (typeof AudioSys !== 'undefined' && AudioSys.playMusic) {
+        const s = (typeof currentScreen !== 'undefined') ? currentScreen : 'home';
+        AudioSys.playMusic(s === 'gacha' ? 'gacha' : 'home');
+      }
+    } catch(e){}
+
+    console.log('[Victory] 結算關閉 ✓');
+  }
+
+  console.log('[Victory] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
