@@ -6096,6 +6096,384 @@ function stepDone(){
   console.log('[Stats] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   混亂值系統 + 戰鬥統計
+   1. 連續答錯會累積混亂值，敵人傷害倍率上升
+   2. 勝利結算顯示這一場的表現數據
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._chaosLoaded) return;
+  window._chaosLoaded = true;
+
+  console.log('[Chaos] 載入中...');
+
+  /* ========== 混亂值定義 ========== */
+  // index = 連續答錯次數（封頂 5）
+  const CHAOS_MULT  = [1, 1, 1.5, 2, 2.5, 3];
+  const CHAOS_LABEL = ['', '', '有點混亂', '混亂', '嚴重混亂', '失控'];
+  const CHAOS_COLOR = ['', '', '#ffd93d', '#ff9500', '#ff5e78', '#ff3050'];
+  const CHAOS_PULSE = [0, 0, 2.0, 1.5, 1.0, 0.7]; // 秒，越多越快
+
+  let chaosStreak = 0;
+
+  /* ========== 戰鬥統計 ========== */
+  let battleStats = null;
+
+  function resetStats(){
+    battleStats = {
+      correct: 0,
+      wrong: 0,
+      totalDamage: 0,
+      maxCombo: 0,
+      startTime: Date.now(),
+      cardId: null,
+      cardLv: 1,
+      cardStar: 1,
+    };
+  }
+
+  function getChaosMult(){
+    const idx = Math.min(chaosStreak, CHAOS_MULT.length - 1);
+    return CHAOS_MULT[idx] || 1;
+  }
+
+  /* ========== 混亂值 UI ========== */
+  function buildChaosUI(){
+    if (document.getElementById('chaosIndicator')) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+#chaosIndicator{
+  position:fixed;top:46%;right:12px;
+  transform:translateY(-50%) scale(.6);
+  z-index:210;padding:10px 14px 12px;
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(30,10,15,.96),rgba(20,6,10,.96));
+  border:2px solid var(--cc, #ff5e78);
+  color:var(--cc, #ff5e78);
+  text-align:center;line-height:1.25;
+  box-shadow:0 0 28px -4px var(--cc, #ff5e78),
+             0 0 14px var(--cc, #ff5e78),
+             inset 0 0 18px rgba(255,50,80,.15);
+  opacity:0;pointer-events:none;
+  transition:opacity .3s, transform .3s cubic-bezier(.2,1.4,.4,1);
+  min-width:96px;
+}
+#chaosIndicator.show{opacity:1;transform:translateY(-50%) scale(1);}
+#chaosIndicator.shake{animation:chaosShake .45s;}
+@keyframes chaosShake{
+  0%,100%{transform:translateY(-50%) translateX(0) scale(1);}
+  25%{transform:translateY(-50%) translateX(-6px) scale(1.1);}
+  75%{transform:translateY(-50%) translateX(6px) scale(1.1);}
+}
+#chaosIndicator.pulse{animation:chaosPulse var(--pulse, 1.5s) ease-in-out infinite;}
+@keyframes chaosPulse{
+  0%,100%{box-shadow:0 0 28px -4px var(--cc), 0 0 14px var(--cc), inset 0 0 18px rgba(255,50,80,.15);}
+  50%{box-shadow:0 0 44px -2px var(--cc), 0 0 30px var(--cc), inset 0 0 32px rgba(255,50,80,.4);}
+}
+#chaosIndicator .ci-icon{font-size:18px;display:block;margin-bottom:2px;filter:drop-shadow(0 0 8px var(--cc));}
+#chaosIndicator .ci-count{font-size:10px;opacity:.8;letter-spacing:.5px;font-weight:800;margin-bottom:1px;}
+#chaosIndicator .ci-label{font-size:11px;font-weight:900;letter-spacing:1px;margin-bottom:3px;}
+#chaosIndicator .ci-mult{font-size:20px;font-weight:900;text-shadow:0 0 12px var(--cc);letter-spacing:-.5px;}
+#chaosIndicator .ci-tip{font-size:9px;opacity:.65;letter-spacing:.3px;margin-top:3px;}
+    `;
+    document.head.appendChild(style);
+
+    const el = document.createElement('div');
+    el.id = 'chaosIndicator';
+    el.innerHTML = `
+      <span class="ci-icon">⚠️</span>
+      <div class="ci-count">連續答錯</div>
+      <div class="ci-label">—</div>
+      <div class="ci-mult">×1.0</div>
+      <div class="ci-tip">敵人傷害</div>
+    `;
+    document.body.appendChild(el);
+  }
+
+  function updateChaosUI(){
+    const el = document.getElementById('chaosIndicator');
+    if (!el) return;
+
+    // 戰鬥不在或已結束 → 隱藏
+    const bui = document.getElementById('battle-ui');
+    const battleOver = !battle || battle.over || (bui && bui.classList.contains('closed'));
+
+    if (chaosStreak < 2 || battleOver){
+      el.classList.remove('show', 'pulse');
+      return;
+    }
+
+    const idx = Math.min(chaosStreak, CHAOS_MULT.length - 1);
+    const mult = CHAOS_MULT[idx];
+    const color = CHAOS_COLOR[idx];
+    const label = CHAOS_LABEL[idx];
+    const pulse = CHAOS_PULSE[idx];
+
+    el.style.setProperty('--cc', color);
+    el.style.setProperty('--pulse', pulse + 's');
+    el.querySelector('.ci-count').textContent = '連續答錯 ' + chaosStreak + ' 次';
+    el.querySelector('.ci-label').textContent = label;
+    el.querySelector('.ci-mult').textContent = '×' + mult.toFixed(1);
+    el.classList.add('show', 'pulse');
+
+    // 抖動
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+  }
+
+  function hideChaosUI(){
+    const el = document.getElementById('chaosIndicator');
+    if (el) el.classList.remove('show', 'pulse', 'shake');
+  }
+
+  /* ========== Hook startBattle ========== */
+  const _origStartBattle = window.startBattle;
+  if (typeof _origStartBattle === 'function'){
+    window.startBattle = function(){
+      chaosStreak = 0;
+      resetStats();
+      hideChaosUI();
+
+      const r = _origStartBattle.apply(this, arguments);
+
+      setTimeout(() => {
+        try {
+          const p = P();
+          const c = p.cards[p.team];
+          if (c && battleStats){
+            battleStats.cardId = p.team;
+            battleStats.cardLv = c.lv;
+            battleStats.cardStar = c.star;
+          }
+        } catch(e){}
+      }, 100);
+
+      return r;
+    };
+  }
+
+  /* ========== Hook answer：追蹤答對/答錯 + 累積混亂 ========== */
+  const _origAnswer = window.answer;
+  if (typeof _origAnswer === 'function'){
+    window.answer = function(idx, btn){
+      // 先判斷這次會不會被處理
+      let willProcess = false;
+      let wasCorrect = false;
+      try {
+        if (battle && !battle.busy && !battle.over && battle.currentQ){
+          willProcess = true;
+          // idx === -1 代表超時
+          wasCorrect = (idx !== -1) && (idx === battle.currentQ.correctIndex);
+        }
+      } catch(e){}
+
+      // 呼叫原始 answer
+      const r = _origAnswer.apply(this, arguments);
+
+      // 處理統計與混亂
+      if (willProcess){
+        if (wasCorrect){
+          if (battleStats){
+            battleStats.correct++;
+            if (battle && battle.combo) {
+              battleStats.maxCombo = Math.max(battleStats.maxCombo, battle.combo);
+            }
+          }
+          chaosStreak = 0;
+          setTimeout(updateChaosUI, 500);
+        } else {
+          if (battleStats) battleStats.wrong++;
+          chaosStreak++;
+          setTimeout(updateChaosUI, 500);
+
+          // 從第 2 次連錯開始，敵人傷害倍率提升
+          if (chaosStreak >= 2 && battle){
+            const mult = getChaosMult();
+            const orig = battle.enemyAtk;
+            battle.enemyAtk = Math.round(orig * mult);
+
+            // 敵人攻擊讀取 enemyAtk 的時機：
+            // answer 內部 setTimeout(doEnemyAttack, 420)
+            // + doEnemyAttack 內部 setTimeout(..., 245)
+            // = 665ms 後讀取，所以 900ms 後恢復原值
+            setTimeout(() => {
+              if (battle) battle.enemyAtk = orig;
+            }, 900);
+          }
+        }
+      }
+
+      return r;
+    };
+  }
+
+  /* ========== Hook doHeroAttack：累積傷害 ========== */
+  const _origDoHeroAttack = window.doHeroAttack;
+  if (typeof _origDoHeroAttack === 'function'){
+    window.doHeroAttack = function(dmg, crit){
+      try {
+        if (battleStats && typeof dmg === 'number') {
+          battleStats.totalDamage += dmg;
+        }
+      } catch(e){}
+      return _origDoHeroAttack.apply(this, arguments);
+    };
+  }
+
+  /* ========== 勝利結算：注入統計區塊 ========== */
+  function injectStatsIntoVictory(){
+    if (!battleStats) return;
+    const card = document.querySelector('#victoryOverlay .vc-card');
+    if (!card) return;
+    if (card.querySelector('.vc-stats-injected')) return;
+
+    const duration = Math.max(1, Math.round((Date.now() - battleStats.startTime) / 1000));
+    const totalQ = battleStats.correct + battleStats.wrong;
+    const avgDmg = battleStats.correct > 0
+      ? Math.round(battleStats.totalDamage / battleStats.correct)
+      : 0;
+
+    if (!document.getElementById('vcStatsStyle')){
+      const st = document.createElement('style');
+      st.id = 'vcStatsStyle';
+      st.textContent = `
+        @keyframes vcStatsIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: none; }
+        }
+        .vc-stats-injected {
+          margin: 12px 0 12px;
+          background: rgba(255,255,255,.04);
+          border-radius: 12px;
+          padding: 12px 14px;
+          border: 1px solid rgba(139,124,255,.18);
+          animation: vcStatsIn .5s cubic-bezier(.2,1,.3,1) backwards;
+          animation-delay: 1.15s;
+          text-align: left;
+        }
+        .vc-stats-title {
+          font-size: 10.5px; letter-spacing: 2.5px;
+          color: #8b93b0; font-weight: 800;
+          margin-bottom: 10px; text-align: center;
+        }
+        .vc-stats-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px 14px;
+          margin-bottom: 10px;
+        }
+        .vc-stat {
+          display: flex; justify-content: space-between;
+          align-items: baseline; font-size: 11.5px;
+        }
+        .vc-stat .lbl { color: #8b93b0; font-weight: 700; }
+        .vc-stat .val { font-weight: 900; font-size: 13px; }
+        .vc-stat .val.green { color: #7bed9f; text-shadow: 0 0 8px rgba(123,237,159,.5); }
+        .vc-stat .val.red   { color: #ff8b9c; text-shadow: 0 0 8px rgba(255,139,156,.5); }
+        .vc-stat .val.gold  { color: #ffd93d; text-shadow: 0 0 8px rgba(255,217,61,.5); }
+        .vc-stat .val.blue  { color: #8bddff; text-shadow: 0 0 8px rgba(139,221,255,.5); }
+        .vc-stat .val.purple{ color: #c3bcff; text-shadow: 0 0 8px rgba(195,188,255,.5); }
+        .vc-card-info {
+          text-align: center; font-size: 10.5px;
+          color: #8b93b0; padding-top: 10px;
+          border-top: 1px solid rgba(255,255,255,.06);
+          letter-spacing: .3px;
+        }
+        .vc-card-info b { color: #c3bcff; font-weight: 900; }
+      `;
+      document.head.appendChild(st);
+    }
+
+    const block = document.createElement('div');
+    block.className = 'vc-stats-injected';
+    block.innerHTML = `
+      <div class="vc-stats-title">⚔️ 這場的表現</div>
+      <div class="vc-stats-grid">
+        <div class="vc-stat">
+          <span class="lbl">✅ 答對</span>
+          <span class="val green">${battleStats.correct} 題</span>
+        </div>
+        <div class="vc-stat">
+          <span class="lbl">❌ 答錯</span>
+          <span class="val red">${battleStats.wrong} 題</span>
+        </div>
+        <div class="vc-stat">
+          <span class="lbl">💥 總傷害</span>
+          <span class="val gold">${battleStats.totalDamage}</span>
+        </div>
+        <div class="vc-stat">
+          <span class="lbl">⏱️ 用時</span>
+          <span class="val blue">${duration} 秒</span>
+        </div>
+        <div class="vc-stat">
+          <span class="lbl">📊 每題平均傷害</span>
+          <span class="val gold">${avgDmg}</span>
+        </div>
+        <div class="vc-stat">
+          <span class="lbl">🔥 最高連擊</span>
+          <span class="val purple">${battleStats.maxCombo}</span>
+        </div>
+      </div>
+      ${battleStats.cardId ? `
+        <div class="vc-card-info">
+          使用卡牌 <b>${battleStats.cardId}</b> · Lv.${battleStats.cardLv} · ${'★'.repeat(battleStats.cardStar)}
+        </div>
+      ` : ''}
+    `;
+
+    const rewards = card.querySelector('.vc-rewards');
+    if (rewards && rewards.parentNode){
+      rewards.parentNode.insertBefore(block, rewards.nextSibling);
+    } else {
+      const btn = card.querySelector('.vc-btn');
+      if (btn) card.insertBefore(block, btn);
+      else card.appendChild(block);
+    }
+  }
+
+  /* ========== 用 MutationObserver 監聽勝利畫面出現 ========== */
+  function startObserve(){
+    const obs = new MutationObserver(() => {
+      const overlay = document.getElementById('victoryOverlay');
+      if (overlay && overlay.classList.contains('show')){
+        // 等獎勵列表播完再注入統計
+        setTimeout(injectStatsIntoVictory, 700);
+      }
+    });
+    obs.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+  }
+
+  /* ========== 切到主畫面時隱藏混亂 UI ========== */
+  setInterval(() => {
+    const bui = document.getElementById('battle-ui');
+    if (bui && bui.classList.contains('closed')){
+      hideChaosUI();
+    }
+  }, 1000);
+
+  /* ========== 啟動 ========== */
+  setTimeout(buildChaosUI, 300);
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', startObserve);
+  } else {
+    startObserve();
+  }
+
+  console.log('[Chaos] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
