@@ -8048,6 +8048,119 @@ if (!isVIP) {
   console.log('[i18n v2] ロード完了');
 })();
 </script>
+
+<script>
+/* =========================================================
+   単語の日本語訳（第1弾：TOEFL初級 50語）
+   日本語モードのとき、中国語の意味を日本語に置き換える
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._jaWordLoaded) return;
+  window._jaWordLoaded = true;
+
+  console.log('[JA-Word] ロード中...');
+
+  /* =========================================================
+     日本語訳辞書
+     key   = 英単語
+     value = 日本語の意味
+     ========================================================= */
+  window.JA_WORD_MEANINGS = {
+    /* ===== TOEFL初級 50語 ===== */
+    'analyze':      '分析する',
+    'approach':     'アプローチ',
+    'concept':      '概念',
+    'significant':  '重要な',
+    'evidence':     '証拠',
+    'factor':       '要因',
+    'method':       '方法',
+    'theory':       '理論',
+    'research':     '研究',
+    'data':         'データ',
+    'structure':    '構造',
+    'function':     '機能',
+    'process':      '過程',
+    'context':      '文脈',
+    'define':       '定義する',
+    'establish':    '確立する',
+    'indicate':     '示す',
+    'occur':        '起こる',
+    'require':      '要求する',
+    'achieve':      '達成する',
+    'obtain':       '得る',
+    'involve':      '含む',
+    'maintain':     '維持する',
+    'influence':    '影響',
+    'environment':  '環境',
+    'individual':   '個人',
+    'respond':      '応答する',
+    'affect':       '影響を与える',
+    'assume':       '仮定する',
+    'benefit':      '利点',
+    'category':     'カテゴリー',
+    'communicate':  '伝える',
+    'complex':      '複雑な',
+    'consist':      '構成する',
+    'contrast':     '対比',
+    'create':       '創造する',
+    'culture':      '文化',
+    'determine':    '決定する',
+    'develop':      '発展する',
+    'economy':      '経済',
+    'evaluate':     '評価する',
+    'feature':      '特徴',
+    'focus':        '集中する',
+    'impact':       '影響',
+    'interpret':    '解釈する',
+    'investigate':  '調査する',
+    'participate':  '参加する',
+    'potential':    '潜在能力',
+    'predict':      '予測する',
+    'regulate':     '規制する',
+  };
+
+  /* =========================================================
+     wordOf をラップ：日本語モード時に意味を置換
+     ========================================================= */
+  const _prevWordOf = window.wordOf;
+
+  if (typeof _prevWordOf === 'function'){
+    window.wordOf = function(id){
+      const w = _prevWordOf.apply(this, arguments);
+      if (!w) return w;
+
+      const lang = window._i18nCurrentLang || 'zh';
+      if (lang === 'ja' && window.JA_WORD_MEANINGS[w.w]){
+        // 元のオブジェクトを壊さないようコピーを返す
+        return Object.assign({}, w, { zh: window.JA_WORD_MEANINGS[w.w] });
+      }
+      return w;
+    };
+    console.log('[JA-Word] wordOf フック完了');
+  } else {
+    console.warn('[JA-Word] wordOf が見つかりません');
+  }
+
+  /* =========================================================
+     言語切替時に再描画を促す
+     ========================================================= */
+  setInterval(() => {
+    const lang = window._i18nCurrentLang || 'zh';
+    if (lang === 'ja' && window._jaWordLastLang !== 'ja'){
+      window._jaWordLastLang = 'ja';
+      console.log('[JA-Word] 日本語モード検出 → 再描画');
+      try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+    } else if (lang !== 'ja' && window._jaWordLastLang === 'ja'){
+      window._jaWordLastLang = lang;
+      try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+    }
+  }, 800);
+
+  console.log('[JA-Word] 就緒 ✓ · ' + Object.keys(window.JA_WORD_MEANINGS).length + ' 語');
+})();
+</script>
   
 </body>
 </html>
