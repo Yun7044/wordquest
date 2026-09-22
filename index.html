@@ -4465,7 +4465,8 @@ function stepClickResult(){
       setTimeout(stepGoGacha, 800);
     }
   }, 300);
-}stepGoGacha
+}
+    
 function stepGoGacha(){
   tut.step = 'goGacha';
   hideSpotlight();
@@ -10874,31 +10875,26 @@ if (!isVIP) {
 
 <script>
 /* =========================================================
-   📕 錯題本系統（核心）
-   - 錯題追蹤：記錄每個單字的答錯次數與連續答對
-   - 複習佇列：連續答對 2 次 → 標記已掌握
-   - 發音：Web Speech API（免費、離線可用）
-   - 答錯時自動唸讀音
+   📕 錯題本系統（修正版）
+   - 錯題追蹤
+   - 複習佇列（連續答對 2 次 → 已掌握）
+   - 答錯才唸讀音，答對不唸
+   - 掌握時刻唸一次（正回饋）
    ========================================================= */
 (function(){
   'use strict';
   if (window._wrongbookLoaded) return;
   window._wrongbookLoaded = true;
 
-  const KEY = 'wordquest_wrongbook_v1';
+  var KEY = 'wordquest_wrongbook_v1';
   console.log('[WrongBook] 載入中...');
 
-  /* =========================================================
-     資料結構
-     ========================================================= */
-  let book = {
-    words: {},          // { wordId: { wrongCount, correctStreak, mastered, lastWrongAt } }
-  };
-
+  /* ========== 資料 ========== */
+  var book = { words: {} };
   try {
-    const raw = localStorage.getItem(KEY);
+    var raw = localStorage.getItem(KEY);
     if (raw){
-      const d = JSON.parse(raw);
+      var d = JSON.parse(raw);
       if (d && d.words && typeof d.words === 'object'){
         book.words = d.words;
       }
@@ -10909,32 +10905,27 @@ if (!isVIP) {
     try { localStorage.setItem(KEY, JSON.stringify(book)); } catch(e){}
   }
 
-  /* =========================================================
-     發音系統（Web Speech API）
-     ========================================================= */
-  let _voiceReady = false;
-
-  function pickEnglishVoice(){
+  /* ========== 發音 ========== */
+  function pickVoice(){
     if (typeof speechSynthesis === 'undefined') return null;
-    const voices = speechSynthesis.getVoices();
-    // 優先順序：en-US → en-GB → en-*
-    return voices.find(v => v.lang === 'en-US')
-        || voices.find(v => v.lang === 'en-GB')
-        || voices.find(v => v.lang.indexOf('en') === 0)
+    var voices = speechSynthesis.getVoices();
+    if (!voices || !voices.length) return null;
+    return voices.find(function(v){ return v.lang === 'en-US'; })
+        || voices.find(function(v){ return v.lang === 'en-GB'; })
+        || voices.find(function(v){ return v.lang && v.lang.indexOf('en') === 0; })
         || null;
   }
 
   function speak(word, rate){
     if (typeof speechSynthesis === 'undefined') return;
     try {
-      // 打斷前一個
       speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(word);
+      var u = new SpeechSynthesisUtterance(word);
       u.lang = 'en-US';
       u.rate = rate || 0.85;
       u.pitch = 1.0;
       u.volume = 1.0;
-      const voice = pickEnglishVoice();
+      var voice = pickVoice();
       if (voice) u.voice = voice;
       speechSynthesis.speak(u);
     } catch(e){
@@ -10942,27 +10933,27 @@ if (!isVIP) {
     }
   }
 
-  // 公開 API（給錯題本頁面用）
   window.wbSpeak = speak;
 
-  // 預熱（有些瀏覽器需要先互動一次）
   if (typeof speechSynthesis !== 'undefined'){
-    speechSynthesis.onvoiceschanged = () => {
-      _voiceReady = true;
+    speechSynthesis.onvoiceschanged = function(){
       console.log('[WrongBook] 語音清單已載入');
     };
-    setTimeout(() => pickEnglishVoice(), 500);
+    setTimeout(function(){ pickVoice(); }, 500);
   }
 
-  /* =========================================================
-     錯題追蹤
-     ========================================================= */
+  /* ========== 錯題記錄 ========== */
   function recordWrong(wordId){
     if (!wordId) return;
     if (!book.words[wordId]){
-      book.words[wordId] = { wrongCount: 0, correctStreak: 0, mastered: false, lastWrongAt: 0 };
+      book.words[wordId] = {
+        wrongCount: 0,
+        correctStreak: 0,
+        mastered: false,
+        lastWrongAt: 0
+      };
     }
-    const w = book.words[wordId];
+    var w = book.words[wordId];
     w.wrongCount++;
     w.correctStreak = 0;
     w.mastered = false;
@@ -10972,7 +10963,7 @@ if (!isVIP) {
 
   function recordCorrectAfterWrong(wordId){
     if (!wordId) return;
-    const w = book.words[wordId];
+    var w = book.words[wordId];
     if (!w) return;
     w.correctStreak = (w.correctStreak || 0) + 1;
     if (w.correctStreak >= 2){
@@ -10981,65 +10972,86 @@ if (!isVIP) {
     saveBook();
   }
 
-  function isInReviewQueue(wordId){
-    const w = book.words[wordId];
-    if (!w) return false;
-    return !w.mastered;
-  }
-
   function getReviewWords(){
-    return Object.keys(book.words).filter(id => !book.words[id].mastered);
+    var result = [];
+    for (var id in book.words){
+      if (!book.words[id].mastered) result.push(id);
+    }
+    return result;
   }
 
   function getMasteredWords(){
-    return Object.keys(book.words).filter(id => book.words[id].mastered);
+    var result = [];
+    for (var id in book.words){
+      if (book.words[id].mastered) result.push(id);
+    }
+    return result;
   }
 
-  /* =========================================================
-     Hook：answer() — 記錄答對/答錯、發音、延長停頓
-     ========================================================= */
-  let pendingWrongWord = null;   // 本題答錯的單字（給下一題推進用）
+  /* ========== Hook: answer ========== */
+  var pendingWrongWord = null;
 
-  const _prevAnswer = window.answer;
-  if (typeof _prevAnswer === 'function'){
+  if (typeof window.answer === 'function'){
+    var _prevAnswer = window.answer;
     window.answer = function(idx, btn){
-      let willProcess = false;
-      let wasCorrect = false;
-      let currentWord = null;
+      var willProcess = false;
+      var wasCorrect = false;
+      var currentWord = null;
 
       try {
-        if (battle && !battle.busy && !battle.over && battle.currentQ){
+        if (window.battle && !battle.busy && !battle.over && battle.currentQ){
           willProcess = true;
           wasCorrect = (idx !== -1) && (idx === battle.currentQ.correctIndex);
           currentWord = battle.currentQ.word;
         }
       } catch(e){}
 
-      // 呼叫原始
-      const r = _prevAnswer.apply(this, arguments);
+      var r = _prevAnswer.apply(this, arguments);
 
       if (willProcess && currentWord){
-        const wid = currentWord.w;
+        var wid = currentWord.w;
+
         if (wasCorrect){
+          // 記錄「升級前」狀態
+          var beforeMeta = book.words[wid];
+          var wasMastered = beforeMeta ? !!beforeMeta.mastered : false;
+
           recordCorrectAfterWrong(wid);
-          // 正確答案也唸一次（加強記憶）
-          if (isInReviewQueue(wid) || Math.random() < 0.3){
-            setTimeout(() => speak(wid, 0.85), 200);
+
+          // 檢查是否「這一刻剛升級為已掌握」
+          var afterMeta = book.words[wid];
+          var isMasteredNow = afterMeta ? !!afterMeta.mastered : false;
+          var justMastered = (!wasMastered && isMasteredNow);
+
+          // 只在「剛剛掌握」時唸一次
+          if (justMastered){
+            setTimeout(function(){
+              speak(wid, 0.9);
+              console.log('[WrongBook] 🎉 掌握時刻，唸一次:', wid);
+            }, 200);
           }
+          // 答對時不唸讀音（這是關鍵修正）
+
         } else {
           recordWrong(wid);
           pendingWrongWord = wid;
 
-          // 答錯 → 1.5 秒後唸讀音（等玩家看到正確答案後）
-          setTimeout(() => {
-            speak(wid, 0.75);
-          }, 700);
+          // 加入本場錯題
+          if (!window._wbThisBattleWrong) window._wbThisBattleWrong = [];
+          if (window._wbThisBattleWrong.indexOf(wid) === -1){
+            window._wbThisBattleWrong.push(wid);
+          }
 
-          // 正確答案放大 + 閃光（CSS 類別）
-          setTimeout(() => {
-            const opts = document.querySelectorAll('#options .opt');
-            if (opts && battle && battle.currentQ){
-              const correctOpt = opts[battle.currentQ.correctIndex];
+          // 答錯 → 0.5 秒後唸讀音
+          setTimeout(function(){
+            speak(wid, 0.75);
+          }, 500);
+
+          // 正確答案放大
+          setTimeout(function(){
+            var opts = document.querySelectorAll('#options .opt');
+            if (opts && window.battle && battle.currentQ){
+              var correctOpt = opts[battle.currentQ.correctIndex];
               if (correctOpt){
                 correctOpt.classList.add('wb-correct-emphasis');
               }
@@ -11053,18 +11065,16 @@ if (!isVIP) {
     console.log('[WrongBook] answer フック完了');
   }
 
-  /* =========================================================
-     Hook：doEnemyAttack — 答錯時延長敵人攻擊（爭取記憶時間）
-     ========================================================= */
-  const _prevEnemyAttack = window.doEnemyAttack;
-  if (typeof _prevEnemyAttack === 'function'){
+  /* ========== Hook: doEnemyAttack（延後攻擊，爭取記憶時間） ========== */
+  if (typeof window.doEnemyAttack === 'function'){
+    var _prevEnemyAttack = window.doEnemyAttack;
     window.doEnemyAttack = function(){
       if (pendingWrongWord){
-        // 延後 1.5 秒，總延遲 ≈ 420 + 1500 = 1920ms ≈ 2 秒
-        const word = pendingWrongWord;
         pendingWrongWord = null;
-        return setTimeout(() => {
-          _prevEnemyAttack.apply(this, arguments);
+        var args = arguments;
+        var self = this;
+        return setTimeout(function(){
+          _prevEnemyAttack.apply(self, args);
         }, 1500);
       }
       return _prevEnemyAttack.apply(this, arguments);
@@ -11072,44 +11082,50 @@ if (!isVIP) {
     console.log('[WrongBook] doEnemyAttack フック完了');
   }
 
-  /* =========================================================
-     Hook：generateQuestion — 30% 機率優先出錯題
-     ========================================================= */
-  const _prevGenQ = window.generateQuestion;
-  if (typeof _prevGenQ === 'function'){
+  /* ========== Hook: generateQuestion（30% 機率優先出錯題） ========== */
+  function shuffleArr(a){
+    var arr = a.slice();
+    for (var i = arr.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  if (typeof window.generateQuestion === 'function'){
+    var _prevGenQ = window.generateQuestion;
     window.generateQuestion = function(){
       // 30% 機率優先出錯題
       if (Math.random() < 0.3){
-        const queue = getReviewWords();
+        var queue = getReviewWords();
         if (queue.length > 0){
-          const wid = queue[Math.floor(Math.random() * queue.length)];
-          const w = (typeof wordOf === 'function') ? wordOf(wid) : null;
-          const p = (typeof P === 'function') ? P() : null;
-          const c = p && p.cards ? p.cards[wid] : null;
+          var wid = queue[Math.floor(Math.random() * queue.length)];
+          var w = (typeof window.wordOf === 'function') ? window.wordOf(wid) : null;
+          var p = (typeof window.P === 'function') ? window.P() : null;
+          var c = (p && p.cards) ? p.cards[wid] : null;
 
           if (w && c){
-            // 用該單字產生題目
-            const pool = (typeof currentPool === 'function') ? currentPool() : [];
-            const type = 'meaning';
-            const text = `「<b>${w.w}</b>」是什麼意思？`;
-            const correct = w.zh;
-            const pz = pool.filter(x => x.zh !== w.zh).map(x => x.zh);
-            const dis = [];
-            const used = new Set([w.zh]);
-            for (const zh of shuffleArr(pz)){
-              if (dis.length >= 3) break;
-              if (!used.has(zh)){ dis.push(zh); used.add(zh); }
+            var pool = (typeof window.currentPool === 'function') ? window.currentPool() : [];
+            var text = '「<b>' + w.w + '</b>」是什麼意思？';
+            var correct = w.zh;
+            var pz = pool.filter(function(x){ return x.zh !== w.zh; }).map(function(x){ return x.zh; });
+            var dis = [];
+            var used = {}; used[w.zh] = 1;
+            var shuffled = shuffleArr(pz);
+            for (var i = 0; i < shuffled.length && dis.length < 3; i++){
+              var zh = shuffled[i];
+              if (!used[zh]){ dis.push(zh); used[zh] = 1; }
             }
-            const options = shuffleArr([correct, ...dis]);
+            var options = shuffleArr([correct].concat(dis));
             console.log('[WrongBook] 複習出題:', wid);
             return {
-              text,
-              options,
+              text: text,
+              options: options,
               correctIndex: options.indexOf(correct),
               mult: 1.0,
-              type,
+              type: 'meaning',
               word: w,
-              isReview: true,
+              isReview: true
             };
           }
         }
@@ -11119,84 +11135,41 @@ if (!isVIP) {
     console.log('[WrongBook] generateQuestion フック完了');
   }
 
-  function shuffleArr(a){
-    const arr = a.slice();
-    for (let i = arr.length - 1; i > 0; i--){
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
-  /* =========================================================
-     Hook：startBattle — 重置本場錯題記錄
-     ========================================================= */
-  window._wbThisBattleWrong = [];
-
-  const _prevStartBattle = window.startBattle;
-  if (typeof _prevStartBattle === 'function'){
+  /* ========== Hook: startBattle（重置本場錯題） ========== */
+  if (typeof window.startBattle === 'function'){
+    var _prevStartBattle = window.startBattle;
     window.startBattle = function(){
       window._wbThisBattleWrong = [];
       return _prevStartBattle.apply(this, arguments);
     };
+    console.log('[WrongBook] startBattle フック完了');
   }
 
-  /* =========================================================
-     記錄本場錯題（給勝利結算用）
-     ========================================================= */
-  const _prevRecordWrong = recordWrong;
-  recordWrong = function(wordId){
-    if (window._wbThisBattleWrong && window._wbThisBattleWrong.indexOf(wordId) === -1){
-      window._wbThisBattleWrong.push(wordId);
-    }
-    _prevRecordWrong(wordId);
-  };
-
-  /* =========================================================
-     公開 API
-     ========================================================= */
+  /* ========== 公開 API ========== */
   window.wrongBook = {
-    getAll: () => book.words,
-    getReviewWords,
-    getMasteredWords,
-    count: () => Object.keys(book.words).length,
-    reviewCount: () => getReviewWords().length,
-    masteredCount: () => getMasteredWords().length,
-    clear: () => { book = { words: {} }; saveBook(); },
-    remove: (id) => { delete book.words[id]; saveBook(); },
-    markMastered: (id) => {
+    getAll: function(){ return book.words; },
+    getReviewWords: getReviewWords,
+    getMasteredWords: getMasteredWords,
+    count: function(){ return Object.keys(book.words).length; },
+    reviewCount: function(){ return getReviewWords().length; },
+    masteredCount: function(){ return getMasteredWords().length; },
+    clear: function(){ book = { words: {} }; saveBook(); },
+    remove: function(id){ delete book.words[id]; saveBook(); },
+    markMastered: function(id){
       if (book.words[id]){
         book.words[id].mastered = true;
         book.words[id].correctStreak = 2;
         saveBook();
       }
-    },
+    }
   };
 
-  /* =========================================================
-     CSS：正確答案強調
-     ========================================================= */
-  const style = document.createElement('style');
-  style.textContent = `
-.opt.wb-correct-emphasis{
-  transform: scale(1.12);
-  box-shadow:
-    0 0 24px rgba(46,213,115,1),
-    0 0 48px rgba(46,213,115,.6),
-    inset 0 0 12px rgba(255,255,255,.3) !important;
-  animation: wbCorrectPulse 1.2s ease-in-out;
-  z-index: 5;
-}
-@keyframes wbCorrectPulse{
-  0%{transform:scale(1);}
-  20%{transform:scale(1.15);}
-  50%{transform:scale(1.08);}
-  100%{transform:scale(1.12);}
-}
-  `;
-  document.head.appendChild(style);
+  /* ========== CSS ========== */
+  var styleEl = document.createElement('style');
+  styleEl.textContent = '.opt.wb-correct-emphasis{transform:scale(1.12);box-shadow:0 0 24px rgba(46,213,115,1),0 0 48px rgba(46,213,115,.6),inset 0 0 12px rgba(255,255,255,.3) !important;animation:wbCorrectPulse 1.2s ease-in-out;z-index:5;}@keyframes wbCorrectPulse{0%{transform:scale(1);}20%{transform:scale(1.15);}50%{transform:scale(1.08);}100%{transform:scale(1.12);}}';
+  document.head.appendChild(styleEl);
 
-  setTimeout(() => {
+  setTimeout(function(){
     console.log('[WrongBook] 就緒 ✓ · 錯題', Object.keys(book.words).length, '· 待複習', getReviewWords().length);
   }, 1500);
 
