@@ -6474,6 +6474,409 @@ function stepDone(){
   console.log('[Chaos] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   VIP 向日葵寶寶模式
+   隱藏入口：點頂部「⚔️ 單字遠征」標誌 5 次
+   密碼：sunflower
+   專為英文初學者設計的超基礎模式
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._vipLoaded) return;
+  window._vipLoaded = true;
+
+  /* ========== 設定（想改密碼改這裡） ========== */
+  const VIP_PASSWORD = 'sunflower';
+  const VIP_MODE = 'sunflower';
+  const UNLOCK_KEY = 'wordquest_vip_unlocked';
+  const TAP_TARGET = 5;
+  const TAP_WINDOW = 2000;
+
+  console.log('[VIP] 載入中...');
+
+  /* ========== 超基礎詞庫（A1 等級，80 字） ========== */
+  const W = (w,zh,pos,forms,syn,ant,ex) =>
+    ({w,zh,pos,rar:1,tier:'向日葵',forms:forms||[],syn:syn||[],ant:ant||[],ex:ex||''});
+
+  const VIP_WORDS = [
+    /* 家庭 5 */
+    W("mother","媽媽","n",["mothers"],[],[],"My mother is kind."),
+    W("father","爸爸","n",["fathers"],[],[],"My father is tall."),
+    W("brother","兄弟","n",["brothers"],["sibling"],[],"I have one brother."),
+    W("sister","姊妹","n",["sisters"],["sibling"],[],"My sister is nice."),
+    W("family","家庭","n",["families"],["home"],[],"I love my family."),
+
+    /* 動物 5 */
+    W("cat","貓","n",["cats"],[],[],"The cat is small."),
+    W("dog","狗","n",["dogs"],[],[],"The dog can run."),
+    W("bird","鳥","n",["birds"],[],[],"The bird can fly."),
+    W("fish","魚","n",["fish"],[],[],"The fish can swim."),
+    W("horse","馬","n",["horses"],[],[],"The horse is big."),
+
+    /* 食物 6 */
+    W("apple","蘋果","n",["apples"],[],[],"I eat an apple."),
+    W("bread","麵包","n",[],[],[],"I like bread."),
+    W("milk","牛奶","n",[],[],[],"Drink your milk."),
+    W("egg","蛋","n",["eggs"],[],[],"I eat one egg."),
+    W("rice","米飯","n",[],[],[],"We eat rice."),
+    W("water","水","n",[],[],[],"I drink water."),
+
+    /* 日常物品 7 */
+    W("book","書","n",["books"],[],[],"This is a book."),
+    W("pen","筆","n",["pens"],[],[],"I have a pen."),
+    W("bag","包包","n",["bags"],[],[],"My bag is red."),
+    W("chair","椅子","n",["chairs"],[],[],"Sit on the chair."),
+    W("table","桌子","n",["tables"],[],[],"The table is big."),
+    W("car","車","n",["cars"],[],[],"I see a car."),
+    W("house","房子","n",["houses"],["home"],[],"This is my house."),
+
+    /* 地點 3 */
+    W("school","學校","n",["schools"],[],[],"I go to school."),
+    W("home","家","n",[],[],[],"I am at home."),
+    W("park","公園","n",["parks"],[],[],"Let's go to the park."),
+
+    /* 自然 7 */
+    W("sun","太陽","n",[],[],[],"The sun is hot."),
+    W("moon","月亮","n",[],[],[],"The moon is up."),
+    W("sky","天空","n",[],[],[],"The sky is blue."),
+    W("tree","樹","n",["trees"],[],[],"The tree is tall."),
+    W("flower","花","n",["flowers"],[],[],"This flower is pretty."),
+    W("rain","雨","n",[],[],[],"The rain is cold."),
+    W("snow","雪","n",[],[],[],"I like snow."),
+
+    /* 動詞 26 */
+    W("run","跑","v",["runs","ran","running"],[],["walk","stop"],"I can run."),
+    W("walk","走","v",["walks","walked","walking"],[],["run","stop"],"Let's walk."),
+    W("eat","吃","v",["eats","ate","eating"],[],["drink"],"I eat rice."),
+    W("drink","喝","v",["drinks","drank","drinking"],[],["eat"],"I drink water."),
+    W("sleep","睡覺","v",["sleeps","slept","sleeping"],[],["wake"],"I sleep at night."),
+    W("read","讀","v",["reads","read","reading"],[],["write"],"I read a book."),
+    W("write","寫","v",["writes","wrote","writing"],[],["read"],"I write my name."),
+    W("speak","說","v",["speaks","spoke","speaking"],["talk"],["listen"],"I speak English."),
+    W("listen","聽","v",["listens","listened","listening"],["hear"],["speak"],"Listen to me."),
+    W("see","看","v",["sees","saw","seeing"],["look"],[],"I see a bird."),
+    W("go","去","v",["goes","went","going"],[],["come","stay"],"I go to school."),
+    W("come","來","v",["comes","came","coming"],[],["go"],"Come here."),
+    W("sit","坐","v",["sits","sat","sitting"],[],["stand"],"Sit down, please."),
+    W("stand","站","v",["stands","stood","standing"],[],["sit"],"Stand up."),
+    W("open","打開","v",["opens","opened","opening"],[],["close"],"Open the door."),
+    W("close","關上","v",["closes","closed","closing"],[],["open"],"Close the door."),
+    W("play","玩","v",["plays","played","playing"],[],["work"],"I play with my dog."),
+    W("help","幫忙","v",["helps","helped","helping"],["aid"],[],"Can you help me?"),
+    W("love","愛","v",["loves","loved","loving"],["like"],["hate"],"I love my mom."),
+    W("like","喜歡","v",["likes","liked","liking"],["love"],["hate"],"I like cats."),
+    W("want","想要","v",["wants","wanted","wanting"],["need"],[],"I want water."),
+    W("need","需要","v",["needs","needed","needing"],["want"],[],"I need help."),
+    W("have","有","v",["has","had","having"],["own"],["lack"],"I have a pen."),
+    W("make","做","v",["makes","made","making"],["create"],[],"I make a cake."),
+    W("take","拿","v",["takes","took","taking"],["get"],["give"],"Take this book."),
+    W("give","給","v",["gives","gave","giving"],["offer"],["take"],"Give me the pen."),
+
+    /* 形容詞 14 */
+    W("big","大的","adj",["bigger","biggest"],["large"],["small"],"The dog is big."),
+    W("small","小的","adj",["smaller","smallest"],["little"],["big"],"The cat is small."),
+    W("hot","熱的","adj",["hotter","hottest"],["warm"],["cold"],"The sun is hot."),
+    W("cold","冷的","adj",["colder","coldest"],["cool"],["hot"],"The water is cold."),
+    W("good","好的","adj",["better","best"],["nice"],["bad"],"This is good."),
+    W("bad","壞的","adj",["worse","worst"],["wrong"],["good"],"That is bad."),
+    W("happy","快樂的","adj",["happier","happiest"],["glad"],["sad"],"I am happy."),
+    W("sad","悲傷的","adj",["sadder","saddest"],["unhappy"],["happy"],"Don't be sad."),
+    W("new","新的","adj",["newer","newest"],["fresh"],["old"],"This is new."),
+    W("old","舊的","adj",["older","oldest"],["ancient"],["new"],"That is old."),
+    W("fast","快的","adj",["faster","fastest"],["quick"],["slow"],"The car is fast."),
+    W("slow","慢的","adj",["slower","slowest"],["late"],["fast"],"The bus is slow."),
+    W("long","長的","adj",["longer","longest"],["tall"],["short"],"It is a long road."),
+    W("short","短的","adj",["shorter","shortest"],["small"],["long"],"This is a short pen."),
+
+    /* 顏色 6 */
+    W("red","紅色","adj",["redder","reddest"],[],[],"The apple is red."),
+    W("blue","藍色","adj",["bluer","bluest"],[],[],"The sky is blue."),
+    W("green","綠色","adj",["greener","greenest"],[],[],"The tree is green."),
+    W("yellow","黃色","adj",["yellower","yellowest"],[],[],"The sun is yellow."),
+    W("black","黑色","adj",[],[],["white"],"The cat is black."),
+    W("white","白色","adj",[],[],["black"],"The snow is white."),
+
+    /* 問候 4 */
+    W("hello","你好","n",[],[],["goodbye"],"Hello, how are you?"),
+    W("goodbye","再見","n",[],[],["hello"],"Goodbye, see you!"),
+    W("yes","是","n",[],[],["no"],"Yes, I can."),
+    W("no","不","n",[],[],["yes"],"No, thank you."),
+  ];
+
+  /* ========== 讓系統認識新模式 ========== */
+  const _prevCurrentPool = window.currentPool;
+  window.currentPool = function(){
+    if (state.mode === VIP_MODE) return VIP_WORDS;
+    return _prevCurrentPool ? _prevCurrentPool.apply(this, arguments) : WORDS;
+  };
+
+  const _prevWordOf = window.wordOf;
+  window.wordOf = function(id){
+    const v = VIP_WORDS.find(x => x.w === id);
+    if (v) return v;
+    return _prevWordOf ? _prevWordOf.apply(this, arguments) : null;
+  };
+
+  /* ========== 初始化進度 ========== */
+  function ensureVIPProgress(){
+    if (!state.progress) state.progress = {};
+    if (!state.progress[VIP_MODE] || typeof state.progress[VIP_MODE] !== 'object'){
+      state.progress[VIP_MODE] = {
+        cards: {
+          cat: {lv:1, star:1},
+          dog: {lv:1, star:1},
+          apple: {lv:1, star:1},
+        },
+        team: 'cat',
+        stage: 1,
+      };
+    }
+  }
+
+  const _prevRenderAll = window.renderAll;
+  window.renderAll = function(){
+    ensureVIPProgress();
+    return _prevRenderAll ? _prevRenderAll.apply(this, arguments) : undefined;
+  };
+
+  /* ========== 模式 UI ========== */
+  function updateVIPBadge(){
+    const badge = document.getElementById('modeBadge');
+    const sub = document.getElementById('homeSubtitle');
+    if (!badge || !sub) return;
+    if (state.mode === VIP_MODE){
+      badge.className = 'gept';
+      badge.textContent = '🌻 向日葵寶寶模式';
+      sub.textContent = '基礎 A1 詞庫 · 80 字 · 慢慢來';
+    }
+  }
+
+  ['renderHome', 'updateModeUI'].forEach(fn => {
+    if (typeof window[fn] === 'function'){
+      const orig = window[fn];
+      window[fn] = function(){
+        const r = orig.apply(this, arguments);
+        setTimeout(updateVIPBadge, 0);
+        return r;
+      };
+    }
+  });
+
+  /* ========== 戰鬥弱化（向日葵模式專屬） ========== */
+  const _prevStartBattle = window.startBattle;
+  if (typeof _prevStartBattle === 'function'){
+    window.startBattle = function(){
+      const r = _prevStartBattle.apply(this, arguments);
+      if (state.mode === VIP_MODE && window.battle){
+        // 敵人 HP 減半、攻擊減半
+        setTimeout(() => {
+          if (window.battle){
+            battle.enemyMaxHp = Math.round(battle.enemyMaxHp * 0.5);
+            battle.enemyHp = battle.enemyMaxHp;
+            battle.enemyAtk = Math.round(battle.enemyAtk * 0.4);
+            if (typeof updateBars === 'function') updateBars();
+          }
+        }, 50);
+      }
+      return r;
+    };
+  }
+
+  /* ========== 隱藏入口：點標誌 5 次 ========== */
+  let tapCount = 0;
+  let tapTimer = null;
+
+  function setupHiddenEntry(){
+    const brand = document.querySelector('#topbar .brand');
+    if (!brand || brand._vipBound) return;
+    brand._vipBound = true;
+
+    brand.addEventListener('click', () => {
+      tapCount++;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(() => { tapCount = 0; }, TAP_WINDOW);
+
+      // 每次點擊給一點視覺回饋
+      brand.style.transition = 'transform .1s';
+      brand.style.transform = 'scale(1.15)';
+      setTimeout(() => { brand.style.transform = ''; }, 100);
+
+      if (tapCount >= TAP_TARGET){
+        tapCount = 0;
+        clearTimeout(tapTimer);
+        // 已解鎖 → 直接進模式
+        if (localStorage.getItem(UNLOCK_KEY) === '1'){
+          enterVIPMode();
+        } else {
+          showPasswordModal();
+        }
+      }
+    });
+  }
+
+  /* ========== 密碼彈窗 ========== */
+  function showPasswordModal(){
+    if (document.getElementById('vipPassModal')) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+#vipPassModal{
+  position:fixed;inset:0;z-index:5500;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(4,6,12,.92);backdrop-filter:blur(10px);
+  animation:vipFade .3s ease;
+}
+@keyframes vipFade{from{opacity:0}to{opacity:1}}
+.vip-modal-box{
+  width:88%;max-width:340px;padding:28px 22px 22px;
+  background:linear-gradient(180deg,#1a2038,#0f1424);
+  border-radius:22px;border:1.5px solid rgba(255,217,61,.4);
+  box-shadow:0 24px 70px -20px rgba(0,0,0,.95),
+             0 0 60px -10px rgba(255,217,61,.4);
+  text-align:center;
+  animation:vipBox .45s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes vipBox{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:none}}
+.vip-modal-icon{font-size:52px;margin-bottom:8px;filter:drop-shadow(0 0 24px rgba(255,217,61,.7));animation:vipIcon 2s ease-in-out infinite}
+@keyframes vipIcon{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.08) rotate(3deg)}}
+.vip-modal-title{
+  font-size:20px;font-weight:900;letter-spacing:2px;margin-bottom:8px;
+  background:linear-gradient(135deg,#fff8d0,#ffd93d 40%,#ff9500);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.vip-modal-desc{font-size:12px;color:#8b93b0;line-height:1.7;margin-bottom:18px;letter-spacing:.5px}
+.vip-pass-input{
+  width:100%;padding:14px 16px;border-radius:13px;
+  border:1.5px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.05);color:#e8ecf5;
+  font-family:inherit;font-size:16px;font-weight:700;
+  letter-spacing:3px;text-align:center;outline:none;
+  transition:border-color .2s;margin-bottom:14px;
+}
+.vip-pass-input:focus{border-color:rgba(255,217,61,.7)}
+.vip-pass-input::placeholder{color:#4d5470;font-weight:500;letter-spacing:1px}
+.vip-pass-btns{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.vip-pass-btn{
+  padding:13px;border-radius:13px;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.07);color:#e8ecf5;
+  font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;
+  transition:transform .12s;
+}
+.vip-pass-btn:active{transform:scale(.95)}
+.vip-pass-btn.primary{
+  background:linear-gradient(135deg,#ffd93d,#ff9500);border:none;
+  color:#1a1208;
+  box-shadow:0 8px 20px -8px rgba(255,150,0,.9);
+}
+.vip-pass-err{
+  font-size:11.5px;color:#ff6b81;font-weight:700;
+  margin-top:10px;letter-spacing:.5px;
+  animation:vipShake .4s;
+}
+@keyframes vipShake{
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-6px)}
+  75%{transform:translateX(6px)}
+}
+    `;
+    document.head.appendChild(style);
+
+    const modal = document.createElement('div');
+    modal.id = 'vipPassModal';
+    modal.innerHTML = `
+      <div class="vip-modal-box">
+        <div class="vip-modal-icon">🌻</div>
+        <h2 class="vip-modal-title">VIP 秘密通道</h2>
+        <p class="vip-modal-desc">這是隱藏模式，只有知道密碼的人可以進入。</p>
+        <input id="vipPassInput" class="vip-pass-input" type="password"
+          placeholder="輸入密碼" autocomplete="off" maxlength="30">
+        <div class="vip-pass-btns">
+          <button class="vip-pass-btn" id="vipPassCancel">取消</button>
+          <button class="vip-pass-btn primary" id="vipPassOk">進入</button>
+        </div>
+        <div id="vipPassErr"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const input = document.getElementById('vipPassInput');
+    const errEl = document.getElementById('vipPassErr');
+    setTimeout(() => input.focus(), 300);
+
+    function trySubmit(){
+      const val = input.value.trim();
+      if (!val){
+        errEl.className = 'vip-pass-err';
+        errEl.textContent = '請輸入密碼';
+        return;
+      }
+      if (val.toLowerCase() === VIP_PASSWORD.toLowerCase()){
+        try { localStorage.setItem(UNLOCK_KEY, '1'); } catch(e){}
+        try { S.rare(); } catch(e){}
+        modal.remove();
+        style.remove();
+        enterVIPMode();
+      } else {
+        errEl.className = 'vip-pass-err';
+        errEl.textContent = '密碼錯誤，請再試一次';
+        input.value = '';
+        input.focus();
+        try { S.wrong(); } catch(e){}
+        // 重新觸發抖動
+        errEl.style.animation = 'none';
+        void errEl.offsetWidth;
+        errEl.style.animation = '';
+      }
+    }
+
+    document.getElementById('vipPassOk').onclick = trySubmit;
+    document.getElementById('vipPassCancel').onclick = () => {
+      modal.remove();
+      style.remove();
+    };
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') trySubmit();
+    });
+  }
+
+  /* ========== 進入 VIP 模式 ========== */
+  function enterVIPMode(){
+    ensureVIPProgress();
+    state.mode = VIP_MODE;
+    try { if (typeof save === 'function') save(); } catch(e){}
+    try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+    try {
+      if (typeof switchScreen === 'function') switchScreen('home');
+    } catch(e){}
+    try { toast('🌻 歡迎來到向日葵寶寶模式'); } catch(e){}
+  }
+
+  /* ========== 返回 TOEIC（首頁按鈕） ========== */
+  setTimeout(() => {
+    const backBtn = document.getElementById('backToToeicBtn');
+    if (backBtn && !backBtn._vipBound){
+      backBtn._vipBound = true;
+      const origClick = backBtn.onclick;
+      backBtn.onclick = function(e){
+        // 如果目前是 VIP，切回 TOEIC 後也應該正常
+        if (typeof origClick === 'function') origClick.call(this, e);
+      };
+    }
+  }, 800);
+
+  /* ========== 啟動 ========== */
+  setTimeout(() => {
+    ensureVIPProgress();
+    setupHiddenEntry();
+    console.log('[VIP] 隱藏入口已設置（點標誌 5 次）');
+  }, 500);
+
+  console.log('[VIP] 就緒 ✓ 密碼提示：' + VIP_PASSWORD.length + ' 個字母的英文單字');
+})();
+</script>
   
 </body>
 </html>
