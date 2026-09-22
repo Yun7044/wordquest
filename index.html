@@ -5727,6 +5727,375 @@ function stepDone(){
   console.log('[VictoryFix v3] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   近期統計雷達圖
+   五維度：答對率 / 答題速 / 答錯率 / 關卡推進 / 敗北率
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._statsLoaded) return;
+  window._statsLoaded = true;
+
+  const STATS_KEY = 'wordquest_stats_v1';
+  const MAX_ANSWERS = 30;
+  const MAX_BATTLES = 10;
+
+  console.log('[Stats] 載入中...');
+
+  /* ========== 載入統計 ========== */
+  let stats = {
+    answers: [],
+    battles: [],
+    maxStage: 1,
+  };
+
+  try {
+    const raw = localStorage.getItem(STATS_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (d && typeof d === 'object') {
+        if (Array.isArray(d.answers)) stats.answers = d.answers.slice(-MAX_ANSWERS);
+        if (Array.isArray(d.battles)) stats.battles = d.battles.slice(-MAX_BATTLES);
+        if (typeof d.maxStage === 'number' && d.maxStage >= 1) stats.maxStage = d.maxStage;
+      }
+    }
+  } catch(e){}
+
+  function saveStats(){
+    try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch(e){}
+  }
+
+  /* ========== 記錄 ========== */
+  function recordAnswer(correct, time){
+    stats.answers.push({
+      correct: !!correct,
+      time: Math.max(0, time | 0),
+      ts: Date.now()
+    });
+    if (stats.answers.length > MAX_ANSWERS) {
+      stats.answers = stats.answers.slice(-MAX_ANSWERS);
+    }
+    saveStats();
+  }
+
+  function recordBattle(won, stage){
+    stats.battles.push({
+      won: !!won,
+      stage: Math.max(1, stage | 0),
+      ts: Date.now()
+    });
+    if (stats.battles.length > MAX_BATTLES) {
+      stats.battles = stats.battles.slice(-MAX_BATTLES);
+    }
+    if (stage > stats.maxStage) stats.maxStage = stage;
+    saveStats();
+  }
+
+  /* ========== 掛鉤 answer ========== */
+  if (typeof window.answer === 'function'){
+    const _origAnswer = window.answer;
+    window.answer = function(idx, btn){
+      try {
+        const b = (typeof battle !== 'undefined') ? battle : null;
+        if (b && b.currentQ && !b.busy && idx !== -2){  // -2 預留給特殊呼叫
+          const correct = (idx === b.currentQ.correctIndex);
+          const time = Date.now() - (b.qStart || Date.now());
+          recordAnswer(correct, time);
+        }
+      } catch(e){}
+      return _origAnswer.apply(this, arguments);
+    };
+  }
+
+  /* ========== 掛鉤 winBattle / loseBattle ========== */
+  ['winBattle', 'loseBattle'].forEach(fn => {
+    if (typeof window[fn] === 'function'){
+      const _orig = window[fn];
+      window[fn] = function(){
+        try {
+          const won = (fn === 'winBattle');
+          let stage = 1;
+          try { if (typeof P === 'function') stage = P().stage; } catch(e){}
+          recordBattle(won, stage);
+        } catch(e){}
+        return _orig.apply(this, arguments);
+      };
+    }
+  });
+
+  /* ========== 計算五維分數 ========== */
+  function computeScores(){
+    const ans = stats.answers;
+    const bat = stats.battles;
+
+    const totalAns = ans.length;
+    const correctCount = ans.filter(a => a.correct).length;
+    const wrongCount = totalAns - correctCount;
+
+    const accuracy = totalAns > 0 ? correctCount / totalAns : 0;
+    const wrongRate = totalAns > 0 ? wrongCount / totalAns : 0;
+
+    // 答題速：7 秒為基準，越快分數越高
+    const Q_TIME = 7000;
+    const avgTime = totalAns > 0
+      ? ans.reduce((s, a) => s + a.time, 0) / totalAns
+      : Q_TIME * 0.5;
+    const speedScore = Math.max(0, Math.min(1, 1 - avgTime / Q_TIME));
+
+    // 關卡推進：30 關為滿分
+    const stageScore = Math.min(1, stats.maxStage / 30);
+
+    // 敗北率
+    const totalBat = bat.length;
+    const lostCount = bat.filter(b => !b.won).length;
+    const loseRate = totalBat > 0 ? lostCount / totalBat : 0;
+
+    return {
+      values: [accuracy, speedScore, wrongRate, stageScore, loseRate],
+      raw: {
+        accuracy, avgTime, wrongRate,
+        maxStage: stats.maxStage, loseRate,
+        totalAns, correctCount, wrongCount,
+        totalBat, lostCount
+      }
+    };
+  }
+
+  /* ========== 建立統計畫面 ========== */
+  function buildStatsScreen(){
+    if (document.getElementById('screen-stats')) return;
+
+    const screen = document.createElement('section');
+    screen.id = 'screen-stats';
+    screen.className = 'screen';
+    screen.innerHTML = `
+      <div class="hero-panel">
+        <h1 style="font-size:22px">📊 近期統計</h1>
+        <p id="statsSub">—</p>
+      </div>
+
+      <div class="panel" style="padding:14px 8px 6px">
+        <canvas id="radarCanvas" style="width:100%;height:300px;display:block"></canvas>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">數據詳情</div>
+        <div id="statsDetails"></div>
+      </div>
+
+      <button class="big-btn ghost" id="statsResetBtn" style="margin-top:4px">🗑️ 清除統計資料</button>
+    `;
+
+    const screens = document.getElementById('screens');
+    if (screens) screens.appendChild(screen);
+
+    const resetBtn = screen.querySelector('#statsResetBtn');
+    if (resetBtn){
+      resetBtn.onclick = () => {
+        try { S.click(); } catch(e){}
+        if (!confirm('確定清除所有統計資料嗎？')) return;
+        stats = { answers: [], battles: [], maxStage: 1 };
+        saveStats();
+        renderStats();
+        try { toast('統計已清除'); } catch(e){}
+      };
+    }
+  }
+
+  /* ========== 渲染統計內容 ========== */
+  function renderStats(){
+    const scores = computeScores();
+
+    const subEl = document.getElementById('statsSub');
+    if (subEl){
+      subEl.textContent = `最近 ${stats.answers.length} 次答題 · ${stats.battles.length} 場戰鬥`;
+    }
+
+    drawRadar(scores.values);
+
+    const details = document.getElementById('statsDetails');
+    if (details){
+      const r = scores.raw;
+      const rows = [
+        ['答對率', (r.accuracy * 100).toFixed(1) + '%', '#7bed9f'],
+        ['平均答題時間', (r.avgTime / 1000).toFixed(2) + ' 秒', '#8bddff'],
+        ['答錯率', (r.wrongRate * 100).toFixed(1) + '%', '#ff8b9c'],
+        ['最高關卡', '第 ' + r.maxStage + ' 關', '#ffd93d'],
+        ['敗北率', (r.loseRate * 100).toFixed(1) + '%', '#ff6b81'],
+      ];
+      details.innerHTML = rows.map(([label, value, color]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;
+          padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px">
+          <span style="color:#8b93b0;font-weight:700">${label}</span>
+          <span style="font-weight:900;color:${color}">${value}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  /* ========== 繪製雷達圖 ========== */
+  function drawRadar(values){
+    const canvas = document.getElementById('radarCanvas');
+    if (!canvas) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const W = canvas.clientWidth;
+    const H = canvas.clientHeight;
+    if (W < 10 || H < 10) return;
+
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    const cx = W / 2;
+    const cy = H / 2;
+    const radius = Math.min(W, H) / 2 - 48;
+
+    const labels = ['答對率', '答題速', '答錯率', '關卡推進', '敗北率'];
+    const colors = ['#7bed9f', '#8bddff', '#ff8b9c', '#ffd93d', '#ff6b81'];
+    const n = 5;
+    const angleStep = (Math.PI * 2) / n;
+    const offset = -Math.PI / 2;
+
+    /* --- 背景網格（4 層）--- */
+    for (let level = 1; level <= 4; level++){
+      const r = (radius * level) / 4;
+      ctx.beginPath();
+      for (let i = 0; i <= n; i++){
+        const a = offset + i * angleStep;
+        const x = cx + Math.cos(a) * r;
+        const y = cy + Math.sin(a) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(139,124,255,' + (0.06 + level * 0.05) + ')';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    /* --- 放射軸線 --- */
+    for (let i = 0; i < n; i++){
+      const a = offset + i * angleStep;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius);
+      ctx.strokeStyle = 'rgba(139,124,255,.18)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    /* --- 資料區域 --- */
+    ctx.beginPath();
+    for (let i = 0; i < n; i++){
+      const a = offset + i * angleStep;
+      const v = Math.max(0.02, Math.min(1, values[i]));
+      const x = cx + Math.cos(a) * radius * v;
+      const y = cy + Math.sin(a) * radius * v;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    grad.addColorStop(0, 'rgba(255,217,61,.5)');
+    grad.addColorStop(1, 'rgba(255,149,0,.15)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,217,61,.95)';
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = 'rgba(255,217,61,.75)';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    /* --- 資料點 --- */
+    for (let i = 0; i < n; i++){
+      const a = offset + i * angleStep;
+      const v = Math.max(0.02, Math.min(1, values[i]));
+      const x = cx + Math.cos(a) * radius * v;
+      const y = cy + Math.sin(a) * radius * v;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = colors[i];
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = colors[i];
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    /* --- 標籤 --- */
+    ctx.font = 'bold 12px -apple-system, "PingFang TC", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 0; i < n; i++){
+      const a = offset + i * angleStep;
+      const lx = cx + Math.cos(a) * (radius + 30);
+      const ly = cy + Math.sin(a) * (radius + 30);
+
+      // 標籤底色
+      const tw = ctx.measureText(labels[i]).width;
+      ctx.fillStyle = 'rgba(15,20,36,.85)';
+      ctx.beginPath();
+      ctx.roundRect(lx - tw/2 - 6, ly - 10, tw + 12, 20, 6);
+      ctx.fill();
+
+      ctx.fillStyle = colors[i];
+      ctx.fillText(labels[i], lx, ly);
+    }
+  }
+
+  /* ========== 建立導覽按鈕 ========== */
+  function buildNavButton(){
+    const navbar = document.getElementById('navbar');
+    if (!navbar) return;
+    if (navbar.querySelector('.navbtn[data-screen="stats"]')) return;
+
+    const btn = document.createElement('div');
+    btn.className = 'navbtn';
+    btn.dataset.screen = 'stats';
+    btn.innerHTML = '<span class="ic">📊</span>統計';
+    btn.onclick = () => {
+      try { S.click(); } catch(e){}
+      if (typeof switchScreen === 'function') switchScreen('stats');
+    };
+    navbar.appendChild(btn);
+  }
+
+  /* ========== 掛鉤 switchScreen，切到統計時重新繪製 ========== */
+  const _origSwitchScreen = window.switchScreen;
+  if (typeof _origSwitchScreen === 'function'){
+    window.switchScreen = function(name){
+      const r = _origSwitchScreen.apply(this, arguments);
+      if (name === 'stats'){
+        setTimeout(renderStats, 80);
+      }
+      return r;
+    };
+  }
+
+  /* ========== 啟動 ========== */
+  setTimeout(() => {
+    buildStatsScreen();
+    buildNavButton();
+    console.log('[Stats] 已載入 ✓ (答題 ' + stats.answers.length + ' · 戰鬥 ' + stats.battles.length + ')');
+  }, 600);
+
+  console.log('[Stats] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
