@@ -6877,6 +6877,734 @@ function stepDone(){
   console.log('[VIP] 就緒 ✓ 密碼提示：' + VIP_PASSWORD.length + ' 個字母的英文單字');
 })();
 </script>
+
+<script>
+/* =========================================================
+   VIP 文法入門：be 動詞階段
+   - 綁定向日葵模式
+   - 二選一 + 顏色標示 + 解釋
+   - 錯題重播直到答對
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._vipGrammarLoaded) return;
+  window._vipGrammarLoaded = true;
+
+  const PROGRESS_KEY = 'wordquest_vip_grammar_v1';
+  const VIP_MODE = 'sunflower';
+
+  console.log('[VIP-Grammar] 載入中...');
+
+  /* ========== 題庫：be 動詞階段 ========== */
+  // 每個題目都有：
+  //   parts: [{text, color}] 句子結構（空格用 {blank} 表示）
+  //   options: [正確, 錯誤]
+  //   answer: 正確索引
+  //   explain: 解釋
+  const LESSONS = [
+    {
+      id: 1,
+      parts: [
+        { text: 'I', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'a student', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['am', 'is'],
+      answer: 0,
+      explain: '<b>I</b> 後面永遠用 <b>am</b>。<br>記法：I am、You are、He/She/It is',
+    },
+    {
+      id: 2,
+      parts: [
+        { text: 'You', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'my friend', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['are', 'am'],
+      answer: 0,
+      explain: '<b>You</b> 後面用 <b>are</b>。<br>不管是「你」還是「你們」，都用 are。',
+    },
+    {
+      id: 3,
+      parts: [
+        { text: 'He', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'tall', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['is', 'are'],
+      answer: 0,
+      explain: '<b>He</b> 後面用 <b>is</b>。<br>He / She / It 都用 is。',
+    },
+    {
+      id: 4,
+      parts: [
+        { text: 'She', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'happy', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['is', 'am'],
+      answer: 0,
+      explain: '<b>She</b> 後面用 <b>is</b>。<br>She / He / It 都是 is。',
+    },
+    {
+      id: 5,
+      parts: [
+        { text: 'It', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'a cat', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['is', 'are'],
+      answer: 0,
+      explain: '<b>It</b> 後面用 <b>is</b>。<br>It 是指「一個東西」，用 is。',
+    },
+    {
+      id: 6,
+      parts: [
+        { text: 'We', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'students', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['are', 'am'],
+      answer: 0,
+      explain: '<b>We</b> 後面用 <b>are</b>。<br>We（我們）、They（他們）、You（你們）都用 are。',
+    },
+    {
+      id: 7,
+      parts: [
+        { text: 'They', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'teachers', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['are', 'is'],
+      answer: 0,
+      explain: '<b>They</b> 後面用 <b>are</b>。<br>They 是「他們」，複數用 are。',
+    },
+    {
+      id: 8,
+      parts: [
+        { text: 'I', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'tired', color: 'obj' },
+        { text: ' ', color: '' },
+        { text: 'today', color: 'time' },
+        { text: '.', color: '' },
+      ],
+      options: ['am', 'are'],
+      answer: 0,
+      explain: '<b>I</b> 後面用 <b>am</b>。<br>跟前面一樣，I 永遠配 am。',
+    },
+    {
+      id: 9,
+      parts: [
+        { text: 'You', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'kind', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['are', 'is'],
+      answer: 0,
+      explain: '<b>You</b> 後面用 <b>are</b>。<br>You 不管是單數還是複數，都用 are。',
+    },
+    {
+      id: 10,
+      parts: [
+        { text: 'He', color: 'subj' },
+        { text: ' ', color: '' },
+        { text: '{blank}', color: 'verb' },
+        { text: ' ', color: '' },
+        { text: 'my brother', color: 'obj' },
+        { text: '.', color: '' },
+      ],
+      options: ['is', 'am'],
+      answer: 0,
+      explain: '<b>He</b> 後面用 <b>is</b>。<br>He / She / It 都是 is，這是最重要的規則。',
+    },
+  ];
+
+  /* ========== 顏色定義 ========== */
+  const COLORS = {
+    subj: { fg: '#5ee7ff', bg: 'rgba(94,231,255,.12)', label: '主詞' },
+    verb: { fg: '#ff5e78', bg: 'rgba(255,94,120,.12)', label: '動詞' },
+    obj:  { fg: '#7cffb2', bg: 'rgba(124,255,178,.12)', label: '補語' },
+    time: { fg: '#ffd93d', bg: 'rgba(255,217,61,.12)', label: '時間' },
+  };
+
+  /* ========== 進度 ========== */
+  let progress = {
+    completed: false,
+    bestScore: 0,
+    totalCorrect: 0,
+    totalWrong: 0,
+  };
+
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (raw){
+      const d = JSON.parse(raw);
+      if (d && typeof d === 'object'){
+        progress = Object.assign(progress, d);
+      }
+    }
+  } catch(e){}
+
+  function saveProgress(){
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch(e){}
+  }
+
+  /* ========== CSS ========== */
+  const style = document.createElement('style');
+  style.textContent = `
+#vgOverlay{
+  position:fixed;inset:0;z-index:2200;
+  display:none;flex-direction:column;
+  background:radial-gradient(ellipse at center, rgba(30,20,60,.96), rgba(4,6,12,.99));
+  overflow:hidden;
+}
+#vgOverlay.show{display:flex;animation:vgFade .35s ease;}
+@keyframes vgFade{from{opacity:0}to{opacity:1}}
+
+.vg-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 18px;padding-top:calc(14px + env(safe-area-inset-top));
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:rgba(12,15,26,.7);backdrop-filter:blur(10px);
+}
+.vg-title{
+  font-size:14px;font-weight:900;letter-spacing:1px;
+  background:linear-gradient(135deg,#7cffb2,#5ee7ff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.vg-progress{
+  font-size:11px;color:#8b93b0;font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+.vg-close{
+  width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);color:#c7cce0;
+  font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .15s;
+}
+.vg-close:active{transform:scale(.88)}
+
+.vg-body{
+  flex:1;display:flex;flex-direction:column;
+  padding:24px 18px;overflow-y:auto;
+  max-width:540px;width:100%;margin:0 auto;
+}
+
+.vg-hint{
+  text-align:center;font-size:11.5px;color:#6f7796;
+  letter-spacing:2px;font-weight:700;margin-bottom:14px;
+}
+
+.vg-sentence{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:26px 20px;
+  margin-bottom:24px;
+  text-align:center;
+  font-size:26px;font-weight:800;letter-spacing:.5px;
+  line-height:1.5;
+  animation:vgSentenceIn .45s cubic-bezier(.2,1.2,.4,1);
+}
+@keyframes vgSentenceIn{
+  from{opacity:0;transform:translateY(14px) scale(.96)}
+  to{opacity:1;transform:none}
+}
+
+.vg-word{
+  display:inline-block;
+  padding:3px 8px;
+  margin:0 2px;
+  border-radius:8px;
+  transition:all .3s;
+}
+
+.vg-blank{
+  display:inline-block;
+  min-width:80px;
+  padding:3px 14px;
+  margin:0 2px;
+  border-radius:8px;
+  background:rgba(255,94,120,.15);
+  border:2px dashed rgba(255,94,120,.55);
+  color:#ff8b9c;
+  animation:vgBlankPulse 1.6s ease-in-out infinite;
+}
+@keyframes vgBlankPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,94,120,.4)}
+  50%{box-shadow:0 0 0 8px rgba(255,94,120,0)}
+}
+
+.vg-legend{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
+  margin-bottom:20px;
+  font-size:10.5px;font-weight:700;
+}
+.vg-legend .lg-item{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:8px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  color:#8b93b0;
+}
+.vg-legend .lg-dot{
+  width:9px;height:9px;border-radius:3px;
+}
+
+.vg-options{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;margin-top:auto;padding-top:12px;
+}
+.vg-option{
+  padding:20px 12px;border-radius:16px;
+  border:1.5px solid rgba(255,255,255,.14);
+  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  color:#e8ecf5;font-family:inherit;
+  font-size:22px;font-weight:900;letter-spacing:1px;
+  cursor:pointer;
+  transition:transform .12s, background .15s, border-color .2s;
+  position:relative;overflow:hidden;
+}
+.vg-option::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 0%, rgba(94,231,255,.15), transparent 70%);
+  opacity:0;transition:opacity .25s;
+  pointer-events:none;
+}
+.vg-option:hover::before{opacity:1}
+.vg-option:active{transform:scale(.96)}
+.vg-option.correct{
+  background:linear-gradient(160deg,rgba(46,213,115,.3),rgba(46,213,115,.1));
+  border-color:#7bed9f;
+  color:#c7ffe0;
+  box-shadow:0 0 30px -6px rgba(46,213,115,.7);
+}
+.vg-option.wrong{
+  background:linear-gradient(160deg,rgba(255,71,87,.3),rgba(255,71,87,.1));
+  border-color:#ff8b9c;
+  color:#ffd6dd;
+  animation:vgOptShake .4s;
+}
+@keyframes vgOptShake{
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-8px)}
+  75%{transform:translateX(8px)}
+}
+.vg-option.dim{opacity:.35;pointer-events:none}
+
+.vg-explain{
+  margin-top:16px;padding:16px 18px;
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+  font-size:13px;line-height:1.8;color:#c7cce0;
+  animation:vgExplainIn .4s cubic-bezier(.2,1.2,.4,1);
+  position:relative;
+}
+.vg-explain::before{
+  content:'';position:absolute;left:0;top:12px;bottom:12px;
+  width:3px;border-radius:2px;
+  background:linear-gradient(180deg,#5ee7ff,#7cffb2);
+}
+.vg-explain b{color:#7cffb2;font-weight:900}
+.vg-explain.good{border-color:rgba(46,213,115,.4)}
+.vg-explain.bad{border-color:rgba(255,71,87,.4)}
+.vg-explain.bad::before{background:linear-gradient(180deg,#ff8b9c,#ff5e78)}
+@keyframes vgExplainIn{
+  from{opacity:0;transform:translateY(-8px)}
+  to{opacity:1;transform:none}
+}
+
+.vg-next{
+  margin-top:14px;padding:14px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,#7c5cff,#4a8cff);
+  color:#fff;font-family:inherit;
+  font-size:15px;font-weight:900;letter-spacing:2px;
+  cursor:pointer;
+  box-shadow:0 8px 24px -6px rgba(110,90,255,.7);
+  animation:vgNextIn .4s cubic-bezier(.2,1.4,.4,1) backwards;
+  animation-delay:.25s;
+}
+.vg-next:active{transform:scale(.97)}
+@keyframes vgNextIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+
+/* 完成畫面 */
+.vg-done{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:16px;padding:30px 20px;
+  flex:1;
+}
+.vg-done-icon{
+  font-size:72px;
+  filter:drop-shadow(0 0 30px rgba(255,217,61,.8));
+  animation:vgDoneIcon .8s cubic-bezier(.2,1.6,.4,1);
+}
+@keyframes vgDoneIcon{
+  0%{transform:scale(0) rotate(-30deg);opacity:0}
+  60%{transform:scale(1.15) rotate(8deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+.vg-done-title{
+  font-size:26px;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(135deg,#fff8d0,#ffd93d 40%,#ff9500);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px rgba(255,217,61,.6));
+}
+.vg-done-sub{font-size:13px;color:#8b93b0;line-height:1.7;letter-spacing:.5px}
+.vg-done-stats{
+  display:flex;gap:26px;margin:14px 0 4px;
+}
+.vg-done-stat{display:flex;flex-direction:column;gap:4px}
+.vg-done-stat .lab{font-size:10.5px;color:#8b93b0;letter-spacing:2px;font-weight:700}
+.vg-done-stat .val{font-size:24px;font-weight:900;color:#7cffb2;font-variant-numeric:tabular-nums}
+.vg-done-btn{
+  margin-top:12px;padding:15px 40px;border-radius:999px;border:none;
+  background:linear-gradient(135deg,#7cffb2,#5ee7ff);
+  color:#052012;font-family:inherit;
+  font-size:15px;font-weight:900;letter-spacing:3px;
+  cursor:pointer;
+  box-shadow:0 8px 28px -6px rgba(124,255,178,.7);
+}
+.vg-done-btn:active{transform:scale(.96)}
+  `;
+  document.head.appendChild(style);
+
+  /* ========== Overlay ========== */
+  const overlay = document.createElement('div');
+  overlay.id = 'vgOverlay';
+  document.body.appendChild(overlay);
+
+  /* ========== 遊戲狀態 ========== */
+  let state = {
+    queue: [],
+    idx: 0,
+    correct: 0,
+    wrong: 0,
+    retryMode: false,
+    answered: false,
+    currentLesson: null,
+  };
+
+  /* ========== 渲染句子 ========== */
+  function renderSentence(parts){
+    return parts.map(p => {
+      if (p.text === '{blank}'){
+        return `<span class="vg-blank">______</span>`;
+      }
+      if (!p.color){
+        return `<span>${p.text}</span>`;
+      }
+      const c = COLORS[p.color];
+      return `<span class="vg-word" style="color:${c.fg};background:${c.bg}">${p.text}</span>`;
+    }).join('');
+  }
+
+  /* ========== 渲染題目 ========== */
+  function renderQuestion(){
+    const lesson = state.currentLesson;
+    if (!lesson) return;
+
+    const total = state.queue.length;
+    const cur = state.idx + 1;
+
+    overlay.innerHTML = `
+      <div class="vg-header">
+        <div class="vg-title">📖 文法入門 · be 動詞</div>
+        <div class="vg-progress">第 ${cur} / ${total} 題</div>
+        <button class="vg-close" id="vgClose">✕</button>
+      </div>
+      <div class="vg-body">
+        <div class="vg-hint">選出正確的答案</div>
+
+        <div class="vg-sentence" id="vgSentence">
+          ${renderSentence(lesson.parts)}
+        </div>
+
+        <div class="vg-legend">
+          <div class="lg-item"><span class="lg-dot" style="background:#5ee7ff"></span>主詞（誰）</div>
+          <div class="lg-item"><span class="lg-dot" style="background:#ff5e78"></span>動詞（做什麼）</div>
+          <div class="lg-item"><span class="lg-dot" style="background:#7cffb2"></span>補語（是什麼）</div>
+          <div class="lg-item"><span class="lg-dot" style="background:#ffd93d"></span>時間 / 地點</div>
+        </div>
+
+        <div class="vg-options" id="vgOptions">
+          ${lesson.options.map((opt, i) => `
+            <button class="vg-option" data-idx="${i}">${opt}</button>
+          `).join('')}
+        </div>
+
+        <div id="vgFeedback"></div>
+      </div>
+    `;
+
+    // 綁定關閉
+    const closeBtn = overlay.querySelector('#vgClose');
+    if (closeBtn) closeBtn.onclick = closeLesson;
+
+    // 綁定選項
+    overlay.querySelectorAll('.vg-option').forEach(btn => {
+      btn.onclick = () => handleAnswer(parseInt(btn.dataset.idx, 10), btn);
+    });
+
+    state.answered = false;
+  }
+
+  /* ========== 處理作答 ========== */
+  function handleAnswer(picked, btn){
+    if (state.answered) return;
+    state.answered = true;
+
+    const lesson = state.currentLesson;
+    const correct = (picked === lesson.answer);
+
+    // 標記選項
+    overlay.querySelectorAll('.vg-option').forEach(b => {
+      const idx = parseInt(b.dataset.idx, 10);
+      if (idx === lesson.answer) b.classList.add('correct');
+      else if (idx === picked) b.classList.add('wrong');
+      else b.classList.add('dim');
+      b.disabled = true;
+    });
+
+    // 統計
+    if (correct){
+      state.correct++;
+      try { S.correct(); } catch(e){}
+    } else {
+      state.wrong++;
+      try { S.wrong(); } catch(e){}
+    }
+
+    // 解釋 + 下一題按鈕
+    const feedback = overlay.querySelector('#vgFeedback');
+    const isLast = (state.idx >= state.queue.length - 1) && correct;
+
+    feedback.innerHTML = `
+      <div class="vg-explain ${correct ? 'good' : 'bad'}">
+        ${correct ? '✅ 答對了！<br>' : '❌ 不對喔，正確答案是「' + lesson.options[lesson.answer] + '」<br>'}
+        ${lesson.explain}
+      </div>
+      <button class="vg-next" id="vgNext">
+        ${isLast ? '完成課程 →' : correct ? '下一題 →' : '再試一次 →'}
+      </button>
+    `;
+
+    overlay.querySelector('#vgNext').onclick = () => {
+      if (!correct){
+        // 答錯：加入錯題佇列（重播）
+        state.queue.push(lesson);
+        state.idx++;
+        nextQuestion();
+      } else {
+        state.idx++;
+        nextQuestion();
+      }
+    };
+  }
+
+  /* ========== 下一題 ========== */
+  function nextQuestion(){
+    if (state.idx >= state.queue.length){
+      finishLesson();
+      return;
+    }
+    state.currentLesson = state.queue[state.idx];
+    renderQuestion();
+  }
+
+  /* ========== 完成課程 ========== */
+  function finishLesson(){
+    // 更新進度
+    progress.completed = true;
+    progress.bestScore = Math.max(progress.bestScore, state.correct);
+    progress.totalCorrect += state.correct;
+    progress.totalWrong += state.wrong;
+    saveProgress();
+
+    const accuracy = (state.correct + state.wrong) > 0
+      ? Math.round(state.correct / (state.correct + state.wrong) * 100)
+      : 100;
+
+    overlay.innerHTML = `
+      <div class="vg-header">
+        <div class="vg-title">📖 文法入門</div>
+        <button class="vg-close" id="vgClose">✕</button>
+      </div>
+      <div class="vg-done">
+        <div class="vg-done-icon">🌟</div>
+        <div class="vg-done-title">階段完成！</div>
+        <div class="vg-done-sub">
+          你已經掌握了 be 動詞的三個基本規則：<br>
+          <b style="color:#5ee7ff">I am</b> ·
+          <b style="color:#ff5e78">You are</b> ·
+          <b style="color:#7cffb2">He / She / It is</b>
+        </div>
+        <div class="vg-done-stats">
+          <div class="vg-done-stat">
+            <span class="lab">答對</span>
+            <span class="val">${state.correct}</span>
+          </div>
+          <div class="vg-done-stat">
+            <span class="lab">答錯</span>
+            <span class="val" style="color:#ff8b9c">${state.wrong}</span>
+          </div>
+          <div class="vg-done-stat">
+            <span class="lab">正確率</span>
+            <span class="val" style="color:#ffd93d">${accuracy}%</span>
+          </div>
+        </div>
+        <button class="vg-done-btn" id="vgDoneBtn">回到主頁</button>
+      </div>
+    `;
+
+    overlay.querySelector('#vgClose').onclick = closeLesson;
+    overlay.querySelector('#vgDoneBtn').onclick = closeLesson;
+
+    try { S.win(); } catch(e){}
+    setTimeout(() => { try { AudioSys.sfx(1568, .3, 'sine', .12); } catch(e){} }, 250);
+    setTimeout(() => { try { AudioSys.sfx(2093, .4, 'sine', .1); } catch(e){} }, 450);
+  }
+
+  /* ========== 關閉課程 ========== */
+  function closeLesson(){
+    try { S.click(); } catch(e){}
+    overlay.classList.remove('show');
+    setTimeout(() => { overlay.innerHTML = ''; }, 350);
+
+    // 刷新主頁（如果進度有更新）
+    try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+  }
+
+  /* ========== 開始課程 ========== */
+  function startLesson(){
+    state.queue = [...LESSONS];
+    state.idx = 0;
+    state.correct = 0;
+    state.wrong = 0;
+    state.currentLesson = state.queue[0];
+
+    overlay.classList.add('show');
+    renderQuestion();
+
+    try { S.click(); } catch(e){}
+    console.log('[VIP-Grammar] 開始課程 · ' + LESSONS.length + ' 題');
+  }
+
+  /* ========== 注入「文法入門」按鈕（僅 VIP 模式） ========== */
+  function injectGrammarButton(){
+    if (state.mode !== VIP_MODE){
+      const existing = document.getElementById('vipGrammarBtn');
+      if (existing) existing.remove();
+      return;
+    }
+
+    // 避免重複
+    if (document.getElementById('vipGrammarBtn')) return;
+
+    const homeScreen = document.getElementById('screen-home');
+    if (!homeScreen) return;
+
+    // 找「開始戰鬥」按鈕，插在它後面
+    const startBtn = document.getElementById('startBattleBtn');
+    if (!startBtn) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'vipGrammarBtn';
+    btn.className = 'big-btn';
+    btn.style.cssText = `
+      background:linear-gradient(135deg,#7cffb2,#5ee7ff);
+      color:#052012;
+      box-shadow:0 8px 24px -6px rgba(124,255,178,.7),inset 0 1px 0 rgba(255,255,255,.5);
+    `;
+    btn.textContent = progress.completed
+      ? '📖 文法入門 · 已通關'
+      : '📖 文法入門 · be 動詞';
+
+    btn.onclick = () => {
+      try { S.click(); } catch(e){}
+      startLesson();
+    };
+
+    startBtn.parentNode.insertBefore(btn, startBtn.nextSibling);
+
+    // 標題下面加一行提示
+    if (!document.getElementById('vipGrammarHint')){
+      const hint = document.createElement('div');
+      hint.id = 'vipGrammarHint';
+      hint.style.cssText = `
+        text-align:center;font-size:11px;color:#5ee7ff;
+        font-weight:700;letter-spacing:1.5px;margin:-4px 0 12px;
+      `;
+      hint.textContent = '▸ 從最簡單的 be 動詞開始';
+      btn.parentNode.insertBefore(hint, btn.nextSibling);
+    }
+  }
+
+  /* ========== 監聽模式切換：每次 renderAll 後檢查 ========== */
+  const _prevRenderAll = window.renderAll;
+  window.renderAll = function(){
+    const r = _prevRenderAll ? _prevRenderAll.apply(this, arguments) : undefined;
+    setTimeout(injectGrammarButton, 100);
+    return r;
+  };
+
+  /* ========== 監聽 switchScreen，回主頁時也檢查 ========== */
+  const _prevSwitchScreen = window.switchScreen;
+  if (typeof _prevSwitchScreen === 'function'){
+    window.switchScreen = function(name){
+      const r = _prevSwitchScreen.apply(this, arguments);
+      if (name === 'home') setTimeout(injectGrammarButton, 120);
+      return r;
+    };
+  }
+
+  /* ========== 定期檢查（保險） ========== */
+  setInterval(() => {
+    if (state.mode === VIP_MODE && !document.getElementById('vipGrammarBtn')){
+      injectGrammarButton();
+    } else if (state.mode !== VIP_MODE && document.getElementById('vipGrammarBtn')){
+      const btn = document.getElementById('vipGrammarBtn');
+      const hint = document.getElementById('vipGrammarHint');
+      if (btn) btn.remove();
+      if (hint) hint.remove();
+    }
+  }, 1500);
+
+  console.log('[VIP-Grammar] 就緒 ✓ · ' + LESSONS.length + ' 題 be 動詞');
+})();
+</script>
   
 </body>
 </html>
