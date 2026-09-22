@@ -11105,6 +11105,160 @@ if (!isVIP) {
   console.log('[WrongBook v3] 載入完了');
 })();
 </script>
+
+<script>
+/* =========================================================
+   WB-Hook：把 answer hook 補回來
+   - 自己管理錯題本讀寫（不依賴其他補丁的變數）
+   - 答錯時直接呼叫 window.wbSpeak
+   ========================================================= */
+(function(){
+  'use strict';
+  if (window._wbHookLoaded) return;
+  window._wbHookLoaded = true;
+
+  const KEY = 'wordquest_wrongbook_v1';
+  console.log('[WB-Hook] 載入...');
+
+  /* ========== 錯題本讀寫 ========== */
+  let book = { words: {} };
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw){
+      const d = JSON.parse(raw);
+      if (d && d.words && typeof d.words === 'object'){
+        book.words = d.words;
+      }
+    }
+  } catch(e){}
+
+  function saveBook(){
+    try { localStorage.setItem(KEY, JSON.stringify(book)); } catch(e){}
+  }
+
+  function recordWrong(wordId){
+    if (!wordId) return;
+    if (!book.words[wordId]){
+      book.words[wordId] = { wrongCount: 0, correctStreak: 0, mastered: false, lastWrongAt: 0 };
+    }
+    const w = book.words[wordId];
+    w.wrongCount++;
+    w.correctStreak = 0;
+    w.mastered = false;
+    w.lastWrongAt = Date.now();
+    saveBook();
+
+    if (!window._wbThisBattleWrong) window._wbThisBattleWrong = [];
+    if (window._wbThisBattleWrong.indexOf(wordId) === -1){
+      window._wbThisBattleWrong.push(wordId);
+    }
+  }
+
+  function recordCorrect(wordId){
+    if (!wordId) return;
+    const w = book.words[wordId];
+    if (!w) return;
+    w.correctStreak = (w.correctStreak || 0) + 1;
+    if (w.correctStreak >= 2){
+      w.mastered = true;
+    }
+    saveBook();
+  }
+
+  /* ========== Hook answer ========== */
+  if (typeof window.answer === 'function'){
+    const _prevAnswer = window.answer;
+
+    window.answer = function(idx, btn){
+      let willProcess = false;
+      let wasCorrect = false;
+      let word = null;
+
+      try {
+        if (typeof battle !== 'undefined' && battle && !battle.busy && !battle.over && battle.currentQ){
+          willProcess = true;
+          wasCorrect = (idx !== -1) && (idx === battle.currentQ.correctIndex);
+          word = battle.currentQ.word;
+        }
+      } catch(e){}
+
+      // 答錯 → 在「使用者點擊呼叫棧內」同步唸讀音
+      if (willProcess && word && !wasCorrect){
+        if (typeof window.wbSpeak === 'function'){
+          window.wbSpeak(word.w, 0.75);
+        }
+      }
+
+      const r = _prevAnswer.apply(this, arguments);
+
+      // 非同步記錄
+      if (willProcess && word){
+        if (wasCorrect){
+          const meta = book.words[word.w];
+          const wasMastered = meta ? meta.mastered : false;
+          recordCorrect(word.w);
+          const afterMeta = book.words[word.w];
+          const isMasteredNow = afterMeta ? afterMeta.mastered : false;
+          // 剛掌握 → 唸一次（正回饋）
+          if (!wasMastered && isMasteredNow){
+            setTimeout(() => {
+              if (typeof window.wbSpeak === 'function') window.wbSpeak(word.w, 0.9);
+            }, 200);
+          }
+        } else {
+          recordWrong(word.w);
+        }
+      }
+
+      return r;
+    };
+
+    console.log('[WB-Hook] answer フック完了');
+  } else {
+    console.warn('[WB-Hook] 找不到 window.answer');
+  }
+
+  /* ========== 重置本場錯題 ========== */
+  const _prevStartBattle = window.startBattle;
+  if (typeof _prevStartBattle === 'function'){
+    window.startBattle = function(){
+      window._wbThisBattleWrong = [];
+      return _prevStartBattle.apply(this, arguments);
+    };
+  }
+
+  /* ========== 修正 wrongBook API 的資料同步 ========== */
+  // 讓外部讀到的錯題本跟這個 hook 用同一份資料
+  const _prevWrongBook = window.wrongBook;
+  if (_prevWrongBook){
+    window.wrongBook = {
+      getAll: () => book.words,
+      getReviewWords: () => Object.keys(book.words).filter(id => !book.words[id].mastered),
+      getMasteredWords: () => Object.keys(book.words).filter(id => book.words[id].mastered),
+      count: () => Object.keys(book.words).length,
+      reviewCount: () => Object.keys(book.words).filter(id => !book.words[id].mastered).length,
+      masteredCount: () => Object.keys(book.words).filter(id => book.words[id].mastered).length,
+      clear: () => { book = { words: {} }; saveBook(); },
+      remove: (id) => { delete book.words[id]; saveBook(); },
+      markMastered: (id) => {
+        if (book.words[id]){
+          book.words[id].mastered = true;
+          book.words[id].correctStreak = 2;
+          saveBook();
+        }
+      },
+    };
+    console.log('[WB-Hook] wrongBook API 已同步');
+  }
+
+  setTimeout(() => {
+    console.log('[WB-Hook] 就緒 ✓ · 錯題', Object.keys(book.words).length, '· 待複習',
+      Object.keys(book.words).filter(id => !book.words[id].mastered).length);
+  }, 1500);
+
+  console.log('[WB-Hook] 載入完了');
+})();
+</script>
     
 </body>
 </html>
