@@ -9345,5 +9345,145 @@ if (!isVIP) {
 })();
 </script>
 
+<script>
+/* =========================================================
+   TutFix4：修復教學卡在抽卡引導
+   - 偵測「戰鬥結算未關 + 引導已跳到抽卡」→ 自動修復
+   - 使用者點繼續前進時，主動觸發關閉流程
+   - 保險：定期檢查 + 強制恢復引導
+   ========================================================= */
+(function(){
+  'use strict';
+  if (window._tutFix4Loaded) return;
+  window._tutFix4Loaded = true;
+
+  console.log('[TutFix4] 載入...');
+
+  /* ========== 強制關閉戰鬥結算 ========== */
+  function forceCloseBattle(){
+    const overlay = document.getElementById('victoryOverlay');
+    const box = document.getElementById('battleResult');
+    const bui = document.getElementById('battle-ui');
+
+    if (overlay) {
+      overlay.classList.remove('show');
+      setTimeout(() => { overlay.innerHTML = ''; }, 400);
+    }
+    if (box) {
+      box.classList.add('hidden');
+      box.innerHTML = '';
+      box.style.opacity = '';
+      box.style.pointerEvents = '';
+      box.style.display = '';
+      box.style.transform = '';
+    }
+    if (bui) {
+      bui.classList.add('closed');
+      bui.style.display = '';
+      bui.style.pointerEvents = '';
+    }
+
+    try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+    try {
+      if (typeof AudioSys !== 'undefined' && AudioSys.playMusic) {
+        const s = (typeof currentScreen !== 'undefined') ? currentScreen : 'home';
+        AudioSys.playMusic(s === 'gacha' ? 'gacha' : 'home');
+      }
+    } catch(e){}
+
+    console.log('[TutFix4] 戰鬥結算已強制關閉');
+  }
+
+  /* ========== 重新把 spotlight 定位到「抽卡」 ========== */
+  function restoreSpotlightToGacha(){
+    const sp  = document.getElementById('tutSpotlight');
+    const tip = document.getElementById('tutTip');
+    const bl  = document.getElementById('tutBlocker');
+    const gachaNav = document.querySelector('.navbtn[data-screen="gacha"]');
+    if (!gachaNav || !sp || !tip) return;
+
+    const r = gachaNav.getBoundingClientRect();
+
+    sp.style.display = 'block';
+    sp.style.left   = (r.left - 8) + 'px';
+    sp.style.top    = (r.top  - 8) + 'px';
+    sp.style.width  = (r.width  + 16) + 'px';
+    sp.style.height = (r.height + 16) + 'px';
+
+    tip.style.display = 'block';
+    const tipW = tip.offsetWidth || 280;
+    tip.style.left = Math.max(10,
+      Math.min(window.innerWidth - tipW - 10, r.left + r.width/2 - tipW/2)) + 'px';
+    tip.style.top = Math.max(10, r.top - 82) + 'px';
+
+    const textEl = document.getElementById('tutTipText');
+    if (textEl) textEl.innerHTML = '去抽卡吧！點下面的「抽卡」';
+
+    if (bl) bl.classList.add('active');
+
+    console.log('[TutFix4] Spotlight 已恢復到抽卡按鈕');
+  }
+
+  /* ========== 定期檢查：偵測異常狀態 ========== */
+  setInterval(function(){
+    const sp = document.getElementById('tutSpotlight');
+    if (!sp || sp.style.display === 'none') return;
+
+    const gachaNav = document.querySelector('.navbtn[data-screen="gacha"]');
+    if (!gachaNav) return;
+
+    const gr = gachaNav.getBoundingClientRect();
+    const sr = sp.getBoundingClientRect();
+
+    // 判斷 spotlight 是否在「抽卡」按鈕上（±30px 容差）
+    const onGacha = Math.abs(sr.left - gr.left) < 30
+                 && Math.abs(sr.top  - gr.top)  < 30;
+    if (!onGacha) return;
+
+    // 檢查戰鬥結算是否還在
+    const overlay = document.getElementById('victoryOverlay');
+    const box = document.getElementById('battleResult');
+    const bui = document.getElementById('battle-ui');
+
+    const battleOpen =
+      (overlay && overlay.classList.contains('show')) ||
+      (box && !box.classList.contains('hidden') && box.style.display !== 'none') ||
+      (bui && !bui.classList.contains('closed'));
+
+    if (battleOpen) {
+      console.log('[TutFix4] 偵測到異常：戰鬥未關 + 引導已跳到抽卡 → 修復中');
+      forceCloseBattle();
+      setTimeout(restoreSpotlightToGacha, 400);
+    }
+  }, 300);
+
+  /* ========== 使用者點「繼續前進」時，主動觸發關閉 ========== */
+  document.addEventListener('pointerdown', function(e){
+    const t = e.target;
+    if (!t || !t.closest) return;
+
+    // 點到 Victory 的繼續前進按鈕
+    if (t.closest('#victoryBtn')) {
+      console.log('[TutFix4] 偵測到使用者點 Victory 按鈕');
+      // 主動觸發隱藏的 resultBtn，讓 [Fix] 處理
+      const rb = document.getElementById('resultBtn');
+      if (rb) {
+        try { rb.click(); } catch(err){}
+      }
+      // 備用：150ms 後強制關閉
+      setTimeout(forceCloseBattle, 150);
+      return;
+    }
+
+    // 點到隱藏的 resultBtn
+    if (t.closest('#resultBtn')) {
+      setTimeout(forceCloseBattle, 200);
+    }
+  }, true);
+
+  console.log('[TutFix4] 就緒 ✓');
+})();
+</script>
+  
 </body>
 </html>
