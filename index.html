@@ -8172,6 +8172,14 @@ if (!isVIP) {
     'inhibit':      '抑制する',
     'initiate':     '開始する',
     'innovate':     '革新する',
+        /* ===== 學術考試選單 ===== */
+    '學術考試模式': '学術試験モード',
+    '選擇考試級別開始挑戰': '試験レベルを選んで挑戦しよう',
+    '托福初級': 'TOEFL初級',
+    'TOEFL 基礎學術字 · 50 字': 'TOEFL基礎学術語 · 50単語',
+    '雅思初級': 'IELTS初級',
+    'IELTS 基礎學術字 · 50 字': 'IELTS基礎学術語 · 50単語',
+    '返回主頁': 'ホームに戻る',
   };
   };
 
@@ -8182,15 +8190,29 @@ if (!isVIP) {
 
   if (typeof _prevWordOf === 'function'){
     window.wordOf = function(id){
-      const w = _prevWordOf.apply(this, arguments);
+      let w;
+      try {
+        w = _prevWordOf.apply(this, arguments);
+      } catch(e){
+        console.warn('[JA-Word] wordOf error:', e);
+        return null;
+      }
       if (!w) return w;
 
       const lang = window._i18nCurrentLang || 'zh';
-      if (lang === 'ja' && window.JA_WORD_MEANINGS[w.w]){
-        // 元のオブジェクトを壊さないようコピーを返す
-        return Object.assign({}, w, { zh: window.JA_WORD_MEANINGS[w.w] });
+
+      // 第一次碰到的時候，記住原始中文
+      if (w._origZh === undefined) w._origZh = w.zh;
+
+      if (lang === 'ja'){
+        const ja = window.JA_WORD_MEANINGS && window.JA_WORD_MEANINGS[w.w];
+        if (ja) w.zh = ja;
+        else w.zh = w._origZh;   // 沒翻譯的，還原中文
+      } else {
+        w.zh = w._origZh;        // 中文模式一律還原
       }
-      return w;
+
+      return w;   // ← 關鍵：回傳「同一個物件」，不是複製
     };
     console.log('[JA-Word] wordOf フック完了');
   } else {
