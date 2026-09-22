@@ -4093,9 +4093,11 @@ init();
 
       // ★★★ 關鍵：在「使用者點擊 answer 的呼叫棧內」同步觸發 speak
       // 這樣 iOS 就不會擋
-      if (willProcess && word && !wasCorrect){
-        speak(word.w, 0.75);
-      }
+if (willProcess && word && !wasCorrect){
+  if (typeof window.wbSpeak === 'function'){
+    window.wbSpeak(word.w, 0.75);
+  }
+}
 
       // 呼叫原本的 answer
       const r = _prevAnswer.apply(this, arguments);
@@ -4109,9 +4111,11 @@ init();
           const afterMeta = book.words[word.w];
           const isMasteredNow = afterMeta ? afterMeta.mastered : false;
           // 只在「剛掌握」那一刻唸一次
-          if (!wasMastered && isMasteredNow){
-            setTimeout(() => speak(word.w, 0.9), 200);
-          }
+if (!wasMastered && isMasteredNow){
+  setTimeout(() => {
+    if (typeof window.wbSpeak === 'function') window.wbSpeak(word.w, 0.9);
+  }, 200);
+}
         } else {
           recordWrong(word.w);
         }
