@@ -8248,6 +8248,89 @@ if (!isVIP) {
   console.log('[JA-Word v2] ロード完了');
 })();
 </script>
+
+<script>
+/* =========================================================
+   SaveFix：修復新模式進度丟失
+   1. 啟動時從 localStorage 恢復新模式進度
+   2. 每次 save() 前先合併 localStorage 的新模式進度
+   ========================================================= */
+(function(){
+  'use strict';
+  if (window._saveFixLoaded) return;
+  window._saveFixLoaded = true;
+
+  const SAVE_KEY = 'wordquest_multi_v1';
+  const EXTRA_MODES = ['toeflBasic', 'ieltsBasic', 'geptHigh', 'sunflower'];
+
+  console.log('[SaveFix] 載入中...');
+
+  function mergeFromStorage(){
+    let changed = false;
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      const saved = JSON.parse(raw);
+      if (!saved || !saved.progress || !state.progress) return false;
+
+      EXTRA_MODES.forEach(mode => {
+        const savedMode = saved.progress[mode];
+        if (!savedMode || typeof savedMode !== 'object') return;
+
+        if (!state.progress[mode]) {
+          state.progress[mode] = { cards: {}, team: '', stage: 1 };
+        }
+        const stateMode = state.progress[mode];
+        if (!stateMode.cards) stateMode.cards = {};
+
+        // 合併卡片：不覆蓋 state 已有的
+        Object.keys(savedMode.cards || {}).forEach(id => {
+          if (!stateMode.cards[id]) {
+            stateMode.cards[id] = savedMode.cards[id];
+            changed = true;
+          }
+        });
+
+        // 取較大的 stage
+        if (typeof savedMode.stage === 'number' && savedMode.stage > (stateMode.stage || 1)) {
+          stateMode.stage = savedMode.stage;
+          changed = true;
+        }
+        // team 只在 state 沒有時採用
+        if (typeof savedMode.team === 'string' && !stateMode.team) {
+          stateMode.team = savedMode.team;
+          changed = true;
+        }
+      });
+    } catch(e) {
+      console.warn('[SaveFix] merge 失敗:', e);
+    }
+    return changed;
+  }
+
+  // 包裝 save()：保存前先合併
+  const _origSave = window.save;
+  if (typeof _origSave === 'function'){
+    window.save = function(){
+      mergeFromStorage();
+      return _origSave.apply(this, arguments);
+    };
+  }
+
+  // 啟動時合併一次
+  setTimeout(() => {
+    if (mergeFromStorage()){
+      try { _origSave.call(window); } catch(e){}
+      if (typeof renderAll === 'function') renderAll();
+      console.log('[SaveFix] 啟動時合併新模式進度 ✓');
+    } else {
+      console.log('[SaveFix] 無需合併');
+    }
+  }, 2500);
+
+  console.log('[SaveFix] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
