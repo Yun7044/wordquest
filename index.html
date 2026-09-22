@@ -10859,26 +10859,23 @@ if (!isVIP) {
 
 <script>
 /* =========================================================
-   📕 錯題本系統（修正版）
-   - 錯題追蹤
-   - 複習佇列（連續答對 2 次 → 已掌握）
-   - 答錯才唸讀音，答對不唸
-   - 掌握時刻唸一次（正回饋）
+   WrongBook v3 — 完整重寫版
+   核心修正：答錯時「點擊當下」直接唸，不延遲
    ========================================================= */
 (function(){
   'use strict';
-  if (window._wrongbookLoaded) return;
-  window._wrongbookLoaded = true;
+  if (window._wrongbookV3Loaded) return;
+  window._wrongbookV3Loaded = true;
 
-  var KEY = 'wordquest_wrongbook_v1';
-  console.log('[WrongBook] 載入中...');
+  const KEY = 'wordquest_wrongbook_v1';
+  console.log('[WrongBook v3] 載入中...');
 
   /* ========== 資料 ========== */
-  var book = { words: {} };
+  let book = { words: {} };
   try {
-    var raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY);
     if (raw){
-      var d = JSON.parse(raw);
+      const d = JSON.parse(raw);
       if (d && d.words && typeof d.words === 'object'){
         book.words = d.words;
       }
@@ -10889,66 +10886,94 @@ if (!isVIP) {
     try { localStorage.setItem(KEY, JSON.stringify(book)); } catch(e){}
   }
 
-  /* ========== 發音 ========== */
+  /* ========== 發音（含 iOS 解鎖） ========== */
+  let voiceUnlocked = false;
+
   function pickVoice(){
     if (typeof speechSynthesis === 'undefined') return null;
-    var voices = speechSynthesis.getVoices();
+    const voices = speechSynthesis.getVoices();
     if (!voices || !voices.length) return null;
-    return voices.find(function(v){ return v.lang === 'en-US'; })
-        || voices.find(function(v){ return v.lang === 'en-GB'; })
-        || voices.find(function(v){ return v.lang && v.lang.indexOf('en') === 0; })
+    return voices.find(v => v.lang === 'en-US')
+        || voices.find(v => v.lang === 'en-GB')
+        || voices.find(v => v.lang && v.lang.indexOf('en') === 0)
         || null;
   }
 
   function speak(word, rate){
-    if (typeof speechSynthesis === 'undefined') return;
+    if (!word) return;
+    if (typeof speechSynthesis === 'undefined'){
+      console.warn('[WrongBook v3] speechSynthesis 不存在');
+      return;
+    }
+
+    // 第一次呼叫先解鎖
+    if (!voiceUnlocked){
+      try {
+        const u0 = new SpeechSynthesisUtterance(' ');
+        u0.volume = 0;
+        speechSynthesis.speak(u0);
+        voiceUnlocked = true;
+        console.log('[WrongBook v3] 🔓 語音已解鎖');
+      } catch(e){}
+    }
+
     try {
       speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(word);
+      const u = new SpeechSynthesisUtterance(word);
       u.lang = 'en-US';
       u.rate = rate || 0.85;
       u.pitch = 1.0;
       u.volume = 1.0;
-      var voice = pickVoice();
-      if (voice) u.voice = voice;
+      const v = pickVoice();
+      if (v) u.voice = v;
+      u.onerror = (e) => console.warn('[WrongBook v3] ❌ 發音失敗:', e.error || e);
       speechSynthesis.speak(u);
+      console.log('[WrongBook v3] 🔊 唸:', word);
     } catch(e){
-      console.warn('[WrongBook] speak error:', e);
+      console.warn('[WrongBook v3] speak 例外:', e);
     }
   }
 
+  // 暴露給外部用（錯題本 UI、卡庫發音按鈕等）
   window.wbSpeak = speak;
 
+  // 預熱語音清單
   if (typeof speechSynthesis !== 'undefined'){
-    speechSynthesis.onvoiceschanged = function(){
-      console.log('[WrongBook] 語音清單已載入');
-    };
-    setTimeout(function(){ pickVoice(); }, 500);
+    if (speechSynthesis.onvoiceschanged !== undefined){
+      speechSynthesis.onvoiceschanged = () => {
+        console.log('[WrongBook v3] 語音清單已載入，共', speechSynthesis.getVoices().length, '個');
+      };
+    }
+    setTimeout(() => {
+      const n = speechSynthesis.getVoices().length;
+      if (n > 0) console.log('[WrongBook v3] 語音清單（延遲載入）共', n, '個');
+    }, 1000);
   }
 
   /* ========== 錯題記錄 ========== */
   function recordWrong(wordId){
     if (!wordId) return;
     if (!book.words[wordId]){
-      book.words[wordId] = {
-        wrongCount: 0,
-        correctStreak: 0,
-        mastered: false,
-        lastWrongAt: 0
-      };
+      book.words[wordId] = { wrongCount: 0, correctStreak: 0, mastered: false, lastWrongAt: 0 };
     }
-    var w = book.words[wordId];
+    const w = book.words[wordId];
     w.wrongCount++;
     w.correctStreak = 0;
     w.mastered = false;
     w.lastWrongAt = Date.now();
     saveBook();
+
+    // 加入本場錯題
+    if (!window._wbThisBattleWrong) window._wbThisBattleWrong = [];
+    if (window._wbThisBattleWrong.indexOf(wordId) === -1){
+      window._wbThisBattleWrong.push(wordId);
+    }
   }
 
-  function recordCorrectAfterWrong(wordId){
+  function recordCorrect(wordId){
     if (!wordId) return;
-    var w = book.words[wordId];
-    if (!w) return;
+    const w = book.words[wordId];
+    if (!w) return; // 從沒答錯過的字，不記錄
     w.correctStreak = (w.correctStreak || 0) + 1;
     if (w.correctStreak >= 2){
       w.mastered = true;
@@ -10957,207 +10982,156 @@ if (!isVIP) {
   }
 
   function getReviewWords(){
-    var result = [];
-    for (var id in book.words){
-      if (!book.words[id].mastered) result.push(id);
-    }
-    return result;
+    return Object.keys(book.words).filter(id => !book.words[id].mastered);
   }
-
   function getMasteredWords(){
-    var result = [];
-    for (var id in book.words){
-      if (book.words[id].mastered) result.push(id);
+    return Object.keys(book.words).filter(id => book.words[id].mastered);
+  }
+
+  /* =========================================================
+     核心：攔截選項點擊，同步判斷對錯 + 同步觸發 speak
+     ========================================================= */
+  document.addEventListener('click', function(e){
+    const t = e.target;
+    if (!t || !t.closest) return;
+    const btn = t.closest('#options .opt');
+    if (!btn) return;
+
+    // 從 battle 讀取當前題目
+    let battleObj = null;
+    try { battleObj = window.battle; } catch(err){}
+    if (!battleObj || !battleObj.currentQ) return;
+
+    const word = battleObj.currentQ.word;
+    if (!word || !word.w) return;
+
+    const allOpts = Array.from(document.querySelectorAll('#options .opt'));
+    const btnIdx = allOpts.indexOf(btn);
+    if (btnIdx === -1) return;
+
+    const correctIdx = battleObj.currentQ.correctIndex;
+    const isCorrect = (btnIdx === correctIdx);
+
+    if (isCorrect){
+      // 答對
+      recordCorrect(word.w);
+      // 只在「剛掌握」那一刻唸一次（正回饋）
+      const meta = book.words[word.w];
+      if (meta && meta.mastered && meta.correctStreak === 2){
+        // 這一刻剛升為 mastered
+        setTimeout(() => speak(word.w, 0.9), 150);
+      }
+    } else {
+      // 答錯 → 立刻唸！同步觸發，不等任何延遲
+      recordWrong(word.w);
+      speak(word.w, 0.75);
     }
-    return result;
-  }
+  }, true);
 
-  /* ========== Hook: answer ========== */
-  var pendingWrongWord = null;
-
-  if (typeof window.answer === 'function'){
-    var _prevAnswer = window.answer;
-    window.answer = function(idx, btn){
-      var willProcess = false;
-      var wasCorrect = false;
-      var currentWord = null;
-
-      try {
-        if (window.battle && !battle.busy && !battle.over && battle.currentQ){
-          willProcess = true;
-          wasCorrect = (idx !== -1) && (idx === battle.currentQ.correctIndex);
-          currentWord = battle.currentQ.word;
-        }
-      } catch(e){}
-
-      var r = _prevAnswer.apply(this, arguments);
-
-      if (willProcess && currentWord){
-        var wid = currentWord.w;
-
-        if (wasCorrect){
-          // 記錄「升級前」狀態
-          var beforeMeta = book.words[wid];
-          var wasMastered = beforeMeta ? !!beforeMeta.mastered : false;
-
-          recordCorrectAfterWrong(wid);
-
-          // 檢查是否「這一刻剛升級為已掌握」
-          var afterMeta = book.words[wid];
-          var isMasteredNow = afterMeta ? !!afterMeta.mastered : false;
-          var justMastered = (!wasMastered && isMasteredNow);
-
-          // 只在「剛剛掌握」時唸一次
-          if (justMastered){
-            setTimeout(function(){
-              speak(wid, 0.9);
-              console.log('[WrongBook] 🎉 掌握時刻，唸一次:', wid);
-            }, 200);
-          }
-          // 答對時不唸讀音（這是關鍵修正）
-
-        } else {
-          recordWrong(wid);
-          pendingWrongWord = wid;
-
-          // 加入本場錯題
-          if (!window._wbThisBattleWrong) window._wbThisBattleWrong = [];
-          if (window._wbThisBattleWrong.indexOf(wid) === -1){
-            window._wbThisBattleWrong.push(wid);
-          }
-
-          // 答錯 → 0.5 秒後唸讀音
-          setTimeout(function(){
-            speak(wid, 0.75);
-          }, 500);
-
-          // 正確答案放大
-          setTimeout(function(){
-            var opts = document.querySelectorAll('#options .opt');
-            if (opts && window.battle && battle.currentQ){
-              var correctOpt = opts[battle.currentQ.correctIndex];
-              if (correctOpt){
-                correctOpt.classList.add('wb-correct-emphasis');
-              }
-            }
-          }, 30);
-        }
-      }
-
-      return r;
-    };
-    console.log('[WrongBook] answer フック完了');
-  }
-
-  /* ========== Hook: doEnemyAttack（延後攻擊，爭取記憶時間） ========== */
-  if (typeof window.doEnemyAttack === 'function'){
-    var _prevEnemyAttack = window.doEnemyAttack;
-    window.doEnemyAttack = function(){
-      if (pendingWrongWord){
-        pendingWrongWord = null;
-        var args = arguments;
-        var self = this;
-        return setTimeout(function(){
-          _prevEnemyAttack.apply(self, args);
-        }, 1500);
-      }
-      return _prevEnemyAttack.apply(this, arguments);
-    };
-    console.log('[WrongBook] doEnemyAttack フック完了');
-  }
-
-  /* ========== Hook: generateQuestion（30% 機率優先出錯題） ========== */
+  /* =========================================================
+     Hook: generateQuestion — 30% 機率優先出錯題
+     ========================================================= */
   function shuffleArr(a){
-    var arr = a.slice();
-    for (var i = arr.length - 1; i > 0; i--){
-      var j = Math.floor(Math.random() * (i + 1));
-      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    const arr = a.slice();
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
   }
 
-  if (typeof window.generateQuestion === 'function'){
-    var _prevGenQ = window.generateQuestion;
+  const _prevGenQ = window.generateQuestion;
+  if (typeof _prevGenQ === 'function'){
     window.generateQuestion = function(){
-      // 30% 機率優先出錯題
       if (Math.random() < 0.3){
-        var queue = getReviewWords();
+        const queue = getReviewWords();
         if (queue.length > 0){
-          var wid = queue[Math.floor(Math.random() * queue.length)];
-          var w = (typeof window.wordOf === 'function') ? window.wordOf(wid) : null;
-          var p = (typeof window.P === 'function') ? window.P() : null;
-          var c = (p && p.cards) ? p.cards[wid] : null;
-
+          const wid = queue[Math.floor(Math.random() * queue.length)];
+          const w = (typeof window.wordOf === 'function') ? window.wordOf(wid) : null;
+          const p = (typeof window.P === 'function') ? window.P() : null;
+          const c = (p && p.cards) ? p.cards[wid] : null;
           if (w && c){
-            var pool = (typeof window.currentPool === 'function') ? window.currentPool() : [];
-            var text = '「<b>' + w.w + '</b>」是什麼意思？';
-            var correct = w.zh;
-            var pz = pool.filter(function(x){ return x.zh !== w.zh; }).map(function(x){ return x.zh; });
-            var dis = [];
-            var used = {}; used[w.zh] = 1;
-            var shuffled = shuffleArr(pz);
-            for (var i = 0; i < shuffled.length && dis.length < 3; i++){
-              var zh = shuffled[i];
-              if (!used[zh]){ dis.push(zh); used[zh] = 1; }
+            const pool = (typeof window.currentPool === 'function') ? window.currentPool() : [];
+            const text = '「<b>' + w.w + '</b>」是什麼意思？';
+            const correct = w.zh;
+            const pz = pool.filter(x => x.zh !== w.zh).map(x => x.zh);
+            const dis = [];
+            const used = new Set([w.zh]);
+            for (const zh of shuffleArr(pz)){
+              if (dis.length >= 3) break;
+              if (!used.has(zh)){ dis.push(zh); used.add(zh); }
             }
-            var options = shuffleArr([correct].concat(dis));
-            console.log('[WrongBook] 複習出題:', wid);
+            const options = shuffleArr([correct, ...dis]);
+            console.log('[WrongBook v3] 複習出題:', wid);
             return {
-              text: text,
-              options: options,
+              text, options,
               correctIndex: options.indexOf(correct),
               mult: 1.0,
               type: 'meaning',
               word: w,
-              isReview: true
+              isReview: true,
             };
           }
         }
       }
       return _prevGenQ.apply(this, arguments);
     };
-    console.log('[WrongBook] generateQuestion フック完了');
   }
 
-  /* ========== Hook: startBattle（重置本場錯題） ========== */
-  if (typeof window.startBattle === 'function'){
-    var _prevStartBattle = window.startBattle;
+  /* =========================================================
+     Hook: startBattle — 重置本場錯題
+     ========================================================= */
+  const _prevStartBattle = window.startBattle;
+  if (typeof _prevStartBattle === 'function'){
     window.startBattle = function(){
       window._wbThisBattleWrong = [];
       return _prevStartBattle.apply(this, arguments);
     };
-    console.log('[WrongBook] startBattle フック完了');
   }
 
   /* ========== 公開 API ========== */
   window.wrongBook = {
-    getAll: function(){ return book.words; },
-    getReviewWords: getReviewWords,
-    getMasteredWords: getMasteredWords,
-    count: function(){ return Object.keys(book.words).length; },
-    reviewCount: function(){ return getReviewWords().length; },
-    masteredCount: function(){ return getMasteredWords().length; },
-    clear: function(){ book = { words: {} }; saveBook(); },
-    remove: function(id){ delete book.words[id]; saveBook(); },
-    markMastered: function(id){
+    getAll: () => book.words,
+    getReviewWords,
+    getMasteredWords,
+    count: () => Object.keys(book.words).length,
+    reviewCount: () => getReviewWords().length,
+    masteredCount: () => getMasteredWords().length,
+    clear: () => { book = { words: {} }; saveBook(); },
+    remove: (id) => { delete book.words[id]; saveBook(); },
+    markMastered: (id) => {
       if (book.words[id]){
         book.words[id].mastered = true;
         book.words[id].correctStreak = 2;
         saveBook();
       }
-    }
+    },
   };
 
   /* ========== CSS ========== */
-  var styleEl = document.createElement('style');
-  styleEl.textContent = '.opt.wb-correct-emphasis{transform:scale(1.12);box-shadow:0 0 24px rgba(46,213,115,1),0 0 48px rgba(46,213,115,.6),inset 0 0 12px rgba(255,255,255,.3) !important;animation:wbCorrectPulse 1.2s ease-in-out;z-index:5;}@keyframes wbCorrectPulse{0%{transform:scale(1);}20%{transform:scale(1.15);}50%{transform:scale(1.08);}100%{transform:scale(1.12);}}';
-  document.head.appendChild(styleEl);
+  const style = document.createElement('style');
+  style.textContent = `
+.opt.wb-correct-emphasis{
+  transform: scale(1.12);
+  box-shadow: 0 0 24px rgba(46,213,115,1), 0 0 48px rgba(46,213,115,.6),
+              inset 0 0 12px rgba(255,255,255,.3) !important;
+  animation: wbCorrectPulse 1.2s ease-in-out;
+  z-index: 5;
+}
+@keyframes wbCorrectPulse{
+  0%{transform:scale(1);}
+  20%{transform:scale(1.15);}
+  50%{transform:scale(1.08);}
+  100%{transform:scale(1.12);}
+}
+  `;
+  document.head.appendChild(style);
 
-  setTimeout(function(){
-    console.log('[WrongBook] 就緒 ✓ · 錯題', Object.keys(book.words).length, '· 待複習', getReviewWords().length);
+  setTimeout(() => {
+    console.log('[WrongBook v3] 就緒 ✓ · 錯題', Object.keys(book.words).length, '· 待複習', getReviewWords().length);
   }, 1500);
 
-  console.log('[WrongBook] 核心載入完了');
+  console.log('[WrongBook v3] 載入完了');
 })();
 </script>
     
