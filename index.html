@@ -5673,62 +5673,58 @@ function stepDone(){
 
 <script>
 /* =========================================================
-   VictoryFix v2：把 #resultBtn 搬到 #victoryBtn 的位置
-   讓教學系統的 spotlight 自然對準「繼續前進」
+   VictoryFix v3：用 transform 平移 #resultBtn
+   - 不用 position: fixed，避免 offsetParent 變 null
+   - 教學系統能正常讀到按鈕的「實際顯示位置」
    ========================================================= */
 (function(){
   'use strict';
 
-  console.log('[VictoryFix v2] 載入...');
+  console.log('[VictoryFix v3] 載入...');
 
-  let lastLeft = -999, lastTop = -999;
+  let lastDx = null, lastDy = null;
 
   function syncResultBtn(){
     const overlay = document.getElementById('victoryOverlay');
-    if (!overlay || !overlay.classList.contains('show')) return;
+    if (!overlay || !overlay.classList.contains('show')) {
+      // 沒有勝利畫面時，重置記錄，下次重新計算
+      lastDx = null; lastDy = null;
+      return;
+    }
 
     const vBtn = document.getElementById('victoryBtn');
     const rBtn = document.getElementById('resultBtn');
     if (!vBtn || !rBtn) return;
 
-    // 把 resultBtn 搬到 body 底下（脫離 battleResult 的 backdrop-filter 影響）
-    if (rBtn.parentElement !== document.body) {
-      document.body.appendChild(rBtn);
-    }
+    // 記住當前 transform，重置取得原始位置
+    const saved = rBtn.style.transform;
+    rBtn.style.transform = 'none';
+    const baseR = rBtn.getBoundingClientRect();
+    rBtn.style.transform = saved || '';
 
-    const r = vBtn.getBoundingClientRect();
+    const vr = vBtn.getBoundingClientRect();
+    const dx = Math.round(vr.left - baseR.left);
+    const dy = Math.round(vr.top  - baseR.top);
 
-    // 位置沒變就不重繪（避免抖動）
-    if (Math.abs(r.left - lastLeft) < 0.5 && Math.abs(r.top - lastTop) < 0.5) return;
-    lastLeft = r.left;
-    lastTop = r.top;
+    // 位置沒變就不動（避免閃爍）
+    if (dx === lastDx && dy === lastDy) return;
+    lastDx = dx;
+    lastDy = dy;
 
-    Object.assign(rBtn.style, {
-      position: 'fixed',
-      left: r.left + 'px',
-      top: r.top + 'px',
-      width: r.width + 'px',
-      height: r.height + 'px',
-      opacity: '0',
-      pointerEvents: 'none',
-      zIndex: '1',
-      margin: '0',
-      padding: '0',
-      border: 'none',
-      background: 'transparent',
-      fontSize: '0',
-      color: 'transparent',
-      overflow: 'hidden',
-      animation: 'none',
-      boxShadow: 'none',
-      transition: 'none',
-    });
+    rBtn.style.transform = `translate(${dx}px, ${dy}px)`;
+    rBtn.style.opacity = '0';
+    rBtn.style.pointerEvents = 'none';
+    rBtn.style.zIndex = '1';
+    rBtn.style.margin = '0';
+    rBtn.style.animation = 'none';
+    rBtn.style.transition = 'none';
   }
 
-  // 每 100ms 同步（比教學系統的 500ms 快，蓋過去）
-  setInterval(syncResultBtn, 100);
+  // 每 120ms 同步一次
+  setInterval(syncResultBtn, 120);
+  window.addEventListener('resize', syncResultBtn);
 
-  console.log('[VictoryFix v2] 就緒 ✓');
+  console.log('[VictoryFix v3] 就緒 ✓');
 })();
 </script>
   
