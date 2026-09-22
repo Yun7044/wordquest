@@ -368,6 +368,120 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 }
 ::-webkit-scrollbar{width:0;height:0}
 </style>
+
+  <script>
+/* =========================================================
+   SaveGuard：從頭保護新模式進度
+   必須貼在 <head> 裡，在遊戲程式碼之前執行
+   ========================================================= */
+(function(){
+  'use strict';
+
+  const SAVE_KEY = 'wordquest_multi_v1';
+  const EXTRA_MODES = ['toeflBasic', 'ieltsBasic', 'geptHigh', 'sunflower'];
+
+  const _getItem = localStorage.getItem.bind(localStorage);
+  const _setItem = localStorage.setItem.bind(localStorage);
+
+  // 記錄「上一次成功保存的」新模式進度
+  let snapshot = null;
+  try {
+    const raw = _getItem(SAVE_KEY);
+    if (raw){
+      const d = JSON.parse(raw);
+      if (d && d.progress){
+        snapshot = {};
+        EXTRA_MODES.forEach(m => {
+          if (d.progress[m]) snapshot[m] = d.progress[m];
+        });
+      }
+    }
+  } catch(e){}
+
+  // 每次 save 時，先把舊資料合併回來
+  localStorage.setItem = function(key, value){
+    if (key === SAVE_KEY && snapshot){
+      try {
+        const incoming = JSON.parse(value);
+        if (incoming && incoming.progress){
+          EXTRA_MODES.forEach(mode => {
+            const old = snapshot[mode];
+            if (!old) return;
+            const now = incoming.progress[mode];
+
+            if (!now){
+              // 新模式整個不存在 → 用舊的
+              incoming.progress[mode] = old;
+            } else {
+              // 合併卡片：以舊的為底，state 已有的優先
+              const mergedCards = Object.assign({}, old.cards || {});
+              Object.keys(now.cards || {}).forEach(id => {
+                mergedCards[id] = now.cards[id];
+              });
+              now.cards = mergedCards;
+
+              // stage 取較大的
+              if (typeof old.stage === 'number' && old.stage > (now.stage || 1)){
+                now.stage = old.stage;
+              }
+              // team 若 state 沒有則用舊的
+              if (!now.team && old.team) now.team = old.team;
+            }
+          });
+          value = JSON.stringify(incoming);
+        }
+      } catch(e){
+        console.warn('[SaveGuard] merge error:', e);
+      }
+    }
+
+    const result = _setItem(key, value);
+
+    // 成功寫入後更新 snapshot
+    if (key === SAVE_KEY){
+      try {
+        const d = JSON.parse(value);
+        if (d && d.progress){
+          snapshot = snapshot || {};
+          EXTRA_MODES.forEach(m => {
+            if (d.progress[m]) snapshot[m] = d.progress[m];
+          });
+        }
+      } catch(e){}
+    }
+
+    return result;
+  };
+
+  // 攔截讀取：load() 讀不到新模式時，直接注入
+  const _origGet = localStorage.getItem;
+  localStorage.getItem = function(key){
+    const raw = _origGet.call(localStorage, key);
+    if (key === SAVE_KEY && raw && snapshot){
+      try {
+        const d = JSON.parse(raw);
+        if (d && d.progress){
+          let changed = false;
+          EXTRA_MODES.forEach(mode => {
+            const old = snapshot[mode];
+            if (!old) return;
+            if (!d.progress[mode]
+                || Object.keys(d.progress[mode].cards || {}).length === 0){
+              d.progress[mode] = old;
+              changed = true;
+            }
+          });
+          if (changed) return JSON.stringify(d);
+        }
+      } catch(e){}
+    }
+    return raw;
+  };
+
+  console.log('[SaveGuard] 就緒 ✓ 保護模式:', EXTRA_MODES.join(', '));
+})();
+</script>
+  
 </head>
 <body>
 
