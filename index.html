@@ -5300,11 +5300,9 @@ function stepDone(){
 
 <script>
 /* =========================================================
-   勝利結算畫面
-   - 全螢幕金色光芒 + 星星評價
-   - 獎勵列表逐項浮現
-   - 從底部噴射的粒子
-   - 攔截 showResult，只有勝利時接管
+   勝利結算畫面 v2
+   - 修正：保留 #resultBtn（隱藏），讓新手教學能偵測
+   - 玩家按「繼續前進」時，同時觸發隱藏的 resultBtn
    ========================================================= */
 (function(){
   'use strict';
@@ -5312,7 +5310,7 @@ function stepDone(){
   if (window._victoryScreenLoaded) return;
   window._victoryScreenLoaded = true;
 
-  console.log('[Victory] 載入...');
+  console.log('[Victory v2] 載入...');
 
   /* ========== CSS ========== */
   const css = `
@@ -5512,12 +5510,26 @@ function stepDone(){
   const _origShowResult = window.showResult;
 
   if (typeof _origShowResult !== 'function') {
-    console.warn('[Victory] 找不到 showResult，無法攔截');
+    console.warn('[Victory v2] 找不到 showResult，無法攔截');
     return;
   }
 
   window.showResult = function(win, gold, nextStage){
     if (win) {
+      // ===== 1. 先呼叫原本邏輯，建立 #resultBtn（隱藏起來） =====
+      try {
+        _origShowResult.call(this, win, gold, nextStage);
+        const box = document.getElementById('battleResult');
+        if (box) {
+          box.style.opacity = '0';
+          box.style.pointerEvents = 'none';
+          // 不移除，讓教學能偵測到 #resultBtn
+        }
+      } catch(e) {
+        console.warn('[Victory v2] 建立隱藏結算失敗:', e);
+      }
+
+      // ===== 2. 顯示勝利結算 overlay =====
       showVictoryScreen(gold, nextStage);
       return;
     }
@@ -5527,7 +5539,6 @@ function stepDone(){
 
   /* ========== 顯示勝利結算 ========== */
   function showVictoryScreen(gold, nextStage){
-    // 計算星星評價（依剩餘血量）
     let hpPercent = 1;
     let hpText = '—';
     try {
@@ -5542,7 +5553,6 @@ function stepDone(){
     else if (hpPercent >= 0.6) stars = 2;
     else stars = 1;
 
-    // 組合星星 HTML
     let starHTML = '';
     for (let i = 0; i < 3; i++){
       const isOn = i < stars;
@@ -5550,7 +5560,6 @@ function stepDone(){
         style="animation-delay:${0.4 + i * 0.15}s">⭐</div>`;
     }
 
-    // 目前模式的關卡
     let stageNum = nextStage;
     try { if (typeof P === 'function' && P().stage) stageNum = P().stage; } catch(e){}
 
@@ -5585,20 +5594,15 @@ function stepDone(){
 
     overlay.classList.add('show');
 
-    // 音效
     try { S.win(); } catch(e){}
     setTimeout(() => { try { AudioSys.sfx(1568, .3, 'sine', .12); } catch(e){} }, 300);
     setTimeout(() => { try { AudioSys.sfx(2093, .4, 'sine', .1); } catch(e){} }, 500);
 
-    // 粒子
     spawnParticles();
 
-    // 按鈕綁定（延遲，避免動畫中誤觸）
     setTimeout(() => {
       const btn = document.getElementById('victoryBtn');
-      if (btn) {
-        btn.onclick = closeVictory;
-      }
+      if (btn) btn.onclick = closeVictory;
     }, 900);
   }
 
@@ -5630,36 +5634,40 @@ function stepDone(){
   function closeVictory(){
     try { S.click(); } catch(e){}
 
-    overlay.classList.remove('show');
-    setTimeout(() => {
-      overlay.innerHTML = '';
-    }, 420);
-
-    // 關閉戰鬥 UI
-    const bui = document.getElementById('battle-ui');
-    if (bui) bui.classList.add('closed');
-
-    const box = document.getElementById('battleResult');
-    if (box) {
-      box.classList.add('hidden');
-      box.innerHTML = '';
+    // ===== 關鍵：觸發隱藏的 #resultBtn 點擊，讓教學能偵測到 =====
+    const resultBtn = document.getElementById('resultBtn');
+    if (resultBtn) {
+      console.log('[Victory v2] 觸發隱藏的 resultBtn');
+      try { resultBtn.click(); } catch(e){}
     }
 
-    // 重繪主畫面
-    try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+    overlay.classList.remove('show');
+    setTimeout(() => { overlay.innerHTML = ''; }, 420);
 
-    // 切回主畫面音樂
-    try {
-      if (typeof AudioSys !== 'undefined' && AudioSys.playMusic) {
-        const s = (typeof currentScreen !== 'undefined') ? currentScreen : 'home';
-        AudioSys.playMusic(s === 'gacha' ? 'gacha' : 'home');
+    // ===== 保險：500ms 後強制清理（如果 [Fix] 沒處理好） =====
+    setTimeout(() => {
+      const bui = document.getElementById('battle-ui');
+      const box = document.getElementById('battleResult');
+      if (bui) bui.classList.add('closed');
+      if (box) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        box.style.opacity = '';
+        box.style.pointerEvents = '';
       }
-    } catch(e){}
+      try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+      try {
+        if (typeof AudioSys !== 'undefined' && AudioSys.playMusic) {
+          const s = (typeof currentScreen !== 'undefined') ? currentScreen : 'home';
+          AudioSys.playMusic(s === 'gacha' ? 'gacha' : 'home');
+        }
+      } catch(e){}
+    }, 500);
 
-    console.log('[Victory] 結算關閉 ✓');
+    console.log('[Victory v2] 結算關閉 ✓');
   }
 
-  console.log('[Victory] 就緒 ✓');
+  console.log('[Victory v2] 就緒 ✓');
 })();
 </script>
   
