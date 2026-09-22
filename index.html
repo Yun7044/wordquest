@@ -8051,23 +8051,18 @@ if (!isVIP) {
 
 <script>
 /* =========================================================
-   単語の日本語訳（第1弾：TOEFL初級 50語）
-   日本語モードのとき、中国語の意味を日本語に置き換える
+   JA-Word v2 — 単語の日本語訳
+   ゲームのデータには一切触れず、DOM のテキストだけを置換
    ========================================================= */
 (function(){
   'use strict';
-
-  if (window._jaWordLoaded) return;
-  window._jaWordLoaded = true;
-
-  console.log('[JA-Word] ロード中...');
+  if (window._jaWordV2Loaded) return;
+  window._jaWordV2Loaded = true;
 
   /* =========================================================
-     日本語訳辞書
-     key   = 英単語
-     value = 日本語の意味
+     英単語 → 日本語 の意味
      ========================================================= */
-  window.JA_WORD_MEANINGS = {
+  const JA_EN = {
     /* ===== TOEFL初級 50語 ===== */
     'analyze':      '分析する',
     'approach':     'アプローチ',
@@ -8118,8 +8113,6 @@ if (!isVIP) {
     'participate':  '参加する',
     'potential':    '潜在能力',
     'predict':      '予測する',
-    'regulate':     '規制する',
-        'predict':      '予測する',
     'regulate':     '規制する',
 
     /* ===== IELTS初級 50語 ===== */
@@ -8172,68 +8165,87 @@ if (!isVIP) {
     'inhibit':      '抑制する',
     'initiate':     '開始する',
     'innovate':     '革新する',
-        /* ===== 學術考試選單 ===== */
-    '學術考試模式': '学術試験モード',
-    '選擇考試級別開始挑戰': '試験レベルを選んで挑戦しよう',
-    '托福初級': 'TOEFL初級',
-    'TOEFL 基礎學術字 · 50 字': 'TOEFL基礎学術語 · 50単語',
-    '雅思初級': 'IELTS初級',
-    'IELTS 基礎學術字 · 50 字': 'IELTS基礎学術語 · 50単語',
-    '返回主頁': 'ホームに戻る',
   };
 
   /* =========================================================
-     wordOf をラップ：日本語モード時に意味を置換
+     「中国語の意味 → 日本語の意味」の逆引きマップ
+     全カードプールを走査して自動生成
      ========================================================= */
-  const _prevWordOf = window.wordOf;
+  let zhMap = {};
 
-  if (typeof _prevWordOf === 'function'){
-    window.wordOf = function(id){
-      let w;
-      try {
-        w = _prevWordOf.apply(this, arguments);
-      } catch(e){
-        console.warn('[JA-Word] wordOf error:', e);
-        return null;
-      }
-      if (!w) return w;
+  function buildZhMap(){
+    const pools = [];
+    if (window.WORDS)         pools.push(window.WORDS);
+    if (window.GEPT_MH)       pools.push(window.GEPT_MH);
+    if (window.TOEFL_BASIC)   pools.push(window.TOEFL_BASIC);
+    if (window.IELTS_BASIC)   pools.push(window.IELTS_BASIC);
+    if (window.GEPT_HIGH)     pools.push(window.GEPT_HIGH);
 
-      const lang = window._i18nCurrentLang || 'zh';
+    const map = {};
+    pools.forEach(pool => {
+      if (!Array.isArray(pool)) return;
+      pool.forEach(w => {
+        if (w && w.w && w.zh && JA_EN[w.w]){
+          map[w.zh] = JA_EN[w.w];
+        }
+      });
+    });
+    return map;
+  }
 
-      // 第一次碰到的時候，記住原始中文
-      if (w._origZh === undefined) w._origZh = w.zh;
-
-      if (lang === 'ja'){
-        const ja = window.JA_WORD_MEANINGS && window.JA_WORD_MEANINGS[w.w];
-        if (ja) w.zh = ja;
-        else w.zh = w._origZh;   // 沒翻譯的，還原中文
-      } else {
-        w.zh = w._origZh;        // 中文模式一律還原
-      }
-
-      return w;   // ← 關鍵：回傳「同一個物件」，不是複製
-    };
-    console.log('[JA-Word] wordOf フック完了');
-  } else {
-    console.warn('[JA-Word] wordOf が見つかりません');
+  function rebuild(){
+    zhMap = buildZhMap();
+    console.log('[JA-Word v2] zh→ja マップ:', Object.keys(zhMap).length, '件');
   }
 
   /* =========================================================
-     言語切替時に再描画を促す
+     DOM を再帰的に走査して置換
      ========================================================= */
-  setInterval(() => {
-    const lang = window._i18nCurrentLang || 'zh';
-    if (lang === 'ja' && window._jaWordLastLang !== 'ja'){
-      window._jaWordLastLang = 'ja';
-      console.log('[JA-Word] 日本語モード検出 → 再描画');
-      try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
-    } else if (lang !== 'ja' && window._jaWordLastLang === 'ja'){
-      window._jaWordLastLang = lang;
-      try { if (typeof renderAll === 'function') renderAll(); } catch(e){}
+  function replaceInNode(node){
+    if (node.nodeType === 3){
+      const raw = node.textContent;
+      const trimmed = raw.trim();
+      if (trimmed && zhMap[trimmed]){
+        const lead  = raw.match(/^\s*/)[0];
+        const trail = raw.match(/\s*$/)[0];
+        node.textContent = lead + zhMap[trimmed] + trail;
+      }
+    } else if (node.nodeType === 1){
+      if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
+      for (const c of node.childNodes) replaceInNode(c);
     }
-  }, 800);
+  }
 
-  console.log('[JA-Word] 就緒 ✓ · ' + Object.keys(window.JA_WORD_MEANINGS).length + ' 語');
+  function scan(){
+    if (window._i18nCurrentLang !== 'ja') return;
+    if (document.body) replaceInNode(document.body);
+  }
+
+  /* =========================================================
+     起動
+     ========================================================= */
+  setTimeout(() => {
+    rebuild();
+
+    // 定期スキャン
+    setInterval(scan, 700);
+
+    // 言語切替を検知したら即座に複数回スキャン
+    let lastLang = window._i18nCurrentLang || 'zh';
+    setInterval(() => {
+      const cur = window._i18nCurrentLang || 'zh';
+      if (cur !== lastLang){
+        lastLang = cur;
+        if (cur === 'ja'){
+          setTimeout(scan, 100);
+          setTimeout(scan, 500);
+          setTimeout(scan, 1500);
+        }
+      }
+    }, 500);
+  }, 2000);
+
+  console.log('[JA-Word v2] ロード完了');
 })();
 </script>
   
