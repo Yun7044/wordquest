@@ -5673,60 +5673,62 @@ function stepDone(){
 
 <script>
 /* =========================================================
-   VictoryFix：勝利畫面出現時，修正新手教學 spotlight 位置
-   讓引導框對準「繼續前進」按鈕，而不是被藏起來的 resultBtn
+   VictoryFix v2：把 #resultBtn 搬到 #victoryBtn 的位置
+   讓教學系統的 spotlight 自然對準「繼續前進」
    ========================================================= */
 (function(){
   'use strict';
 
-  console.log('[VictoryFix] 載入...');
+  console.log('[VictoryFix v2] 載入...');
 
-  function repositionSpotlight(){
+  let lastLeft = -999, lastTop = -999;
+
+  function syncResultBtn(){
     const overlay = document.getElementById('victoryOverlay');
-    const sp = document.getElementById('tutSpotlight');
-    const tip = document.getElementById('tutTip');
-
-    // 沒有 victory 畫面 或 沒有 spotlight → 不處理
     if (!overlay || !overlay.classList.contains('show')) return;
-    if (!sp || sp.style.display === 'none') return;
 
     const vBtn = document.getElementById('victoryBtn');
-    if (!vBtn) return;
+    const rBtn = document.getElementById('resultBtn');
+    if (!vBtn || !rBtn) return;
+
+    // 把 resultBtn 搬到 body 底下（脫離 battleResult 的 backdrop-filter 影響）
+    if (rBtn.parentElement !== document.body) {
+      document.body.appendChild(rBtn);
+    }
 
     const r = vBtn.getBoundingClientRect();
-    if (r.width < 10 || r.height < 10) return;
 
-    // 把 spotlight 移到 victoryBtn 上
-    sp.style.left   = (r.left - 8) + 'px';
-    sp.style.top    = (r.top  - 8) + 'px';
-    sp.style.width  = (r.width  + 16) + 'px';
-    sp.style.height = (r.height + 16) + 'px';
+    // 位置沒變就不重繪（避免抖動）
+    if (Math.abs(r.left - lastLeft) < 0.5 && Math.abs(r.top - lastTop) < 0.5) return;
+    lastLeft = r.left;
+    lastTop = r.top;
 
-    // 把 tip 移到按鈕上方
-    if (tip && tip.style.display !== 'none') {
-      const tipW = tip.offsetWidth || 280;
-      const left = Math.max(10,
-        Math.min(window.innerWidth - tipW - 10, r.left + r.width/2 - tipW/2));
-      const top  = Math.max(10, r.top - 82);
-      tip.style.left = left + 'px';
-      tip.style.top  = top  + 'px';
-
-      // 箭頭朝下（指著按鈕）
-      const arrow = tip.querySelector('.tut-tip-arrow');
-      if (arrow) {
-        arrow.dataset.dir = 'down';
-        arrow.style.left = (r.left + r.width/2 - left) + 'px';
-      }
-    }
+    Object.assign(rBtn.style, {
+      position: 'fixed',
+      left: r.left + 'px',
+      top: r.top + 'px',
+      width: r.width + 'px',
+      height: r.height + 'px',
+      opacity: '0',
+      pointerEvents: 'none',
+      zIndex: '1',
+      margin: '0',
+      padding: '0',
+      border: 'none',
+      background: 'transparent',
+      fontSize: '0',
+      color: 'transparent',
+      overflow: 'hidden',
+      animation: 'none',
+      boxShadow: 'none',
+      transition: 'none',
+    });
   }
 
-  // 每 200ms 檢查一次（比教學系統的 500ms 快，能蓋過去）
-  setInterval(repositionSpotlight, 200);
+  // 每 100ms 同步（比教學系統的 500ms 快，蓋過去）
+  setInterval(syncResultBtn, 100);
 
-  // 視窗大小變化也要重定位
-  window.addEventListener('resize', repositionSpotlight);
-
-  console.log('[VictoryFix] 就緒 ✓');
+  console.log('[VictoryFix v2] 就緒 ✓');
 })();
 </script>
   
