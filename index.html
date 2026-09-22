@@ -6398,13 +6398,29 @@ function stepDone(){
 
       // 處理統計與混亂
       if (willProcess){
-        if (wasCorrect){
-          if (battleStats){
-            battleStats.correct++;
-            if (battle && battle.combo) {
-              battleStats.maxCombo = Math.max(battleStats.maxCombo, battle.combo);
-            }
-          }
+if (wasCorrect){
+  // 記錄「升級前」的狀態
+  const beforeMeta = book.words[wid];
+  const beforeStreak = beforeMeta ? (beforeMeta.correctStreak || 0) : 0;
+  const wasMastered = beforeMeta ? beforeMeta.mastered : false;
+
+  recordCorrectAfterWrong(wid);
+
+  // 判斷是否「這一刻剛升級為已掌握」
+  const afterMeta = book.words[wid];
+  const afterStreak = afterMeta ? (afterMeta.correctStreak || 0) : 0;
+  const isMasteredNow = afterMeta ? afterMeta.mastered : false;
+
+  const justMastered = (!wasMastered && isMasteredNow);
+
+  // 只在「剛剛掌握」時唸一次（當作正回饋）
+  if (justMastered){
+    setTimeout(() => {
+      speak(wid, 0.9);
+      console.log('[WrongBook] 🎉 掌握時刻，唸一次:', wid);
+    }, 200);
+  }
+}
           chaosStreak = 0;
           setTimeout(updateChaosUI, 500);
         } else {
