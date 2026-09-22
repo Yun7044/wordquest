@@ -4058,34 +4058,72 @@ init();
     return _wrappedOpenCardModal.call(window, id);
   };
 
-  // 額外保險：升級/升星按鈕失敗時，主動清掉 pending
-  document.addEventListener('click', function(e){
-    const t = e.target;
-    if (!t || !t.closest) return;
-    const btn = t.closest('#mUpLv, #mUpStar');
-    if (!btn || btn.disabled) return;
+  /* =========================================================
+     核心：Hook answer 函式，在「使用者點擊的呼叫棧內」同步觸發 speak
+     ========================================================= */
+  function getBattle(){
+    try {
+      if (typeof battle !== 'undefined' && battle) return battle;
+    } catch(e){}
+    try {
+      if (typeof window.battle !== 'undefined' && window.battle) return window.battle;
+    } catch(e){}
+    return null;
+  }
 
-    // 延遲到原本的 onclick 執行完再檢查
-    setTimeout(() => {
-      const pending = window._pendingMilestone;
-      if (!pending) return;
+  if (typeof window.answer === 'function'){
+    const _prevAnswer = window.answer;
 
-      const card = P().cards[pending.id];
-      if (!card) {
-        window._pendingMilestone = null;
-        return;
+    window.answer = function(idx, btn){
+      // 先取得題目資訊（不改動原本行為）
+      let willProcess = false;
+      let wasCorrect = false;
+      let word = null;
+
+      try {
+        const b = getBattle();
+        if (b && !b.busy && !b.over && b.currentQ){
+          willProcess = true;
+          wasCorrect = (idx !== -1) && (idx === b.currentQ.correctIndex);
+          word = b.currentQ.word;
+        }
+      } catch(e){
+        console.warn('[WrongBook v3] getBattle 失敗:', e);
       }
 
-      const reached = (pending.type === 'level')
-        ? card.lv >= pending.value
-        : card.star >= pending.value;
-
-      if (!reached) {
-        console.log('[Fix4] 升級未成功（資源不足），清除 pending');
-        window._pendingMilestone = null;
+      // ★★★ 關鍵：在「使用者點擊 answer 的呼叫棧內」同步觸發 speak
+      // 這樣 iOS 就不會擋
+      if (willProcess && word && !wasCorrect){
+        speak(word.w, 0.75);
       }
-    }, 100);
-  }, true);
+
+      // 呼叫原本的 answer
+      const r = _prevAnswer.apply(this, arguments);
+
+      // 後續記錄（非同步，不影響發音）
+      if (willProcess && word){
+        if (wasCorrect){
+          const meta = book.words[word.w];
+          const wasMastered = meta ? meta.mastered : false;
+          recordCorrect(word.w);
+          const afterMeta = book.words[word.w];
+          const isMasteredNow = afterMeta ? afterMeta.mastered : false;
+          // 只在「剛掌握」那一刻唸一次
+          if (!wasMastered && isMasteredNow){
+            setTimeout(() => speak(word.w, 0.9), 200);
+          }
+        } else {
+          recordWrong(word.w);
+        }
+      }
+
+      return r;
+    };
+
+    console.log('[WrongBook v3] answer フック完了');
+  } else {
+    console.warn('[WrongBook v3] 找不到 window.answer');
+  }
 
   // 保險：如果開啟了「非升級流程」的彈窗（例如切換畫面、點卡庫），清掉所有舊 pending
   const _prevSwitchScreen = window.switchScreen;
