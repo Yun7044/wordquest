@@ -11259,6 +11259,183 @@ if (!isVIP) {
   console.log('[WB-Hook] 載入完了');
 })();
 </script>
+
+<script>
+/* =========================================================
+   BattleVoice：開始戰鬥時，用女聲唸「Start battle」
+   - 自動挑選女聲（iOS / Android / Windows 都適用）
+   - 搭配科幻「咻」音效
+   - 同時也預熱語音引擎
+   ========================================================= */
+(function(){
+  'use strict';
+  if (window._battleVoiceLoaded) return;
+  window._battleVoiceLoaded = true;
+
+  console.log('[BattleVoice] 載入...');
+
+  /* ========== 挑女聲 ========== */
+  function pickFemaleVoice(){
+    if (typeof speechSynthesis === 'undefined') return null;
+    const voices = speechSynthesis.getVoices();
+    if (!voices || !voices.length) return null;
+
+    const enVoices = voices.filter(v => v.lang && v.lang.indexOf('en') === 0);
+    if (!enVoices.length) return null;
+
+    // 常見的女聲名稱（不同平台）
+    const femaleNames = [
+      'samantha',    // iOS / macOS 預設女聲
+      'victoria',    // macOS
+      'karen',       // macOS 澳洲
+      'moira',       // macOS 愛爾蘭
+      'tessa',       // macOS 南非
+      'zira',        // Windows
+      'aria',        // Windows 11
+      'susan',       // Windows
+      'allison',     // Windows
+      'ava',         // macOS
+      'joanna',      // Amazon
+      'google us english',
+      'google uk english female',
+    ];
+
+    for (const name of femaleNames){
+      const v = enVoices.find(x => x.name.toLowerCase().indexOf(name) !== -1);
+      if (v) return v;
+    }
+
+    // 名稱含 female 的
+    const explicit = enVoices.find(x => {
+      const n = x.name.toLowerCase();
+      return n.indexOf('female') !== -1 || n.indexOf('woman') !== -1;
+    });
+    if (explicit) return explicit;
+
+    // 退而求其次
+    return enVoices.find(v => v.lang === 'en-US') || enVoices[0];
+  }
+
+  let cachedVoice = null;
+
+  function getFemaleVoice(){
+    if (cachedVoice) return cachedVoice;
+    cachedVoice = pickFemaleVoice();
+    if (cachedVoice){
+      console.log('[BattleVoice] 選用語音:', cachedVoice.name, '/', cachedVoice.lang);
+    }
+    return cachedVoice;
+  }
+
+  /* ========== 科幻「咻」音效 ========== */
+  function playSciFiSwoosh(){
+    try {
+      if (typeof AudioSys === 'undefined' || !AudioSys.ready) return;
+      if (AudioSys.sfxEnabled === false) return;
+      const ctx = AudioSys.ctx;
+      if (!ctx) return;
+
+      const target = AudioSys.sfxGain || AudioSys.master;
+      if (!target) return;
+
+      const t = ctx.currentTime;
+
+      // 主掃頻（下行「咻」）
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.connect(gain);
+      gain.connect(target);
+
+      osc.frequency.setValueAtTime(1400, t);
+      osc.frequency.exponentialRampToValueAtTime(160, t + 0.5);
+
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.07, t + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+
+      osc.start(t);
+      osc.stop(t + 0.6);
+
+      // 上方加一層金屬感（三角波）
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'triangle';
+      osc2.connect(gain2);
+      gain2.connect(target);
+
+      osc2.frequency.setValueAtTime(2800, t);
+      osc2.frequency.exponentialRampToValueAtTime(400, t + 0.4);
+
+      gain2.gain.setValueAtTime(0, t);
+      gain2.gain.linearRampToValueAtTime(0.03, t + 0.04);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+
+      osc2.start(t);
+      osc2.stop(t + 0.5);
+    } catch(e){}
+  }
+
+  /* ========== 說「Start battle」 ========== */
+  function sayStartBattle(){
+    if (typeof speechSynthesis === 'undefined') return;
+
+    try {
+      speechSynthesis.cancel();
+
+      const u = new SpeechSynthesisUtterance('Start battle');
+      u.lang = 'en-US';
+      u.rate = 0.82;    // 稍慢，有氣勢
+      u.pitch = 1.08;   // 稍高，更女性化
+      u.volume = 1.0;
+
+      const v = getFemaleVoice();
+      if (v) u.voice = v;
+
+      u.onerror = (e) => console.warn('[BattleVoice] 語音錯誤:', e.error);
+      u.onend = () => console.log('[BattleVoice] ✓ 朗讀完成');
+
+      speechSynthesis.speak(u);
+      console.log('[BattleVoice] 🎤 說: Start battle');
+    } catch(e){
+      console.warn('[BattleVoice] 失敗:', e);
+    }
+  }
+
+  /* ========== 包裝 startBattle ========== */
+  const _prevStartBattle = window.startBattle;
+  if (typeof _prevStartBattle === 'function'){
+    window.startBattle = function(){
+      // 1. 先播科幻音效
+      playSciFiSwoosh();
+
+      // 2. 稍微延遲 120ms 再唸，讓音效先出來
+      setTimeout(sayStartBattle, 120);
+
+      // 3. 執行原本流程
+      return _prevStartBattle.apply(this, arguments);
+    };
+    console.log('[BattleVoice] startBattle 已包裝');
+  } else {
+    console.warn('[BattleVoice] 找不到 startBattle');
+  }
+
+  /* ========== 語音清單載入後更新快取 ========== */
+  if (typeof speechSynthesis !== 'undefined'){
+    speechSynthesis.onvoiceschanged = () => {
+      cachedVoice = null;
+      getFemaleVoice();
+    };
+  }
+
+  setTimeout(() => {
+    getFemaleVoice();
+    console.log('[BattleVoice] 就緒 ✓');
+  }, 1000);
+
+  console.log('[BattleVoice] 載入完了');
+})();
+</script>
     
 </body>
 </html>
