@@ -7548,6 +7548,422 @@ if (!isVIP) {
   console.log('[VIP-Grammar] 就緒 ✓ · ' + LESSONS.length + ' 題 be 動詞');
 })();
 </script>
+
+<script>
+/* =========================================================
+   日本語ローカライズシステム
+   リアルタイム言語切替（中国語 ↔ 日本語）
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._i18nLoaded) return;
+  window._i18nLoaded = true;
+
+  const LANG_KEY = 'wordquest_lang';
+  let currentLang = 'zh';
+  try { currentLang = localStorage.getItem(LANG_KEY) || 'zh'; } catch(e){}
+
+  console.log('[i18n] ロード中... 現在の言語:', currentLang);
+
+  /* =========================================================
+     日本語翻訳辞書
+     ========================================================= */
+  const JA = {
+    /* ===== ナビゲーション ===== */
+    '主頁': 'ホーム',
+    '抽卡': 'ガチャ',
+    '卡庫': 'カード',
+    '公會': 'ギルド',
+    '統計': '統計',
+
+    /* ===== ホーム画面 ===== */
+    '單字遠征': '単語遠征',
+    '用抽到的單字卡，擊倒知識的敵人': 'ガチャで手に入れた単語カードで、知識の敵を倒せ',
+    '出戰卡牌': '出撃カード',
+    '冒險進度': '冒険の進捗',
+    '開始戰鬥': '⚔️ バトル開始',
+    '文法挑戰': '📝 文法チャレンジ',
+    '文法挑戰（第 5 關解鎖）': '📝 文法チャレンジ（ステージ5で解放）',
+    'GEPT 專屬模式': '📗 GEPT専用モード',
+    '切回 TOEIC 模式': '↩️ TOEICモードに戻る',
+    '學術考試模式（托福 / 雅思）': '🎓 学術試験モード（TOEFL / IELTS）',
+
+    /* ===== ガチャ ===== */
+    '點擊下方按鈕抽卡': '下のボタンをタップしてガチャを引こう',
+    '重複卡牌會轉化為 ✨ 星塵': '重複カードは ✨ スターダストに変換',
+    '單抽 ─ 60 💰': '単発ガチャ ─ 60 💰',
+    '十連抽 ─ 600 💰': '10連ガチャ ─ 600 💰',
+    '單次抽卡': '単発ガチャ',
+    '十連抽卡': '10連ガチャ',
+    '從當前模式卡池中抽取': '現在のモードのカードプールから引きます',
+    '花費': '消費',
+    '目前金幣': '所持コイン',
+    '十連保底': '10連保証',
+    '第 10 張必 SR 以上': '10枚目は必ずSR以上',
+    '距離 SSR 保底還有': 'SSR確定まで残り',
+    '抽': '回',
+    '確認抽卡': 'ガチャを引く',
+    '取消': 'キャンセル',
+    '確認': 'OK',
+
+    /* ===== カード ===== */
+    '全部': '全て',
+    '攻擊': '攻撃',
+    '生命': 'HP',
+    '等級': 'レベル',
+    '星級': '★',
+    '詞形變化 / 時態': '語形変化 / 時制',
+    '近義詞': '類義語',
+    '反義詞': '対義語',
+    '例句': '例文',
+    '解鎖': '解放',
+    '升級': 'レベルアップ',
+    '升星': '覚醒',
+    '已滿級': 'MAX',
+    '已滿星': 'MAX',
+    '設為出戰卡牌': '出撃カードに設定',
+    '出戰中': '出撃中',
+    '此單字無詞形變化': 'この単語に語形変化なし',
+    '無資料': 'データなし',
+    '金幣不足': 'コイン不足',
+    '星塵不足（抽到重複卡可獲得）': 'スターダスト不足',
+    '升級成功！': 'レベルアップ！',
+    '升星成功！': '覚醒成功！',
+    '已設為出戰：': '出撃カードに設定：',
+
+    /* ===== 戦闘 ===== */
+    '準備中…': '準備中…',
+    '生命': 'HP',
+
+    /* ===== モード名 ===== */
+    'TOEIC 模式': 'TOEICモード',
+    'GEPT 中高級模式': 'GEPT中上級モード',
+    'GEPT 中高級': 'GEPT中上級',
+    '全民英檢中高級 · 200 字單字庫': '全民英検中上級 · 200単語',
+    '🌻 向日葵寶寶模式': '🌻 ひまわりベビーモード',
+    '基礎 A1 詞庫 · 80 字 · 慢慢來': '基礎A1語彙 · 80単語 · ゆっくり',
+    '🏆 GEPT 高級': '🏆 GEPT上級',
+    '全民英檢高級 · 150 字 · 進階挑戰': '全民英検上級 · 150単語 · 上級挑戦',
+    '🎓 托福初級': '🎓 TOEFL初級',
+    'TOEFL 基礎學術字 · 50 字': 'TOEFL基礎学術語 · 50単語',
+    '🎓 雅思初級': '🎓 IELTS初級',
+    'IELTS 基礎學術字 · 50 字': 'IELTS基礎学術語 · 50単語',
+
+    /* ===== ギルド ===== */
+    '建立你的公會': '🏰 ギルドを作ろう',
+    '創建之後，志同道合的夥伴會陸續前來加入': '作成すると、仲間が続々と加入してきます',
+    '公會名稱': 'ギルド名',
+    '取個帥氣的名字吧…': 'かっこいい名前を入力…',
+    '建立公會': '✨ ギルド作成',
+    '成員列表': 'メンバーリスト',
+    '公會頻道': 'ギルドチャンネル',
+    '會長': 'ギルドマスター',
+    '剛剛': 'たった今',
+    '分鐘前': '分前',
+    '小時前': '時間前',
+    '天前': '日前',
+    '加入於': '加入',
+    '位成員': '名のメンバー',
+    '建立於': '設立',
+    '已加入公會': 'がギルドに加入しました',
+
+    /* ===== ボタン ===== */
+    '繼續前進': '次へ進む',
+    '返回主頁': 'ホームに戻る',
+    '返回': '戻る',
+    '開始教學': 'チュートリアル開始',
+    '開始冒險': '冒険を始める',
+    '重新挑戰': 'もう一度挑戦',
+    '清除統計資料': '🗑️ 統計データを削除',
+
+    /* ===== 勝利画面 ===== */
+    '獲得金幣': '💰 獲得コイン',
+    '目前關卡': '🎯 現在のステージ',
+    '剩餘生命': '❤️ 残りHP',
+    '這場的表現': '⚔️ 今回の成績',
+    '答對': '✅ 正解',
+    '答錯': '❌ 不正解',
+    '總傷害': '💥 総ダメージ',
+    '用時': '⏱️ タイム',
+    '每題平均傷害': '📊 平均ダメージ',
+    '最高連擊': '🔥 最大コンボ',
+    '使用卡牌': '使用カード',
+    '題': '問',
+    '秒': '秒',
+
+    /* ===== 統計 ===== */
+    '近期統計': '📊 最近の統計',
+    '數據詳情': 'データ詳細',
+    '答對率': '正解率',
+    '答題速': '解答速度',
+    '答錯率': '誤答率',
+    '關卡推進': 'ステージ進行',
+    '敗北率': '敗北率',
+    '平均答題時間': '平均解答時間',
+    '最高關卡': '最高ステージ',
+
+    /* ===== マイルストーン ===== */
+    '解鎖詞形變化': '語形変化解放',
+    '解鎖更多詞形': 'さらなる語形解放',
+    '解鎖全部詞形': '全語形解放',
+    '滿級達陣': 'レベルMAX達成',
+    '解鎖近義詞': '類義語解放',
+    '解鎖反義詞': '対義語解放',
+    '解鎖例句': '例文解放',
+    '滿星榮耀': '覚醒MAX',
+
+    /* ===== チュートリアル ===== */
+    '歡迎來到單字遠征': '単語遠征へようこそ',
+    '先帶你走一遍完整流程吧！': 'まずは一連の流れを体験しよう！',
+    '點這裡，開始你的第一場戰鬥！': 'ここをタップして初バトル！',
+    '點擊正確答案，攻擊敵人！': '正解をタップして攻撃！',
+    '太棒了！點這裡繼續': 'すごい！ここをタップして続行',
+    '去抽卡吧！點下面的「抽卡」': 'ガチャを引こう！下の「ガチャ」をタップ',
+    '十連抽試試手氣！': '10連ガチャを試そう！',
+    '新手金幣剛好夠 600': '初心者コインで丁度600',
+    '教學完成！': 'チュートリアル完了！',
+    '你已經學會了戰鬥與抽卡': 'バトルとガチャを覚えました',
+    '接下來就靠自己囉！': 'あとは自分で頑張ろう！',
+    '記得每天來打幾場，把卡牌養強吧 💪': '毎日バトルしてカードを育てよう 💪',
+    '點「確認抽卡」': '「ガチャを引く」をタップ',
+    '導師': '導師',
+    '你已經學會了戰鬥與抽卡。': 'バトルとガチャを覚えました。',
+    '接下來的路，就要靠自己了。': 'ここからは自分の力で進もう。',
+
+    /* ===== VIP ===== */
+    'VIP 秘密通道': 'VIP秘密通路',
+    '這是隱藏模式，只有知道密碼的人可以進入。': 'これは隠しモード。パスワードを知る者のみ入れます。',
+    '輸入密碼': 'パスワードを入力',
+    '進入': '入る',
+    '密碼錯誤，請再試一次': 'パスワードが違います。もう一度',
+    '請輸入密碼': 'パスワードを入力してください',
+    '🌻 歡迎來到向日葵寶寶模式': '🌻 ひまわりベビーモードへようこそ',
+
+    /* ===== 文法 ===== */
+    '文法入門': '📖 文法入門',
+    'be 動詞': 'be動詞',
+    '已通關': 'クリア済み',
+    '從最簡單的 be 動詞開始': '▸ 一番簡単なbe動詞から',
+    '選出正確的答案': '正しい答えを選ぼう',
+    '主詞（誰）': '主語（誰）',
+    '動詞': '動詞',
+    '補語': '補語',
+    '時間': '時間',
+    '答對了！': '✅ 正解！',
+    '不對喔，正確答案是': '❌ 不正解。正解は',
+    '下一題 →': '次の問題 →',
+    '再試一次 →': 'もう一度 →',
+    '完成課程 →': 'コース完了 →',
+    '階段完成！': 'ステージクリア！',
+    '你已經掌握了 be 動詞的三個基本規則：': 'be動詞の3つの基本ルールをマスターしました：',
+    '正確率': '正解率',
+    '回到主頁': 'ホームに戻る',
+
+    /* ===== システム ===== */
+    '金幣不足，去戰鬥賺錢吧！': 'コイン不足。バトルで稼ごう！',
+    '抵達第': '到達：',
+    '第': '第',
+    '關': 'ステージ',
+    '已載入': 'ロード済み',
+  };
+
+  /* =========================================================
+     DOM を再帰的に翻訳
+     ========================================================= */
+  function translateNode(node){
+    if (node.nodeType === 3){ // TEXT_NODE
+      const raw = node.textContent;
+      const trimmed = raw.trim();
+      if (trimmed && JA[trimmed]){
+        const leading = raw.match(/^\s*/)[0];
+        const trailing = raw.match(/\s*$/)[0];
+        node.textContent = leading + JA[trimmed] + trailing;
+      }
+    } else if (node.nodeType === 1){ // ELEMENT_NODE
+      // <script> や <style> はスキップ
+      if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
+
+      if (node.placeholder && JA[node.placeholder]){
+        node.placeholder = JA[node.placeholder];
+      }
+      if (node.title && JA[node.title]){
+        node.title = JA[node.title];
+      }
+      for (const child of node.childNodes){
+        translateNode(child);
+      }
+    }
+  }
+
+  function translatePage(){
+    if (currentLang !== 'ja') return;
+    translateNode(document.body);
+  }
+
+  /* =========================================================
+     クレジットバナー（日本語切替時に表示）
+     ========================================================= */
+  function showCreditBanner(){
+    const old = document.getElementById('i18nCredit');
+    if (old) old.remove();
+
+    const credit = document.createElement('div');
+    credit.id = 'i18nCredit';
+    credit.innerHTML = `
+      <div style="
+        position:fixed;top:0;left:0;right:0;z-index:99999;
+        background:linear-gradient(90deg,rgba(124,92,255,.96),rgba(0,210,255,.96));
+        color:#fff;padding:12px 16px;text-align:center;
+        font-weight:800;letter-spacing:.5px;
+        box-shadow:0 4px 24px -4px rgba(0,0,0,.7);
+        padding-top:calc(12px + env(safe-area-inset-top));
+        animation:i18nCreditIn .55s cubic-bezier(.2,1.4,.4,1);
+      ">
+        <div style="font-size:14px;margin-bottom:3px;">🌸 日本語版</div>
+        <div style="font-size:11.5px;opacity:.95;font-weight:700;">
+          DeepSeek が心を込めて翻訳しました。ぜひご活用ください。
+        </div>
+      </div>
+      <style>
+        @keyframes i18nCreditIn {
+          from { transform: translateY(-100%); opacity: 0; }
+          to   { transform: translateY(0);     opacity: 1; }
+        }
+        @keyframes i18nCreditOut {
+          from { transform: translateY(0);     opacity: 1; }
+          to   { transform: translateY(-100%); opacity: 0; }
+        }
+      </style>
+    `;
+    document.body.appendChild(credit);
+
+    setTimeout(() => {
+      credit.style.animation = 'i18nCreditOut .55s ease forwards';
+      setTimeout(() => credit.remove(), 700);
+    }, 4000);
+  }
+
+  /* =========================================================
+     言語切替ボタン
+     ========================================================= */
+  function updateLangBtn(){
+    const btn = document.getElementById('langBtn');
+    if (btn){
+      btn.textContent = currentLang === 'ja' ? '🇯🇵' : '🌐';
+      btn.title = currentLang === 'ja' ? '日本語' : 'Language';
+    }
+  }
+
+  function addLangButton(){
+    const res = document.querySelector('.resources');
+    if (!res || document.getElementById('langBtn')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'langBtn';
+    btn.className = 'icon-btn';
+    btn.style.fontSize = '16px';
+    btn.textContent = currentLang === 'ja' ? '🇯🇵' : '🌐';
+    btn.onclick = () => {
+      try { S.click(); } catch(e){}
+      switchLang(currentLang === 'ja' ? 'zh' : 'ja');
+    };
+
+    const musicBtn = document.getElementById('musicBtn');
+    if (musicBtn) res.insertBefore(btn, musicBtn);
+    else res.appendChild(btn);
+  }
+
+  /* =========================================================
+     言語切替
+     ========================================================= */
+  function switchLang(lang){
+    currentLang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
+
+    if (lang === 'zh'){
+      // 中国語に戻すときはリロードが最も確実
+      location.reload();
+      return;
+    }
+
+    // 日本語化
+    translatePage();
+    showCreditBanner();
+    updateLangBtn();
+
+    // 動的コンテンツ再翻訳
+    setTimeout(translatePage, 100);
+    setTimeout(translatePage, 400);
+    setTimeout(translatePage, 1000);
+
+    if (typeof renderAll === 'function'){
+      try { renderAll(); } catch(e){}
+      setTimeout(translatePage, 200);
+    }
+
+    try { toast('🇯🇵 日本語に切り替えました'); } catch(e){}
+    console.log('[i18n] 日本語に切替');
+  }
+
+  /* =========================================================
+     動的コンテンツを監視して自動翻訳
+     ========================================================= */
+  function startObserver(){
+    if (currentLang !== 'ja') return;
+
+    const obs = new MutationObserver((mutations) => {
+      if (currentLang !== 'ja') return;
+      for (const m of mutations){
+        for (const node of m.addedNodes){
+          if (node.nodeType === 1 || node.nodeType === 3){
+            translateNode(node);
+          }
+        }
+      }
+    });
+
+    obs.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  /* =========================================================
+     renderAll ラップ：毎回翻訳をかける
+     ========================================================= */
+  const _prevRenderAll = window.renderAll;
+  if (typeof _prevRenderAll === 'function'){
+    window.renderAll = function(){
+      const r = _prevRenderAll.apply(this, arguments);
+      if (currentLang === 'ja'){
+        setTimeout(translatePage, 60);
+        setTimeout(translatePage, 300);
+      }
+      return r;
+    };
+  }
+
+  /* =========================================================
+     初期化
+     ========================================================= */
+  setTimeout(() => {
+    addLangButton();
+    updateLangBtn();
+
+    if (currentLang === 'ja'){
+      translatePage();
+      setTimeout(translatePage, 500);
+      setTimeout(translatePage, 1500);
+      startObserver();
+    }
+
+    console.log('[i18n] 就緒 ✓ 言語:', currentLang);
+  }, 1200);
+
+  console.log('[i18n] ロード完了');
+})();
+</script>
   
 </body>
 </html>
