@@ -7551,47 +7551,58 @@ if (!isVIP) {
 
 <script>
 /* =========================================================
-   日本語ローカライズシステム
-   リアルタイム言語切替（中国語 ↔ 日本語）
+   日本語ローカライズ v2 — 完全版
+   - 帶 emoji 的文字也能翻
+   - 動態內容自動重翻
+   - Canvas 文字（雷達圖）也翻
    ========================================================= */
 (function(){
   'use strict';
 
-  if (window._i18nLoaded) return;
-  window._i18nLoaded = true;
+  if (window._i18nV2Loaded) return;
+  window._i18nV2Loaded = true;
 
   const LANG_KEY = 'wordquest_lang';
   let currentLang = 'zh';
   try { currentLang = localStorage.getItem(LANG_KEY) || 'zh'; } catch(e){}
+  window._i18nCurrentLang = currentLang;
 
-  console.log('[i18n] ロード中... 現在の言語:', currentLang);
+  console.log('[i18n v2] ロード中...', currentLang);
 
   /* =========================================================
-     日本語翻訳辞書
+     日本語辞書
      ========================================================= */
   const JA = {
-    /* ===== ナビゲーション ===== */
+    /* ===== ナビ ===== */
     '主頁': 'ホーム',
     '抽卡': 'ガチャ',
     '卡庫': 'カード',
     '公會': 'ギルド',
     '統計': '統計',
 
-    /* ===== ホーム画面 ===== */
+    /* ===== ホーム ===== */
     '單字遠征': '単語遠征',
+    '⚔️ 單字遠征': '⚔️ 単語遠征',
     '用抽到的單字卡，擊倒知識的敵人': 'ガチャで手に入れた単語カードで、知識の敵を倒せ',
     '出戰卡牌': '出撃カード',
     '冒險進度': '冒険の進捗',
-    '開始戰鬥': '⚔️ バトル開始',
-    '文法挑戰': '📝 文法チャレンジ',
-    '文法挑戰（第 5 關解鎖）': '📝 文法チャレンジ（ステージ5で解放）',
-    'GEPT 專屬模式': '📗 GEPT専用モード',
-    '切回 TOEIC 模式': '↩️ TOEICモードに戻る',
-    '學術考試模式（托福 / 雅思）': '🎓 学術試験モード（TOEFL / IELTS）',
+    '⚔️ 開始戰鬥': '⚔️ バトル開始',
+    '開始戰鬥': 'バトル開始',
+    '📝 文法挑戰': '📝 文法チャレンジ',
+    '文法挑戰': '文法チャレンジ',
+    '📗 GEPT 專屬模式': '📗 GEPT専用モード',
+    'GEPT 專屬模式': 'GEPT専用モード',
+    '🎓 學術考試模式（托福 / 雅思）': '🎓 学術試験モード（TOEFL / IELTS）',
+    '學術考試模式（托福 / 雅思）': '学術試験モード（TOEFL / IELTS）',
+    '↩️ 切回 TOEIC 模式': '↩️ TOEICモードに戻る',
+    '切回 TOEIC 模式': 'TOEICモードに戻る',
+    '📝 文法挑戰（第 5 關解鎖）': '📝 文法チャレンジ（ステージ5解放）',
 
     /* ===== ガチャ ===== */
     '點擊下方按鈕抽卡': '下のボタンをタップしてガチャを引こう',
     '重複卡牌會轉化為 ✨ 星塵': '重複カードは ✨ スターダストに変換',
+    '🎴 單抽 ─ 60 💰': '🎴 単発ガチャ ─ 60 💰',
+    '🎴 十連抽 ─ 600 💰': '🎴 10連ガチャ ─ 600 💰',
     '單抽 ─ 60 💰': '単発ガチャ ─ 60 💰',
     '十連抽 ─ 600 💰': '10連ガチャ ─ 600 💰',
     '單次抽卡': '単発ガチャ',
@@ -7602,10 +7613,8 @@ if (!isVIP) {
     '十連保底': '10連保証',
     '第 10 張必 SR 以上': '10枚目は必ずSR以上',
     '距離 SSR 保底還有': 'SSR確定まで残り',
-    '抽': '回',
     '確認抽卡': 'ガチャを引く',
     '取消': 'キャンセル',
-    '確認': 'OK',
 
     /* ===== カード ===== */
     '全部': '全て',
@@ -7630,11 +7639,6 @@ if (!isVIP) {
     '星塵不足（抽到重複卡可獲得）': 'スターダスト不足',
     '升級成功！': 'レベルアップ！',
     '升星成功！': '覚醒成功！',
-    '已設為出戰：': '出撃カードに設定：',
-
-    /* ===== 戦闘 ===== */
-    '準備中…': '準備中…',
-    '生命': 'HP',
 
     /* ===== モード名 ===== */
     'TOEIC 模式': 'TOEICモード',
@@ -7651,11 +7655,13 @@ if (!isVIP) {
     'IELTS 基礎學術字 · 50 字': 'IELTS基礎学術語 · 50単語',
 
     /* ===== ギルド ===== */
-    '建立你的公會': '🏰 ギルドを作ろう',
+    '🏰 建立你的公會': '🏰 ギルドを作ろう',
+    '建立你的公會': 'ギルドを作ろう',
     '創建之後，志同道合的夥伴會陸續前來加入': '作成すると、仲間が続々と加入してきます',
     '公會名稱': 'ギルド名',
     '取個帥氣的名字吧…': 'かっこいい名前を入力…',
-    '建立公會': '✨ ギルド作成',
+    '✨ 建立公會': '✨ ギルド作成',
+    '建立公會': 'ギルド作成',
     '成員列表': 'メンバーリスト',
     '公會頻道': 'ギルドチャンネル',
     '會長': 'ギルドマスター',
@@ -7667,6 +7673,7 @@ if (!isVIP) {
     '位成員': '名のメンバー',
     '建立於': '設立',
     '已加入公會': 'がギルドに加入しました',
+    '(NPC)': '(NPC)',
 
     /* ===== ボタン ===== */
     '繼續前進': '次へ進む',
@@ -7675,25 +7682,29 @@ if (!isVIP) {
     '開始教學': 'チュートリアル開始',
     '開始冒險': '冒険を始める',
     '重新挑戰': 'もう一度挑戦',
-    '清除統計資料': '🗑️ 統計データを削除',
+    '🗑️ 清除統計資料': '🗑️ 統計データを削除',
+    '清除統計資料': '統計データを削除',
 
     /* ===== 勝利画面 ===== */
-    '獲得金幣': '💰 獲得コイン',
-    '目前關卡': '🎯 現在のステージ',
-    '剩餘生命': '❤️ 残りHP',
-    '這場的表現': '⚔️ 今回の成績',
-    '答對': '✅ 正解',
-    '答錯': '❌ 不正解',
-    '總傷害': '💥 総ダメージ',
-    '用時': '⏱️ タイム',
-    '每題平均傷害': '📊 平均ダメージ',
-    '最高連擊': '🔥 最大コンボ',
+    '💰 獲得金幣': '💰 獲得コイン',
+    '獲得金幣': '獲得コイン',
+    '🎯 目前關卡': '🎯 現在のステージ',
+    '目前關卡': '現在のステージ',
+    '❤️ 剩餘生命': '❤️ 残りHP',
+    '剩餘生命': '残りHP',
+    '⚔️ 這場的表現': '⚔️ 今回の成績',
+    '這場的表現': '今回の成績',
+    '✅ 答對': '✅ 正解',
+    '❌ 答錯': '❌ 不正解',
+    '💥 總傷害': '💥 総ダメージ',
+    '⏱️ 用時': '⏱️ タイム',
+    '📊 每題平均傷害': '📊 平均ダメージ',
+    '🔥 最高連擊': '🔥 最大コンボ',
     '使用卡牌': '使用カード',
-    '題': '問',
-    '秒': '秒',
 
     /* ===== 統計 ===== */
-    '近期統計': '📊 最近の統計',
+    '📊 近期統計': '📊 最近の統計',
+    '近期統計': '最近の統計',
     '數據詳情': 'データ詳細',
     '答對率': '正解率',
     '答題速': '解答速度',
@@ -7702,6 +7713,7 @@ if (!isVIP) {
     '敗北率': '敗北率',
     '平均答題時間': '平均解答時間',
     '最高關卡': '最高ステージ',
+    '最近 30 次答題 · 10 場戰鬥': '最近30問 · 10戦',
 
     /* ===== マイルストーン ===== */
     '解鎖詞形變化': '語形変化解放',
@@ -7741,7 +7753,8 @@ if (!isVIP) {
     '🌻 歡迎來到向日葵寶寶模式': '🌻 ひまわりベビーモードへようこそ',
 
     /* ===== 文法 ===== */
-    '文法入門': '📖 文法入門',
+    '📖 文法入門': '📖 文法入門',
+    '文法入門': '文法入門',
     'be 動詞': 'be動詞',
     '已通關': 'クリア済み',
     '從最簡單的 be 動詞開始': '▸ 一番簡単なbe動詞から',
@@ -7760,35 +7773,86 @@ if (!isVIP) {
     '正確率': '正解率',
     '回到主頁': 'ホームに戻る',
 
-    /* ===== システム ===== */
-    '金幣不足，去戰鬥賺錢吧！': 'コイン不足。バトルで稼ごう！',
-    '抵達第': '到達：',
+    /* ===== 敵 ===== */
+    '單字史萊姆': '単語スライム',
+    '文法哥布林': '文法ゴブリン',
+    '拼音蝙蝠': 'ピンインバット',
+    '時態骷髏': '時制スケルトン',
+    '詞彙巨魔': '語彙トロール',
+    '語法巫師': '文法ウィザード',
+    '遺忘巨龍': '忘却ドラゴン',
+    '沉默幽靈': '沈黙ゴースト',
+    '拼字蜘蛛': 'スペルスパイダー',
+    '混亂惡魔': '混乱デビル',
+
+    /* ===== ポジション ===== */
+    '名詞': '名詞',
+    '形容詞': '形容詞',
+
+    /* ===== その他 ===== */
     '第': '第',
     '關': 'ステージ',
-    '已載入': 'ロード済み',
+    '題': '問',
+    '秒': '秒',
+    '抵達第': '到達：',
   };
 
   /* =========================================================
-     DOM を再帰的に翻訳
+     スマート翻訳関数
      ========================================================= */
+  function tryTranslate(str){
+    if (!str) return null;
+    const s = str.trim();
+    if (!s) return null;
+
+    // 1. 直接命中
+    if (JA[s]) return JA[s];
+
+    // 2. 把「前導 emoji / 符號 + 空白」拆掉，只翻後面
+    //    例：「⚔️ 開始戰鬥」→ 前綴「⚔️ 」+「開始戰鬥」
+    const m = s.match(/^([\p{Extended_Pictographic}\u2600-\u27BF\uFE0F\u200D\s]+)(.+)$/u);
+    if (m){
+      const prefix = m[1];
+      const rest = m[2].trim();
+      if (JA[rest]){
+        return prefix + JA[rest];
+      }
+    }
+
+    // 3. 「文字 + emoji 在尾」的情況
+    const m2 = s.match(/^(.+?)(\s*[\p{Extended_Pictographic}\u2600-\u27BF\uFE0F\u200D]+)$/u);
+    if (m2){
+      const rest = m2[1].trim();
+      const suffix = m2[2];
+      if (JA[rest]){
+        return JA[rest] + suffix;
+      }
+    }
+
+    return null;
+  }
+
   function translateNode(node){
-    if (node.nodeType === 3){ // TEXT_NODE
+    if (node.nodeType === 3){
       const raw = node.textContent;
       const trimmed = raw.trim();
-      if (trimmed && JA[trimmed]){
+      if (!trimmed) return;
+      const translated = tryTranslate(trimmed);
+      if (translated){
         const leading = raw.match(/^\s*/)[0];
         const trailing = raw.match(/\s*$/)[0];
-        node.textContent = leading + JA[trimmed] + trailing;
+        node.textContent = leading + translated + trailing;
       }
-    } else if (node.nodeType === 1){ // ELEMENT_NODE
-      // <script> や <style> はスキップ
+    } else if (node.nodeType === 1){
       if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE') return;
 
-      if (node.placeholder && JA[node.placeholder]){
-        node.placeholder = JA[node.placeholder];
+      if (node.placeholder){
+        const t = tryTranslate(node.placeholder);
+        if (t) node.placeholder = t;
       }
-      if (node.title && JA[node.title]){
-        node.title = JA[node.title];
+      if (node.title){
+        const t = tryTranslate(node.title);
+        if (t) node.title = t;
       }
       for (const child of node.childNodes){
         translateNode(child);
@@ -7802,7 +7866,29 @@ if (!isVIP) {
   }
 
   /* =========================================================
-     クレジットバナー（日本語切替時に表示）
+     Canvas 文字も翻訳（雷達図のラベル等）
+     ========================================================= */
+  let canvasHooked = false;
+  function hookCanvas(){
+    if (canvasHooked) return;
+    canvasHooked = true;
+
+    const _fillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function(text, x, y, maxWidth){
+      if (window._i18nCurrentLang === 'ja' && typeof text === 'string'){
+        const t = tryTranslate(text);
+        if (t) text = t;
+      }
+      if (maxWidth !== undefined){
+        return _fillText.call(this, text, x, y, maxWidth);
+      }
+      return _fillText.call(this, text, x, y);
+    };
+    console.log('[i18n v2] Canvas フック完了');
+  }
+
+  /* =========================================================
+     クレジットバナー
      ========================================================= */
   function showCreditBanner(){
     const old = document.getElementById('i18nCredit');
@@ -7879,66 +7965,61 @@ if (!isVIP) {
      ========================================================= */
   function switchLang(lang){
     currentLang = lang;
+    window._i18nCurrentLang = lang;
     try { localStorage.setItem(LANG_KEY, lang); } catch(e){}
 
     if (lang === 'zh'){
-      // 中国語に戻すときはリロードが最も確実
       location.reload();
       return;
     }
 
-    // 日本語化
     translatePage();
     showCreditBanner();
     updateLangBtn();
 
-    // 動的コンテンツ再翻訳
     setTimeout(translatePage, 100);
     setTimeout(translatePage, 400);
     setTimeout(translatePage, 1000);
-
-    if (typeof renderAll === 'function'){
-      try { renderAll(); } catch(e){}
-      setTimeout(translatePage, 200);
-    }
+    setTimeout(translatePage, 2000);
 
     try { toast('🇯🇵 日本語に切り替えました'); } catch(e){}
-    console.log('[i18n] 日本語に切替');
+    console.log('[i18n v2] 日本語に切替');
   }
 
   /* =========================================================
-     動的コンテンツを監視して自動翻訳
+     自動再翻訳（MutationObserver + 定期チェック）
      ========================================================= */
   function startObserver(){
     if (currentLang !== 'ja') return;
 
-    const obs = new MutationObserver((mutations) => {
+    let pending = false;
+    const obs = new MutationObserver(() => {
       if (currentLang !== 'ja') return;
-      for (const m of mutations){
-        for (const node of m.addedNodes){
-          if (node.nodeType === 1 || node.nodeType === 3){
-            translateNode(node);
-          }
-        }
-      }
+      if (pending) return;
+      pending = true;
+      setTimeout(() => {
+        pending = false;
+        translatePage();
+      }, 120);
     });
+    obs.observe(document.body, { childList: true, subtree: true });
 
-    obs.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+    // 定期チェック（保険）
+    setInterval(() => {
+      if (currentLang === 'ja') translatePage();
+    }, 1500);
   }
 
   /* =========================================================
-     renderAll ラップ：毎回翻訳をかける
+     renderAll ラップ
      ========================================================= */
   const _prevRenderAll = window.renderAll;
   if (typeof _prevRenderAll === 'function'){
     window.renderAll = function(){
       const r = _prevRenderAll.apply(this, arguments);
       if (currentLang === 'ja'){
-        setTimeout(translatePage, 60);
-        setTimeout(translatePage, 300);
+        setTimeout(translatePage, 80);
+        setTimeout(translatePage, 400);
       }
       return r;
     };
@@ -7947,6 +8028,8 @@ if (!isVIP) {
   /* =========================================================
      初期化
      ========================================================= */
+  hookCanvas();
+
   setTimeout(() => {
     addLangButton();
     updateLangBtn();
@@ -7955,13 +8038,14 @@ if (!isVIP) {
       translatePage();
       setTimeout(translatePage, 500);
       setTimeout(translatePage, 1500);
+      setTimeout(translatePage, 3000);
       startObserver();
     }
 
-    console.log('[i18n] 就緒 ✓ 言語:', currentLang);
+    console.log('[i18n v2] 就緒 ✓ 言語:', currentLang);
   }, 1200);
 
-  console.log('[i18n] ロード完了');
+  console.log('[i18n v2] ロード完了');
 })();
 </script>
   
