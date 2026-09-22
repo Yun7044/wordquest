@@ -9740,6 +9740,1121 @@ if (!isVIP) {
   console.log('[DrawFix] 就緒 ✓ · 冷卻', LOCK_MS, 'ms');
 })();
 </script>
+
+<script>
+/* =========================================================
+   🎃 萬聖節之月 簽到系統
+   - 10/1~10/31 每日簽到
+   - 10/1~10/7 限定加碼
+   - 萬聖節主題視覺
+   - 支援中日雙語
+   ========================================================= */
+(function(){
+  'use strict';
+  if (window._checkinLoaded) return;
+  window._checkinLoaded = true;
+
+  const CHECKIN_KEY = 'wordquest_checkin_v1';
+
+  console.log('[Halloween] 載入中...');
+
+  /* ========== 獎勵表 ========== */
+  const REGULAR_REWARDS = {
+    '10-01': { gold: 180 }, '10-02': { gold: 180 }, '10-03': { gold: 180 },
+    '10-04': { gold: 180 }, '10-05': { gold: 180 }, '10-06': { gold: 180 },
+    '10-07': { gold: 420 },
+    '10-08': { dust: 15 }, '10-09': { dust: 15 }, '10-10': { dust: 15 },
+    '10-11': { dust: 15 }, '10-12': { dust: 15 }, '10-13': { dust: 15 },
+    '10-14': { dust: 30 },
+    '10-15': { gold: 180 }, '10-16': { gold: 180 }, '10-17': { gold: 180 },
+    '10-18': { gold: 180 }, '10-19': { gold: 180 }, '10-20': { gold: 180 },
+    '10-21': { gold: 420 },
+    '10-22': { dust: 15 }, '10-23': { dust: 15 }, '10-24': { dust: 15 },
+    '10-25': { dust: 15 }, '10-26': { dust: 15 }, '10-27': { dust: 15 },
+    '10-28': { dust: 30 },
+    '10-29': { gold: 1000 }, '10-30': { gold: 1000 }, '10-31': { gold: 1000 },
+  };
+
+  const LIMITED_REWARDS = {
+    '10-01': { gold: 300 }, '10-02': { dust: 20 }, '10-03': { gold: 900 },
+    '10-04': { dust: 25 }, '10-05': { gold: 900 }, '10-06': { dust: 30 },
+    '10-07': { gold: 900 },
+  };
+
+  /* ========== 狀態 ========== */
+  let checkin = { year: new Date().getFullYear(), signed: [] };
+  try {
+    const raw = localStorage.getItem(CHECKIN_KEY);
+    if (raw){
+      const d = JSON.parse(raw);
+      if (d && typeof d === 'object'){
+        checkin = {
+          year: typeof d.year === 'number' ? d.year : new Date().getFullYear(),
+          signed: Array.isArray(d.signed) ? d.signed : [],
+        };
+      }
+    }
+  } catch(e){}
+
+  const currentYear = new Date().getFullYear();
+  if (checkin.year !== currentYear){
+    checkin = { year: currentYear, signed: [] };
+    saveCheckin();
+  }
+
+  function saveCheckin(){
+    try { localStorage.setItem(CHECKIN_KEY, JSON.stringify(checkin)); } catch(e){}
+  }
+
+  function dateKey(d){ return '10-' + String(d).padStart(2, '0'); }
+
+  function getToday(){
+    const now = new Date();
+    const m = now.getMonth() + 1;
+    const d = now.getDate();
+    if (m !== 10) return null;
+    return dateKey(d);
+  }
+
+  function isSigned(key){ return checkin.signed.indexOf(key) !== -1; }
+  function isToday(key){ return getToday() === key; }
+  function isPast(key){
+    const today = getToday();
+    if (!today) return false;
+    return key < today;
+  }
+
+  /* ========== CSS（萬聖節主題） ========== */
+  const style = document.createElement('style');
+  style.textContent = `
+#ciOverlay{
+  position:fixed;inset:0;z-index:2500;
+  display:none;flex-direction:column;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(255,107,53,.18), transparent 55%),
+    radial-gradient(ellipse at 50% 110%, rgba(139,92,246,.22), transparent 55%),
+    radial-gradient(ellipse at center, rgba(30,15,45,.98), rgba(4,3,10,.99));
+  overflow-y:auto;
+  padding:14px;padding-top:calc(14px + env(safe-area-inset-top));
+  padding-bottom:calc(20px + env(safe-area-inset-bottom));
+  position:relative;
+}
+#ciOverlay.show{display:flex;animation:ciFade .3s ease;}
+@keyframes ciFade{from{opacity:0}to{opacity:1}}
+
+/* 漂浮的裝飾 */
+.ci-deco{
+  position:absolute;pointer-events:none;
+  font-size:36px;opacity:.12;
+  animation:ciFloat 6s ease-in-out infinite;
+}
+.ci-deco.d1{top:6%;left:5%;animation-delay:0s;}
+.ci-deco.d2{top:12%;right:6%;animation-delay:1.2s;}
+.ci-deco.d3{bottom:18%;left:8%;animation-delay:2.4s;}
+.ci-deco.d4{bottom:10%;right:5%;animation-delay:3.6s;}
+.ci-deco.d5{top:42%;left:3%;animation-delay:0.8s;font-size:28px;}
+@keyframes ciFloat{
+  0%,100%{transform:translateY(0) rotate(-4deg);}
+  50%{transform:translateY(-14px) rotate(4deg);}
+}
+
+.ci-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 4px 16px;flex-shrink:0;position:relative;z-index:1;
+}
+.ci-header-left{display:flex;flex-direction:column;gap:2px;}
+.ci-title{
+  font-size:24px;font-weight:900;letter-spacing:2px;
+  background:linear-gradient(135deg,#ffd166,#ff6b35 45%,#c14bff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 16px rgba(255,107,53,.6));
+  display:flex;align-items:center;gap:8px;
+}
+.ci-title .pumpkin{
+  font-size:22px;
+  animation:ciPumpkinSpin 4s ease-in-out infinite;
+  filter:drop-shadow(0 0 12px rgba(255,107,53,.9));
+  -webkit-text-fill-color:initial;
+}
+@keyframes ciPumpkinSpin{
+  0%,100%{transform:rotate(-8deg) scale(1);}
+  50%{transform:rotate(8deg) scale(1.1);}
+}
+.ci-sub{
+  font-size:11px;color:#a78bfa;letter-spacing:2px;font-weight:700;
+}
+.ci-close{
+  width:34px;height:34px;border-radius:50%;
+  border:1px solid rgba(255,107,53,.35);
+  background:rgba(255,107,53,.08);color:#ffd166;font-size:15px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .15s;
+}
+.ci-close:active{transform:scale(.88)}
+
+.ci-info{
+  display:flex;gap:8px;margin-bottom:14px;flex-shrink:0;
+  position:relative;z-index:1;
+}
+.ci-info-item{
+  flex:1;padding:10px 8px;border-radius:12px;
+  background:linear-gradient(160deg,rgba(139,92,246,.14),rgba(255,107,53,.06));
+  border:1px solid rgba(255,107,53,.22);
+  text-align:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.ci-info-item .lab{
+  font-size:10px;color:#a78bfa;font-weight:700;
+  letter-spacing:1.5px;margin-bottom:3px;
+}
+.ci-info-item .val{
+  font-size:16px;font-weight:900;color:#ffd166;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 0 10px rgba(255,209,102,.5);
+}
+
+.ci-calendar{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:5px;margin-bottom:16px;flex-shrink:0;
+  position:relative;z-index:1;
+}
+.ci-day{
+  aspect-ratio:1;border-radius:10px;
+  border:1.5px solid rgba(139,92,246,.18);
+  background:linear-gradient(160deg,rgba(139,92,246,.08),rgba(20,10,35,.5));
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;
+  position:relative;cursor:default;
+  transition:transform .12s,border-color .2s,background .2s;
+  overflow:hidden;min-height:0;
+}
+.ci-day .num{
+  font-size:12px;font-weight:900;color:#a78bfa;
+  line-height:1;font-variant-numeric:tabular-nums;
+}
+.ci-day .rwd{
+  font-size:9.5px;font-weight:800;line-height:1;
+  display:flex;align-items:center;gap:1px;
+}
+
+/* 未來 */
+.ci-day.future{opacity:.4;}
+.ci-day.future .num{color:#4d3a6b;}
+
+/* 錯過 */
+.ci-day.missed{
+  opacity:.5;
+  background:linear-gradient(160deg,rgba(255,94,120,.06),rgba(20,10,35,.5));
+  border-color:rgba(255,94,120,.2);
+}
+.ci-day.missed::after{
+  content:'🕸️';
+  position:absolute;top:1px;right:2px;
+  font-size:10px;opacity:.5;
+}
+
+/* 已簽到 */
+.ci-day.signed{
+  background:linear-gradient(160deg,rgba(255,107,53,.22),rgba(139,92,246,.08));
+  border-color:rgba(255,107,53,.55);
+}
+.ci-day.signed .num{color:#ffd166;}
+.ci-day.signed::after{
+  content:'🎃';
+  position:absolute;top:1px;right:2px;
+  font-size:10px;
+  filter:drop-shadow(0 0 4px rgba(255,107,53,.8));
+}
+
+/* 今天可簽 */
+.ci-day.today{
+  border-color:#ff6b35;
+  background:linear-gradient(160deg,rgba(255,107,53,.3),rgba(139,92,246,.1));
+  box-shadow:
+    0 0 22px -4px rgba(255,107,53,.8),
+    inset 0 0 14px rgba(255,107,53,.2);
+  animation:ciTodayPulse 1.8s ease-in-out infinite;
+  cursor:pointer;
+}
+.ci-day.today .num{color:#ffd166;font-size:14px;}
+.ci-day.today:active{transform:scale(.94);}
+@keyframes ciTodayPulse{
+  0%,100%{box-shadow:0 0 22px -4px rgba(255,107,53,.8),inset 0 0 14px rgba(255,107,53,.2);}
+  50%{box-shadow:0 0 34px -2px rgba(255,107,53,1),inset 0 0 22px rgba(255,107,53,.35);}
+}
+
+/* 限定標籤 */
+.ci-day.limited::before{
+  content:'★';
+  position:absolute;top:2px;left:3px;
+  font-size:9px;color:#ff7ce0;
+  filter:drop-shadow(0 0 6px rgba(255,124,224,1));
+  animation:ciStarPulse 1.5s ease-in-out infinite;
+}
+@keyframes ciStarPulse{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.2);opacity:.8;}
+}
+
+.ci-rwd-gold{color:#ffd166;}
+.ci-rwd-dust{color:#c4b5fd;}
+
+.ci-action{
+  margin-top:auto;
+  padding:16px;border-radius:16px;border:none;
+  font-family:inherit;font-size:16px;font-weight:900;
+  letter-spacing:2px;cursor:pointer;
+  transition:transform .12s;flex-shrink:0;
+  position:relative;z-index:1;
+}
+.ci-action.ready{
+  background:linear-gradient(135deg,#ffd166,#ff6b35 60%,#c14bff);
+  color:#1a0a08;
+  box-shadow:
+    0 8px 28px -6px rgba(255,107,53,.8),
+    0 0 0 1px rgba(255,209,102,.4),
+    inset 0 1px 0 rgba(255,255,255,.4);
+  animation:ciBtnPulse 1.6s ease-in-out infinite;
+}
+@keyframes ciBtnPulse{
+  0%,100%{transform:scale(1);box-shadow:0 8px 28px -6px rgba(255,107,53,.8),0 0 0 1px rgba(255,209,102,.4),inset 0 1px 0 rgba(255,255,255,.4);}
+  50%{transform:scale(1.02);box-shadow:0 8px 36px -4px rgba(255,107,53,1),0 0 0 1px rgba(255,209,102,.7),inset 0 1px 0 rgba(255,255,255,.5);}
+}
+.ci-action.ready:active{transform:scale(.96);}
+.ci-action.done{
+  background:rgba(139,92,246,.12);
+  color:#a78bfa;
+  border:1px solid rgba(139,92,246,.25);
+  cursor:not-allowed;
+}
+.ci-action.closed{
+  background:rgba(255,255,255,.04);
+  color:#6f7796;
+  border:1px solid rgba(255,255,255,.08);
+  cursor:default;
+}
+
+/* 領取動畫 */
+.ci-toast{
+  position:fixed;left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(.7);
+  z-index:2600;
+  background:linear-gradient(180deg,#2a1840,#160a28);
+  border:1.5px solid rgba(255,107,53,.7);
+  border-radius:22px;
+  padding:26px 40px;
+  text-align:center;
+  box-shadow:
+    0 24px 70px -20px rgba(0,0,0,.95),
+    0 0 70px -10px rgba(255,107,53,.8),
+    inset 0 1px 0 rgba(255,255,255,.1);
+  opacity:0;pointer-events:none;
+}
+.ci-toast.show{animation:ciToastPop 1.8s cubic-bezier(.2,1.4,.4,1) forwards;}
+@keyframes ciToastPop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.6);}
+  20%{opacity:1;transform:translate(-50%,-50%) scale(1.1);}
+  40%{transform:translate(-50%,-50%) scale(1);}
+  80%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.15);}
+}
+.ci-toast .t-icon{
+  font-size:56px;margin-bottom:8px;
+  filter:drop-shadow(0 0 24px rgba(255,107,53,.9));
+  animation:ciToastBounce .8s ease-in-out infinite;
+}
+@keyframes ciToastBounce{
+  0%,100%{transform:translateY(0) rotate(-6deg);}
+  50%{transform:translateY(-8px) rotate(6deg);}
+}
+.ci-toast .t-title{
+  font-size:16px;font-weight:900;color:#ffd166;
+  letter-spacing:3px;margin-bottom:8px;
+  text-shadow:0 0 14px rgba(255,107,53,.7);
+}
+.ci-toast .t-amounts{
+  display:flex;gap:14px;justify-content:center;
+  font-size:15px;font-weight:900;
+}
+.ci-toast .t-amounts .g{
+  color:#ffd166;
+  text-shadow:0 0 12px rgba(255,209,102,.7);
+}
+.ci-toast .t-amounts .d{
+  color:#c4b5fd;
+  text-shadow:0 0 12px rgba(196,181,253,.7);
+}
+
+/* 首頁按鈕 */
+.ci-home-btn{
+  position:relative;
+  background:linear-gradient(135deg,#ff6b35,#c14bff) !important;
+  color:#fff !important;
+  box-shadow:
+    0 8px 24px -6px rgba(255,107,53,.8),
+    0 0 0 1px rgba(255,209,102,.3),
+    inset 0 1px 0 rgba(255,255,255,.3) !important;
+  border:none !important;
+}
+.ci-home-btn::after{
+  content:'';
+  position:absolute;top:8px;right:10px;
+  width:9px;height:9px;border-radius:50%;
+  background:#ffd166;
+  box-shadow:0 0 12px #ffd166,0 0 24px #ff6b35;
+  animation:ciDotPulse 1.2s ease-in-out infinite;
+}
+@keyframes ciDotPulse{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.35);opacity:.7;}
+}
+  `;
+  document.head.appendChild(style);
+
+  /* ========== Overlay ========== */
+  const overlay = document.createElement('div');
+  overlay.id = 'ciOverlay';
+  document.body.appendChild(overlay);
+
+  /* ========== 渲染 ========== */
+  function render(){
+    const ja = (window._i18nCurrentLang === 'ja');
+    const today = getToday();
+
+    const T = ja ? {
+      title: 'ハロウィンの月',
+      sub: 'HALLOWEEN MONTH · 毎日ログイン',
+      total: '合計',
+      signed: 'ログイン',
+      days: '日',
+      claim: '今日の報酬を受け取る',
+      done: '本日受取済み',
+      before: 'イベントは10月開始',
+      after: 'イベントは終了しました',
+    } : {
+      title: '萬聖節之月',
+      sub: 'HALLOWEEN MONTH · 每天登入領獎勵',
+      total: '累計',
+      signed: '已簽到',
+      days: '天',
+      claim: '領取今日獎勵',
+      done: '今日已簽到',
+      before: '活動將於 10 月開始',
+      after: '活動已結束',
+    };
+
+    const signedCount = checkin.signed.length;
+    const totalGold = getTotalReward('gold');
+    const totalDust = getTotalReward('dust');
+
+    const now = new Date();
+    const isOct = (now.getMonth() + 1) === 10;
+
+    let html = `
+      <div class="ci-deco d1">🦇</div>
+      <div class="ci-deco d2">🕷️</div>
+      <div class="ci-deco d3">👻</div>
+      <div class="ci-deco d4">🕸️</div>
+      <div class="ci-deco d5">🦇</div>
+
+      <div class="ci-header">
+        <div class="ci-header-left">
+          <div class="ci-title"><span class="pumpkin">🎃</span>${T.title}</div>
+          <div class="ci-sub">${T.sub}</div>
+        </div>
+        <div class="ci-close" id="ciClose">✕</div>
+      </div>
+
+      <div class="ci-info">
+        <div class="ci-info-item">
+          <div class="lab">${T.signed}</div>
+          <div class="val">${signedCount} / 31</div>
+        </div>
+        <div class="ci-info-item">
+          <div class="lab">💰 ${T.total}</div>
+          <div class="val">${totalGold}</div>
+        </div>
+        <div class="ci-info-item">
+          <div class="lab">✨ ${T.total}</div>
+          <div class="val">${totalDust}</div>
+        </div>
+      </div>
+
+      <div class="ci-calendar">`;
+
+    for (let d = 1; d <= 31; d++){
+      const key = dateKey(d);
+      const isSignedDay = isSigned(key);
+      const isTodayDay = isToday(key);
+      const isPastDay = isPast(key);
+      const hasLimited = LIMITED_REWARDS[key] !== undefined;
+
+      let cls = 'ci-day';
+      if (hasLimited) cls += ' limited';
+      if (isTodayDay && !isSignedDay) cls += ' today';
+      else if (isSignedDay) cls += ' signed';
+      else if (isPastDay) cls += ' missed';
+      else if (!isTodayDay) cls += ' future';
+
+      const reg = REGULAR_REWARDS[key] || {};
+      const lim = LIMITED_REWARDS[key] || {};
+      const totalG = (reg.gold || 0) + (lim.gold || 0);
+      const totalD = (reg.dust || 0) + (lim.dust || 0);
+
+      let rwdHTML = '';
+      if (totalG > 0){
+        rwdHTML = `<span class="ci-rwd-gold">💰${totalG}</span>`;
+      } else if (totalD > 0){
+        rwdHTML = `<span class="ci-rwd-dust">✨${totalD}</span>`;
+      }
+
+      html += `
+        <div class="${cls}" data-day="${d}">
+          <div class="num">${d}</div>
+          <div class="rwd">${rwdHTML}</div>
+        </div>`;
+    }
+
+    html += `</div>`;
+
+    if (!isOct){
+      const isBefore = (now.getMonth() + 1) < 10;
+      html += `<button class="ci-action closed">${isBefore ? T.before : T.after}</button>`;
+    } else if (today && !isSigned(today)){
+      html += `<button class="ci-action ready" id="ciClaim">🎃 ${T.claim}</button>`;
+    } else {
+      html += `<button class="ci-action done">${T.done}</button>`;
+    }
+
+    overlay.innerHTML = html;
+
+    document.getElementById('ciClose').onclick = () => {
+      try { S.click(); } catch(e){}
+      overlay.classList.remove('show');
+    };
+
+    const claimBtn = document.getElementById('ciClaim');
+    if (claimBtn){
+      claimBtn.onclick = () => doClaim();
+    }
+  }
+
+  function getTotalReward(type){
+    let total = 0;
+    checkin.signed.forEach(key => {
+      const reg = REGULAR_REWARDS[key] || {};
+      const lim = LIMITED_REWARDS[key] || {};
+      total += (reg[type] || 0) + (lim[type] || 0);
+    });
+    return total;
+  }
+
+  /* ========== 簽到 ========== */
+  function doClaim(){
+    const today = getToday();
+    if (!today) return;
+    if (isSigned(today)) return;
+
+    const reg = REGULAR_REWARDS[today] || {};
+    const lim = LIMITED_REWARDS[today] || {};
+    const gold = (reg.gold || 0) + (lim.gold || 0);
+    const dust = (reg.dust || 0) + (lim.dust || 0);
+
+    try {
+      if (typeof state !== 'undefined'){
+        if (gold > 0) state.gold += gold;
+        if (dust > 0) state.dust += dust;
+        if (typeof save === 'function') save();
+        if (typeof updateTopbar === 'function') updateTopbar();
+      }
+    } catch(e){
+      console.error('[Halloween] 發放失敗:', e);
+    }
+
+    checkin.signed.push(today);
+    saveCheckin();
+
+    // 萬聖節音效
+    try {
+      if (typeof AudioSys !== 'undefined'){
+        AudioSys.sfx(523, .15, 'sine', .1);
+        setTimeout(() => AudioSys.sfx(659, .15, 'sine', .1), 100);
+        setTimeout(() => AudioSys.sfx(784, .15, 'sine', .1), 200);
+        setTimeout(() => AudioSys.sfx(1047, .3, 'sine', .12), 300);
+      }
+    } catch(e){}
+
+    showRewardToast(gold, dust);
+
+    setTimeout(() => {
+      render();
+      updateHomeBtn();
+    }, 1900);
+  }
+
+  function showRewardToast(gold, dust){
+    const ja = (window._i18nCurrentLang === 'ja');
+    const toast = document.createElement('div');
+    toast.className = 'ci-toast';
+    toast.innerHTML = `
+      <div class="t-icon">🎃</div>
+      <div class="t-title">${ja ? 'トリック・オア・トリート！' : '不給糖就搗蛋！'}</div>
+      <div class="t-amounts">
+        ${gold > 0 ? `<span class="g">💰 +${gold}</span>` : ''}
+        ${dust > 0 ? `<span class="d">✨ +${dust}</span>` : ''}
+      </div>
+    `;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => toast.remove(), 2000);
+  }
+
+  /* ========== 首頁按鈕 ========== */
+  function updateHomeBtn(){
+    const existing = document.getElementById('ciHomeBtn');
+    const today = getToday();
+    const canClaim = today && !isSigned(today);
+    const isOct = (new Date().getMonth() + 1) === 10;
+
+    if (!isOct){
+      if (existing) existing.remove();
+      return;
+    }
+
+    const label = canClaim
+      ? '🎃 萬聖節簽到（可領取）'
+      : '🎃 萬聖節簽到';
+
+    if (existing){
+      existing.textContent = label;
+      existing.classList.toggle('ci-home-btn', canClaim);
+      existing.classList.toggle('ghost', !canClaim);
+      return;
+    }
+
+    const homeScreen = document.getElementById('screen-home');
+    if (!homeScreen) return;
+    const startBtn = document.getElementById('startBattleBtn');
+    if (!startBtn) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'ciHomeBtn';
+    btn.className = 'big-btn' + (canClaim ? ' ci-home-btn' : ' ghost');
+    btn.textContent = label;
+    btn.onclick = () => {
+      try { S.click(); } catch(e){}
+      overlay.classList.add('show');
+      render();
+    };
+
+    startBtn.parentNode.insertBefore(btn, startBtn);
+  }
+
+  /* ========== 監聽 ========== */
+  const _prevRenderAll = window.renderAll;
+  if (typeof _prevRenderAll === 'function'){
+    window.renderAll = function(){
+      const r = _prevRenderAll.apply(this, arguments);
+      setTimeout(updateHomeBtn, 200);
+      return r;
+    };
+  }
+
+  const _prevSwitchScreen = window.switchScreen;
+  if (typeof _prevSwitchScreen === 'function'){
+    window.switchScreen = function(name){
+      const r = _prevSwitchScreen.apply(this, arguments);
+      if (name === 'home') setTimeout(updateHomeBtn, 200);
+      return r;
+    };
+  }
+
+  setInterval(() => {
+    updateHomeBtn();
+    if (overlay.classList.contains('show')) render();
+  }, 60000);
+
+  setTimeout(() => {
+    updateHomeBtn();
+    console.log('[Halloween] 就緒 ✓ · 已簽到', checkin.signed.length, '天');
+  }, 2500);
+
+  console.log('[Halloween] 載入完了');
+})();
+</script>
+
+    <script>
+/* =========================================================
+   🎃 活動預告（10/1 前顯示，10/1 自動消失）
+   ========================================================= */
+(function(){
+  'use strict';
+  if (window._previewLoaded) return;
+  window._previewLoaded = true;
+
+  console.log('[Preview] 載入中...');
+
+  const EVENT_START = new Date(new Date().getFullYear(), 9, 1); // 10/1
+
+  function isBeforeEvent(){
+    return new Date() < EVENT_START;
+  }
+
+  function getDaysLeft(){
+    const now = new Date();
+    const diff = EVENT_START - now;
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  /* ========== CSS ========== */
+  const style = document.createElement('style');
+  style.textContent = `
+/* ===== 預告橫幅 ===== */
+#previewBanner{
+  position:relative;
+  margin: 0 0 12px;
+  border-radius:16px;
+  padding:16px 18px;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(255,107,53,.35), transparent 55%),
+    radial-gradient(ellipse at 90% 100%, rgba(193,75,255,.3), transparent 55%),
+    linear-gradient(160deg, #1a0e2e, #0e0618);
+  border:1.5px solid rgba(255,107,53,.5);
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform .15s;
+  animation:previewPulse 3s ease-in-out infinite;
+}
+#previewBanner:active{transform:scale(.98)}
+@keyframes previewPulse{
+  0%,100%{box-shadow:0 0 24px -6px rgba(255,107,53,.6),0 0 0 0 rgba(255,107,53,.4);}
+  50%{box-shadow:0 0 36px -4px rgba(255,107,53,.9),0 0 0 6px rgba(255,107,53,0);}
+}
+
+#previewBanner .pv-deco{
+  position:absolute;pointer-events:none;
+  font-size:24px;opacity:.25;
+  animation:pvFloat 4s ease-in-out infinite;
+}
+#previewBanner .pv-deco.d1{top:8%;right:6%;animation-delay:0s;}
+#previewBanner .pv-deco.d2{bottom:12%;right:18%;animation-delay:1.2s;font-size:18px;}
+#previewBanner .pv-deco.d3{top:20%;left:4%;animation-delay:2s;font-size:16px;opacity:.18;}
+@keyframes pvFloat{
+  0%,100%{transform:translateY(0) rotate(-5deg);}
+  50%{transform:translateY(-8px) rotate(5deg);}
+}
+
+#previewBanner .pv-head{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:6px;position:relative;z-index:1;
+}
+#previewBanner .pv-tag{
+  font-size:9.5px;font-weight:900;letter-spacing:2px;
+  padding:2px 8px;border-radius:6px;
+  background:linear-gradient(135deg,#ff6b35,#c14bff);
+  color:#fff;
+  box-shadow:0 0 10px rgba(255,107,53,.6);
+  animation:pvTagBlink 1.5s ease-in-out infinite;
+}
+@keyframes pvTagBlink{
+  0%,100%{opacity:1;}
+  50%{opacity:.7;}
+}
+#previewBanner .pv-pumpkin{
+  font-size:20px;
+  filter:drop-shadow(0 0 10px rgba(255,107,53,.8));
+  animation:pvPumpkin 2.5s ease-in-out infinite;
+  -webkit-text-fill-color:initial;
+  background:none;
+}
+@keyframes pvPumpkin{
+  0%,100%{transform:rotate(-8deg) scale(1);}
+  50%{transform:rotate(8deg) scale(1.1);}
+}
+
+#previewBanner .pv-title{
+  font-size:16px;font-weight:900;letter-spacing:1px;
+  background:linear-gradient(135deg,#ffd166,#ff6b35 50%,#c14bff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 8px rgba(255,107,53,.5));
+  position:relative;z-index:1;
+}
+#previewBanner .pv-desc{
+  font-size:11.5px;color:#c4b5fd;font-weight:700;
+  line-height:1.6;letter-spacing:.3px;
+  margin-bottom:10px;
+  position:relative;z-index:1;
+}
+#previewBanner .pv-desc b{
+  color:#ffd166;font-weight:900;
+}
+
+#previewBanner .pv-count{
+  display:flex;align-items:baseline;gap:6px;
+  position:relative;z-index:1;
+}
+#previewBanner .pv-count .pv-num{
+  font-size:28px;font-weight:900;
+  color:#ffd166;
+  font-variant-numeric:tabular-nums;
+  line-height:1;
+  text-shadow:0 0 16px rgba(255,209,102,.8);
+}
+#previewBanner .pv-count .pv-unit{
+  font-size:11px;color:#a78bfa;font-weight:800;
+  letter-spacing:1.5px;
+}
+#previewBanner .pv-arrow{
+  position:absolute;right:18px;top:50%;
+  transform:translateY(-50%);
+  font-size:22px;color:#ff6b35;
+  filter:drop-shadow(0 0 8px rgba(255,107,53,.8));
+  animation:pvArrow 1.2s ease-in-out infinite;
+  z-index:1;
+}
+@keyframes pvArrow{
+  0%,100%{transform:translate(0,-50%);}
+  50%{transform:translate(4px,-50%);}
+}
+
+/* ===== 預告彈窗 ===== */
+#previewModal{
+  position:fixed;inset:0;z-index:2600;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(4,3,10,.92);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  padding:20px;
+  animation:pvFadeIn .3s ease;
+}
+@keyframes pvFadeIn{from{opacity:0}to{opacity:1}}
+
+#previewModal .pm-card{
+  width:100%;max-width:360px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,107,53,.25), transparent 60%),
+    linear-gradient(180deg,#1e1030,#0e0618);
+  border-radius:24px;
+  border:1.5px solid rgba(255,107,53,.55);
+  box-shadow:
+    0 24px 70px -20px rgba(0,0,0,.95),
+    0 0 70px -10px rgba(255,107,53,.6);
+  padding:32px 24px 24px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  animation:pvPop .5s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes pvPop{
+  from{opacity:0;transform:scale(.85) translateY(30px)}
+  to{opacity:1;transform:none}
+}
+
+#previewModal .pm-deco{
+  position:absolute;font-size:30px;opacity:.15;
+  pointer-events:none;
+  animation:pvFloat 5s ease-in-out infinite;
+}
+#previewModal .pm-deco.d1{top:8%;left:6%;}
+#previewModal .pm-deco.d2{top:14%;right:8%;animation-delay:1s;font-size:24px;}
+#previewModal .pm-deco.d3{bottom:12%;left:10%;animation-delay:2s;font-size:22px;}
+#previewModal .pm-deco.d4{bottom:8%;right:6%;animation-delay:3s;font-size:28px;}
+
+#previewModal .pm-close{
+  position:absolute;top:14px;right:16px;
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);
+  color:#a78bfa;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .15s;z-index:2;
+}
+#previewModal .pm-close:active{transform:scale(.88);}
+
+#previewModal .pm-pumpkin{
+  font-size:64px;margin-bottom:6px;
+  filter:drop-shadow(0 0 30px rgba(255,107,53,.9));
+  animation:pvPumpkin 2s ease-in-out infinite;
+  display:inline-block;
+}
+
+#previewModal .pm-tag{
+  display:inline-block;
+  font-size:9.5px;font-weight:900;letter-spacing:3px;
+  padding:3px 12px;border-radius:8px;
+  background:linear-gradient(135deg,#ff6b35,#c14bff);
+  color:#fff;
+  box-shadow:0 0 14px rgba(255,107,53,.7);
+  margin-bottom:10px;
+}
+
+#previewModal .pm-title{
+  font-size:26px;font-weight:900;
+  letter-spacing:3px;
+  background:linear-gradient(135deg,#ffd166,#ff6b35 50%,#c14bff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 14px rgba(255,107,53,.6));
+  margin-bottom:8px;
+}
+
+#previewModal .pm-sub{
+  font-size:11px;color:#a78bfa;font-weight:800;
+  letter-spacing:2px;margin-bottom:20px;
+}
+
+#previewModal .pm-desc{
+  font-size:12.5px;color:#c4b5fd;line-height:1.8;
+  letter-spacing:.3px;margin-bottom:20px;
+  text-align:left;
+  padding:14px 16px;
+  background:rgba(139,92,246,.08);
+  border-radius:12px;
+  border:1px solid rgba(139,92,246,.15);
+}
+#previewModal .pm-desc b{
+  color:#ffd166;font-weight:900;
+}
+#previewModal .pm-desc .hl{
+  color:#ff6b35;font-weight:900;
+}
+
+#previewModal .pm-stat{
+  display:flex;gap:8px;margin-bottom:22px;
+}
+#previewModal .pm-stat-item{
+  flex:1;padding:10px;
+  background:rgba(255,107,53,.08);
+  border:1px solid rgba(255,107,53,.2);
+  border-radius:12px;
+  text-align:center;
+}
+#previewModal .pm-stat-item .lab{
+  font-size:9.5px;color:#a78bfa;font-weight:700;
+  letter-spacing:1.5px;margin-bottom:3px;
+}
+#previewModal .pm-stat-item .val{
+  font-size:14px;font-weight:900;color:#ffd166;
+  font-variant-numeric:tabular-nums;
+}
+
+#previewModal .pm-btn{
+  width:100%;padding:15px;border-radius:14px;border:none;
+  font-family:inherit;font-size:15px;font-weight:900;
+  letter-spacing:2px;
+  background:linear-gradient(135deg,#ff6b35,#c14bff);
+  color:#fff;cursor:pointer;
+  box-shadow:0 8px 24px -6px rgba(255,107,53,.8),
+             inset 0 1px 0 rgba(255,255,255,.3);
+  transition:transform .12s;
+}
+#previewModal .pm-btn:active{transform:scale(.96);}
+  `;
+  document.head.appendChild(style);
+
+  /* ========== 首頁橫幅 ========== */
+  function buildBanner(){
+    if (!isBeforeEvent()) return;
+    const homeScreen = document.getElementById('screen-home');
+    if (!homeScreen) return;
+    if (document.getElementById('previewBanner')) return;
+
+    const ja = (window._i18nCurrentLang === 'ja');
+    const days = getDaysLeft();
+
+    const T = ja ? {
+      tag: 'COMING SOON',
+      title: 'ハロウィンの月',
+      desc: '<b>10月1日</b>から毎日ログインで<br>豪華報酬をゲット！',
+      unit: '日後',
+    } : {
+      tag: 'COMING SOON',
+      title: '萬聖節之月',
+      desc: '<b>10/1</b> 起每天登入領取<br>超豪華獎勵！',
+      unit: '天後開始',
+    };
+
+    const banner = document.createElement('div');
+    banner.id = 'previewBanner';
+    banner.innerHTML = `
+      <div class="pv-deco d1">🦇</div>
+      <div class="pv-deco d2">🕷️</div>
+      <div class="pv-deco d3">🕸️</div>
+
+      <div class="pv-head">
+        <span class="pv-pumpkin">🎃</span>
+        <span class="pv-tag">${T.tag}</span>
+      </div>
+
+      <div class="pv-title">${T.title}</div>
+      <div class="pv-desc">${T.desc}</div>
+
+      <div class="pv-count">
+        <span class="pv-num">${days}</span>
+        <span class="pv-unit">${T.unit}</span>
+      </div>
+
+      <div class="pv-arrow">›</div>
+    `;
+
+    banner.onclick = () => {
+      try { S.click(); } catch(e){}
+      showModal();
+    };
+
+    // 插在「開始戰鬥」按鈕上方（若已有簽到按鈕，插在它上方）
+    const ciBtn = document.getElementById('ciHomeBtn');
+    const startBtn = document.getElementById('startBattleBtn');
+    const anchor = ciBtn || startBtn;
+    if (anchor && anchor.parentNode){
+      anchor.parentNode.insertBefore(banner, anchor);
+    } else {
+      homeScreen.appendChild(banner);
+    }
+  }
+
+  /* ========== 預告彈窗 ========== */
+  function showModal(){
+    if (document.getElementById('previewModal')) return;
+
+    const ja = (window._i18nCurrentLang === 'ja');
+    const days = getDaysLeft();
+
+    const T = ja ? {
+      tag: 'HALLOWEEN EVENT',
+      title: 'ハロウィンの月',
+      sub: 'DAILY LOGIN REWARDS',
+      desc: `
+        <b>10月1日</b>から<span class="hl">毎日ログイン</span>で報酬をゲット！<br><br>
+        🎃 期間限定ボーナスあり<br>
+        💰 最大 <b>9000 コイン</b><br>
+        ✨ 最大 <b>315 スターダスト</b><br><br>
+        31日間、毎日受け取ろう！
+      `,
+      statDays: '開始まで',
+      statGold: '最大コイン',
+      statDust: '最大ダスト',
+      btn: '了解！',
+      unit: '日',
+    } : {
+      tag: 'HALLOWEEN EVENT',
+      title: '萬聖節之月',
+      sub: 'DAILY LOGIN REWARDS',
+      desc: `
+        <b>10/1</b> 起<span class="hl">每天登入</span>即可領取獎勵！<br><br>
+        🎃 前 7 天有<span class="hl">限定加碼</span><br>
+        💰 全勤最高 <b>9000 金幣</b><br>
+        ✨ 全勤最高 <b>315 星塵</b><br><br>
+        連續 31 天，每天都有獎！
+      `,
+      statDays: '距離開始',
+      statGold: '最高金幣',
+      statDust: '最高星塵',
+      btn: '知道了！',
+      unit: '天',
+    };
+
+    const modal = document.createElement('div');
+    modal.id = 'previewModal';
+    modal.innerHTML = `
+      <div class="pm-card">
+        <div class="pm-deco d1">🦇</div>
+        <div class="pm-deco d2">🕷️</div>
+        <div class="pm-deco d3">👻</div>
+        <div class="pm-deco d4">🕸️</div>
+
+        <button class="pm-close" id="pmClose">✕</button>
+
+        <div class="pm-pumpkin">🎃</div>
+        <div class="pm-tag">${T.tag}</div>
+        <div class="pm-title">${T.title}</div>
+        <div class="pm-sub">${T.sub}</div>
+
+        <div class="pm-desc">${T.desc}</div>
+
+        <div class="pm-stat">
+          <div class="pm-stat-item">
+            <div class="lab">${T.statDays}</div>
+            <div class="val">${days} ${T.unit}</div>
+          </div>
+          <div class="pm-stat-item">
+            <div class="lab">${T.statGold}</div>
+            <div class="val">9000</div>
+          </div>
+          <div class="pm-stat-item">
+            <div class="lab">${T.statDust}</div>
+            <div class="val">315</div>
+          </div>
+        </div>
+
+        <button class="pm-btn" id="pmBtn">${T.btn}</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const close = () => {
+      modal.style.transition = 'opacity .25s';
+      modal.style.opacity = '0';
+      setTimeout(() => modal.remove(), 250);
+    };
+
+    document.getElementById('pmClose').onclick = () => {
+      try { S.click(); } catch(e){}
+      close();
+    };
+    document.getElementById('pmBtn').onclick = () => {
+      try { S.click(); } catch(e){}
+      close();
+    };
+    modal.onclick = (e) => {
+      if (e.target === modal) close();
+    };
+
+    try { S.rare(); } catch(e){}
+  }
+
+  /* ========== 定期檢查 ========== */
+  const _prevRenderAll = window.renderAll;
+  if (typeof _prevRenderAll === 'function'){
+    window.renderAll = function(){
+      const r = _prevRenderAll.apply(this, arguments);
+      setTimeout(() => {
+        buildBanner();
+        // 如果 10/1 到了，移除橫幅
+        if (!isBeforeEvent()){
+          const b = document.getElementById('previewBanner');
+          if (b) b.remove();
+        }
+      }, 200);
+      return r;
+    };
+  }
+
+  const _prevSwitchScreen = window.switchScreen;
+  if (typeof _prevSwitchScreen === 'function'){
+    window.switchScreen = function(name){
+      const r = _prevSwitchScreen.apply(this, arguments);
+      if (name === 'home') setTimeout(buildBanner, 200);
+      return r;
+    };
+  }
+
+  setInterval(() => {
+    if (!isBeforeEvent()){
+      const b = document.getElementById('previewBanner');
+      if (b) b.remove();
+      return;
+    }
+    buildBanner();
+  }, 30000);
+
+  setTimeout(() => {
+    buildBanner();
+    console.log('[Preview] 就緒 ✓ · 距離活動', getDaysLeft(), '天');
+  }, 2800);
+
+  console.log('[Preview] 載入完了');
+})();
+</script>
     
 </body>
 </html>
