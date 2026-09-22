@@ -5670,6 +5670,65 @@ function stepDone(){
   console.log('[Victory v2] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   VictoryFix：勝利畫面出現時，修正新手教學 spotlight 位置
+   讓引導框對準「繼續前進」按鈕，而不是被藏起來的 resultBtn
+   ========================================================= */
+(function(){
+  'use strict';
+
+  console.log('[VictoryFix] 載入...');
+
+  function repositionSpotlight(){
+    const overlay = document.getElementById('victoryOverlay');
+    const sp = document.getElementById('tutSpotlight');
+    const tip = document.getElementById('tutTip');
+
+    // 沒有 victory 畫面 或 沒有 spotlight → 不處理
+    if (!overlay || !overlay.classList.contains('show')) return;
+    if (!sp || sp.style.display === 'none') return;
+
+    const vBtn = document.getElementById('victoryBtn');
+    if (!vBtn) return;
+
+    const r = vBtn.getBoundingClientRect();
+    if (r.width < 10 || r.height < 10) return;
+
+    // 把 spotlight 移到 victoryBtn 上
+    sp.style.left   = (r.left - 8) + 'px';
+    sp.style.top    = (r.top  - 8) + 'px';
+    sp.style.width  = (r.width  + 16) + 'px';
+    sp.style.height = (r.height + 16) + 'px';
+
+    // 把 tip 移到按鈕上方
+    if (tip && tip.style.display !== 'none') {
+      const tipW = tip.offsetWidth || 280;
+      const left = Math.max(10,
+        Math.min(window.innerWidth - tipW - 10, r.left + r.width/2 - tipW/2));
+      const top  = Math.max(10, r.top - 82);
+      tip.style.left = left + 'px';
+      tip.style.top  = top  + 'px';
+
+      // 箭頭朝下（指著按鈕）
+      const arrow = tip.querySelector('.tut-tip-arrow');
+      if (arrow) {
+        arrow.dataset.dir = 'down';
+        arrow.style.left = (r.left + r.width/2 - left) + 'px';
+      }
+    }
+  }
+
+  // 每 200ms 檢查一次（比教學系統的 500ms 快，能蓋過去）
+  setInterval(repositionSpotlight, 200);
+
+  // 視窗大小變化也要重定位
+  window.addEventListener('resize', repositionSpotlight);
+
+  console.log('[VictoryFix] 就緒 ✓');
+})();
+</script>
   
 </body>
 </html>
