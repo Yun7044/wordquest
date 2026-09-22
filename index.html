@@ -7470,7 +7470,14 @@ function stepDone(){
   /* ========== 注入按鈕 ========== */
   function injectGrammarButton(){
     // 注意：這裡讀的是「遊戲的全域 state」，不是 gs
-    const isVIP = (typeof window.state !== 'undefined' && window.state.mode === VIP_MODE);
+    let isVIP = false;
+try {
+  if (typeof state !== 'undefined' && state && state.mode === VIP_MODE) isVIP = true;
+} catch(e){}
+if (!isVIP) {
+  const badge = document.getElementById('modeBadge');
+  if (badge && badge.textContent.indexOf('向日葵') !== -1) isVIP = true;
+}
 
     if (!isVIP){
       const existing = document.getElementById('vipGrammarBtn');
