@@ -8596,6 +8596,371 @@ if (!isVIP) {
   console.log('[SaveFix] 就緒 ✓');
 })();
 </script>
+
+<script>
+/* =========================================================
+   關於本遊戲
+   - 首頁底部低調的版權文字
+   - 點擊彈出「關於」卡片
+   - 支援中日雙語
+   ========================================================= */
+(function(){
+  'use strict';
+
+  if (window._aboutLoaded) return;
+  window._aboutLoaded = true;
+
+  console.log('[About] 載入中...');
+
+  /* =========================================================
+     ★★★ 想改的地方都在這裡 ★★★
+     ========================================================= */
+  const INFO = {
+    author:     'Yun7044',                 // 你的名字 / 暱稱
+    authorNote: '一個喜歡英文(?)與遊戲的人',  // 一句話介紹自己
+    github:     'yun7044',             // GitHub 帳號（留空會隱藏）
+    version:    'v1.0',
+    year:       '2026',
+    translator: 'DeepSeek',            // 翻譯者
+    thanks:     '姊姊 · 摯友 · 所有試玩過的你',
+  };
+  /* ========================================================= */
+
+  /* =========================================================
+     CSS
+     ========================================================= */
+  const style = document.createElement('style');
+  style.textContent = `
+#aboutFooter{
+  text-align:center;
+  padding:20px 16px calc(20px + env(safe-area-inset-bottom));
+  font-size:11px;
+  color:#4d5470;
+  letter-spacing:1.5px;
+  font-weight:700;
+  cursor:pointer;
+  user-select:none;
+  transition:color .2s;
+  margin-top:auto;
+}
+#aboutFooter:active,
+#aboutFooter:hover{ color:#8b93b0; }
+#aboutFooter .af-icon{
+  display:inline-block;
+  margin-right:6px;
+  opacity:.6;
+  transition:transform .3s;
+}
+#aboutFooter:active .af-icon{ transform:rotate(20deg); }
+
+#aboutModal{
+  position:fixed;inset:0;z-index:6000;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(4,6,12,.9);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+  animation:aboutFadeIn .3s ease;
+  padding:20px;
+}
+@keyframes aboutFadeIn{from{opacity:0}to{opacity:1}}
+
+.about-card{
+  width:100%;max-width:360px;
+  background:linear-gradient(180deg,#1a2038,#0f1424);
+  border-radius:24px;
+  border:1.5px solid rgba(255,217,61,.35);
+  box-shadow:
+    0 24px 70px -20px rgba(0,0,0,.95),
+    0 0 60px -10px rgba(255,217,61,.35);
+  padding:32px 24px 24px;
+  text-align:center;
+  position:relative;
+  animation:aboutPop .5s cubic-bezier(.2,1.4,.4,1);
+  overflow:hidden;
+}
+@keyframes aboutPop{
+  from{opacity:0;transform:scale(.85) translateY(30px)}
+  to{opacity:1;transform:none}
+}
+
+.about-card::before{
+  content:'';
+  position:absolute;top:-80px;left:50%;
+  width:200px;height:200px;margin-left:-100px;
+  border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(255,217,61,.25) 0%,
+    rgba(255,149,0,.1) 40%,
+    transparent 70%);
+  pointer-events:none;
+  animation:aboutGlow 3s ease-in-out infinite;
+}
+@keyframes aboutGlow{
+  0%,100%{transform:scale(1);opacity:.7}
+  50%{transform:scale(1.2);opacity:1}
+}
+
+.about-close{
+  position:absolute;top:14px;right:16px;
+  width:30px;height:30px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);
+  color:#8b93b0;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform .15s;
+  z-index:2;
+}
+.about-close:active{transform:scale(.88);}
+
+.about-logo{
+  position:relative;z-index:1;
+  font-size:56px;margin-bottom:8px;
+  filter:drop-shadow(0 0 24px rgba(255,217,61,.7));
+  animation:aboutLogoFloat 3s ease-in-out infinite;
+}
+@keyframes aboutLogoFloat{
+  0%,100%{transform:translateY(0) rotate(-3deg)}
+  50%{transform:translateY(-6px) rotate(3deg)}
+}
+
+.about-title{
+  position:relative;z-index:1;
+  font-size:24px;font-weight:900;
+  letter-spacing:4px;padding-left:4px;
+  background:linear-gradient(135deg,#fff8d0,#ffd93d 40%,#ff9500);
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent;
+  filter:drop-shadow(0 0 16px rgba(255,217,61,.5));
+  margin-bottom:4px;
+}
+
+.about-version{
+  position:relative;z-index:1;
+  font-size:10.5px;color:#6f7796;
+  letter-spacing:2px;font-weight:700;
+  margin-bottom:22px;
+}
+
+.about-section{
+  position:relative;z-index:1;
+  margin-bottom:16px;
+  padding-bottom:16px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.about-section:last-of-type{
+  border-bottom:none;
+  margin-bottom:8px;
+}
+
+.about-label{
+  font-size:9.5px;color:#5a6180;
+  letter-spacing:3px;font-weight:800;
+  margin-bottom:5px;
+}
+
+.about-value{
+  font-size:16px;font-weight:900;
+  color:#e8ecf5;
+  letter-spacing:.5px;
+}
+.about-value.gold{
+  color:#ffd93d;
+  text-shadow:0 0 12px rgba(255,217,61,.5);
+}
+.about-value.blue{
+  color:#8bddff;
+  text-shadow:0 0 12px rgba(139,221,255,.5);
+}
+.about-value.purple{
+  color:#c3bcff;
+  text-shadow:0 0 12px rgba(195,188,255,.5);
+}
+
+.about-note{
+  position:relative;z-index:1;
+  font-size:11.5px;color:#8b93b0;
+  line-height:1.7;letter-spacing:.3px;
+  margin-top:4px;
+  font-style:italic;
+}
+
+.about-footer{
+  position:relative;z-index:1;
+  font-size:10px;color:#4d5470;
+  letter-spacing:1.5px;font-weight:700;
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.about-footer .heart{
+  color:#ff5e78;
+  display:inline-block;
+  animation:aboutHeart 1.4s ease-in-out infinite;
+}
+@keyframes aboutHeart{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.25)}
+}
+
+.about-particle{
+  position:absolute;
+  width:4px;height:4px;border-radius:50%;
+  background:#ffd93d;
+  box-shadow:0 0 8px #ffd93d;
+  pointer-events:none;
+  animation:aboutParticle 2.5s ease-out infinite;
+}
+@keyframes aboutParticle{
+  0%{opacity:0;transform:translateY(0) scale(0)}
+  20%{opacity:1;transform:translateY(-10px) scale(1)}
+  100%{opacity:0;transform:translateY(-80px) scale(.3)}
+}
+  `;
+  document.head.appendChild(style);
+
+  /* =========================================================
+     建立底部版權文字
+     ========================================================= */
+  function buildFooter(){
+    const homeScreen = document.getElementById('screen-home');
+    if (!homeScreen) return;
+    if (document.getElementById('aboutFooter')) return;
+
+    const footer = document.createElement('div');
+    footer.id = 'aboutFooter';
+    footer.innerHTML = `<span class="af-icon">✍️</span>Made by ${INFO.author} · ${INFO.version}`;
+    footer.onclick = () => {
+      try { S.click(); } catch(e){}
+      showAboutModal();
+    };
+    homeScreen.appendChild(footer);
+  }
+
+  /* =========================================================
+     顯示「關於」彈窗
+     ========================================================= */
+  function showAboutModal(){
+    if (document.getElementById('aboutModal')) return;
+
+    const ja = (window._i18nCurrentLang === 'ja');
+
+    const T = ja ? {
+      title: '単語遠征',
+      author: '作者',
+      translator: '日本語訳',
+      thanks: 'スペシャルサンクス',
+      madeWith: '心を込めて作られました',
+      role: '開発者',
+    } : {
+      title: '單字遠征',
+      author: '作者',
+      translator: '日文翻譯',
+      thanks: '特別感謝',
+      madeWith: '用心製作',
+      role: '開發者',
+    };
+
+    const modal = document.createElement('div');
+    modal.id = 'aboutModal';
+    modal.innerHTML = `
+      <div class="about-card">
+        <button class="about-close" id="aboutClose">✕</button>
+        <div class="about-logo">⚔️</div>
+        <div class="about-title">${T.title}</div>
+        <div class="about-version">WORD QUEST · ${INFO.version} · ${INFO.year}</div>
+
+        <div class="about-section">
+          <div class="about-label">${T.author.toUpperCase()}</div>
+          <div class="about-value gold">${INFO.author}</div>
+          <div class="about-note">${INFO.authorNote}</div>
+        </div>
+
+        ${INFO.github ? `
+        <div class="about-section">
+          <div class="about-label">GITHUB</div>
+          <div class="about-value blue">@${INFO.github}</div>
+        </div>` : ''}
+
+        ${INFO.translator ? `
+        <div class="about-section">
+          <div class="about-label">${T.translator.toUpperCase()}</div>
+          <div class="about-value purple">${INFO.translator}</div>
+        </div>` : ''}
+
+        ${INFO.thanks ? `
+        <div class="about-section">
+          <div class="about-label">${T.thanks.toUpperCase()}</div>
+          <div class="about-value" style="font-size:13.5px;font-weight:700;color:#c7cce0">${INFO.thanks}</div>
+        </div>` : ''}
+
+        <div class="about-footer">
+          Made with <span class="heart">❤</span> · ${INFO.year}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // 粒子
+    const card = modal.querySelector('.about-card');
+    for (let i = 0; i < 12; i++){
+      const p = document.createElement('div');
+      p.className = 'about-particle';
+      p.style.left = (10 + Math.random() * 80) + '%';
+      p.style.bottom = '0';
+      p.style.animationDelay = (Math.random() * 2.5).toFixed(2) + 's';
+      p.style.animationDuration = (2 + Math.random() * 1.5).toFixed(2) + 's';
+      card.appendChild(p);
+    }
+
+    const close = () => {
+      modal.style.transition = 'opacity .25s';
+      modal.style.opacity = '0';
+      setTimeout(() => modal.remove(), 250);
+    };
+
+    document.getElementById('aboutClose').onclick = () => {
+      try { S.click(); } catch(e){}
+      close();
+    };
+    modal.onclick = (e) => {
+      if (e.target === modal) close();
+    };
+
+    try { S.rare(); } catch(e){}
+  }
+
+  /* =========================================================
+     監聽：首頁出現時建立底部文字
+     ========================================================= */
+  const _prevRenderAll = window.renderAll;
+  if (typeof _prevRenderAll === 'function'){
+    window.renderAll = function(){
+      const r = _prevRenderAll.apply(this, arguments);
+      setTimeout(buildFooter, 200);
+      return r;
+    };
+  }
+
+  const _prevSwitchScreen = window.switchScreen;
+  if (typeof _prevSwitchScreen === 'function'){
+    window.switchScreen = function(name){
+      const r = _prevSwitchScreen.apply(this, arguments);
+      if (name === 'home') setTimeout(buildFooter, 200);
+      return r;
+    };
+  }
+
+  // 定期檢查
+  setInterval(buildFooter, 2000);
+
+  setTimeout(() => {
+    buildFooter();
+    console.log('[About] 就緒 ✓ · by ' + INFO.author);
+  }, 2000);
+
+  console.log('[About] 載入完了');
+})();
+</script>
   
 </body>
 </html>
